@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runPipeline } from "@/lib/pipeline.js";
 import { makeIdeas } from "@/lib/ideas.js";
-import { strictLogFetch } from "./saveGuard.js";
+import { strictLogFetch } from "@/lib/saveguard.js";
 
 export type Stage =
   | { kind: "idle" }

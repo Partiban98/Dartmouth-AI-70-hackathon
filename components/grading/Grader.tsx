@@ -7,6 +7,7 @@ import { buildReview, addableCodes } from "./review.js";
 import type { Stage } from "./useGrading";
 import MakeTestCase from "./MakeTestCase";
 import RegressionBadge from "./RegressionBadge";
+import GateReceipt from "./GateReceipt";
 import { firstTrueOverride } from "./overrides.js";
 import CallItFirst from "./CallItFirst";
 import BlindAgreementStat from "./BlindAgreementStat";
@@ -285,6 +286,7 @@ function Saved({ result, table, idea, onAdded, onOpen }: any) {
       <p className="text-sm text-fg-3">{c.receiptSub}{result.overrides?.length ? ` · ${result.overrides.length} suggestion${result.overrides.length === 1 ? "" : "s"} changed by you` : ""}</p>
       {result.feedback && <p className="mt-2 text-fg-2">“{result.feedback}”</p>}
       {override && <MakeTestCase idea={idea} itemId={result.itemId} aiCode={override.from} taRuling="OK" onOpen={onOpen} onAdded={onAdded} />}
+      <GateReceipt idea={idea} itemId={result.itemId} />
     </Panel>
   );
 }

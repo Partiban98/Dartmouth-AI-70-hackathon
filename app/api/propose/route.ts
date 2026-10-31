@@ -22,6 +22,8 @@ export async function POST(request: Request) {
   if (!r.ok) return Response.json({ error: r.error, attempts: r.attempts }, { status: 502 });
   const verifyText = textOf(payload, ideaConfig.verifyAgainst);
   const proposals = r.proposals.map((p: any) => ({ ...p, verified: verifyQuote(p.quote, verifyText).found }));
-  log.append("proposals", proposalRecord(body.idea, body.itemId, { ...r, proposals }));
+  // payloadHash is the hash of exactly what was sent, straight from the adapter,
+  // so the Privacy Gate receipt can show it rather than recompute it later.
+  log.append("proposals", { ...proposalRecord(body.idea, body.itemId, { ...r, proposals }), payloadHash: r.payloadHash ?? null });
   return Response.json({ proposals: r.proposals, label: r.label, modelId: r.modelId, rung: r.rung, cacheHit: r.cacheHit, caveat: r.caveat, attempts: r.attempts });
 }

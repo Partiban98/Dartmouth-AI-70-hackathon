@@ -1,10 +1,13 @@
 import { getContext, LOCAL_DIR } from "@/server/context.js";
 import { logProblem, withLocalIdentities } from "@/server/privacy.js";
+import { recordProblem } from "@/server/records.js";
 
 export async function POST(request: Request) {
-  const { log, course } = getContext();
+  const { log, course, ideas } = getContext();
   const rec = await request.json();
-  if (rec.type !== "gate" && rec.type !== "decision") return Response.json({ error: "only gate and decision records are accepted here" }, { status: 400 });
+  // A malformed record would break counts and exports for every later request, so it is refused before writing.
+  const shape = recordProblem(rec, ideas() as any);
+  if (shape) return Response.json({ error: shape }, { status: 400 });
   // This laptop's own students count as known names here too, so a note naming one is refused, never written.
   const problem = logProblem(rec, withLocalIdentities(course, LOCAL_DIR));
   if (problem) return Response.json({ error: problem }, { status: 422 });

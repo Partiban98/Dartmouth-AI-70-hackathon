@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { checkOutbound, withLocalIdentities, logProblem } from "../server/privacy.js";
 import { verifyQuote, counters, analytics } from "../lib/engine.js";
 import { makeIdeas } from "../lib/ideas.js";
+import { recordProblem } from "../server/records.js";
 import { blockedRecord, proposalRecord } from "../lib/logshape.js";
 import { makeAdapter } from "../server/adapter.js";
 import { makeLog } from "../server/log.js";
@@ -50,7 +51,8 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
       }
       if (req.method === "POST" && url.pathname === "/log") {
         const rec = await readBody(req);
-        if (rec.type !== "gate" && rec.type !== "decision") return send(res, 400, { error: "only gate and decision records are accepted here" });
+        const shape = recordProblem(rec, ideas);
+        if (shape) return send(res, 400, { error: shape });
         const problem = logProblem(rec, withLocalIdentities(course, localDir));
         if (problem) return send(res, 422, { error: problem });
         log.append(rec.type === "decision" ? "decisions" : "gate", rec);

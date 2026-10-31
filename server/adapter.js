@@ -17,11 +17,17 @@ const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 const readJson = (p, fallback) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return fallback; } };
 const writeJson = (p, o) => { mkdirSync(join(p, ".."), { recursive: true }); writeFileSync(p, JSON.stringify(o, null, 2) + "\n"); };
 
+/** E3: the cache key is the whole request the model sees: system prompt, task, allowed codes and labels, question, and paper.
+ *  A changed question or scheme is a different request. "v2" keeps old entries (keyed on the paper alone) from ever matching. */
+export function cacheKey(ideaConfig, promptName, payload) {
+  return createHash("sha256").update(JSON.stringify({ v: 2, system: SYSTEM, promptName, prompt: buildUserPrompt({ ...ideaConfig, promptName }, payload) })).digest("hex");
+}
+
 export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, localDir = "local" } = {}) {
   const paths = { smoke: join(localDir, "smoke.json"), smokeGemini: join(localDir, "smoke-gemini.json"), calls: join(localDir, "calls.json"), cache: join(localDir, "cache") };
   mkdirSync(paths.cache, { recursive: true });
 
-  const payloadHash = (promptName, payload) => sha256(JSON.stringify({ system: SYSTEM, promptName, payload }));
+  const payloadHash = cacheKey;
   const cachePath = (ph, modelId) => join(paths.cache, `${ph}.${modelId}.json`);
   const callCount = () => readJson(paths.calls, { count: 0 }).count;
   const bumpCalls = () => writeJson(paths.calls, { count: callCount() + 1 });
@@ -114,7 +120,7 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
   async function propose({ ideaConfig, payload, promptName }) {
     const attempts = [];
     const replay = env.REPLAY_MODE === "1";
-    const ph = payloadHash(promptName, payload);
+    const ph = payloadHash(ideaConfig, promptName, payload);
     const smoke = readJson(paths.smoke, null);
     const dev = env.NODE_ENV === "development";
     const rungs = replay ? [] : [

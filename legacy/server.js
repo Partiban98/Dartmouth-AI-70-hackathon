@@ -3,10 +3,10 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname, normalize as pnorm } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkOutbound, withLocalIdentities } from "../server/privacy.js";
+import { checkOutbound, withLocalIdentities, logProblem } from "../server/privacy.js";
 import { verifyQuote, counters, analytics } from "../lib/engine.js";
 import { makeIdeas } from "../lib/ideas.js";
-import { blockedRecord, proposalRecord, assertLogSafe } from "../lib/logshape.js";
+import { blockedRecord, proposalRecord } from "../lib/logshape.js";
 import { makeAdapter } from "../server/adapter.js";
 import { makeLog } from "../server/log.js";
 import { loadDotenv } from "../server/env.js";
@@ -51,7 +51,8 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
       if (req.method === "POST" && url.pathname === "/log") {
         const rec = await readBody(req);
         if (rec.type !== "gate" && rec.type !== "decision") return send(res, 400, { error: "only gate and decision records are accepted here" });
-        try { assertLogSafe(rec, withLocalIdentities(course, localDir)); } catch (e) { return send(res, 422, { error: e.message }); }
+        const problem = logProblem(rec, withLocalIdentities(course, localDir));
+        if (problem) return send(res, 422, { error: problem });
         log.append(rec.type === "decision" ? "decisions" : "gate", rec);
         return send(res, 200, { ok: true });
       }

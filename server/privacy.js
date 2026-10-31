@@ -23,46 +23,85 @@ export function projectPayload(payload, ideaConfig) {
   return out;
 }
 
-/** E1: the course plus every student this laptop imported (full name, its lowercase form, email, NetID, student ID), as known names.
- *  Read on each call so papers imported after start-up count. Short Latin tokens are left out: the check matches substrings. */
-export function withLocalIdentities(course, localDir) {
-  const known = new Set([...(course.roster ?? []), ...(course.dictionary ?? [])].map((e) => e.name));
-  const extra = new Set();
-  for (const meta of listImported(localDir)) {
-    for (const m of Object.values(loadMap(localDir, meta.id))) {
-      const name = String(m.name ?? "").trim();
-      for (const v of [name, name.toLowerCase(), m.email, m.netid, m.studentId]) {
-        const s = String(v ?? "").trim();
-        // Latin tokens under 4 letters would match inside ordinary words; names in other scripts are often 2 characters.
-        const min = /^[\x00-\x7f]*$/.test(s) ? 4 : 2;
-        if (s.length < min || (/^\d+$/.test(s) && s.length < 5) || known.has(s)) continue;
-        extra.add(s);
-      }
-    }
+/** E1: every student this laptop knows: the course roster plus everything it imported (full name, each name word, email, NetID, student ID).
+ *  Read on each call so papers imported after start-up count. Returned on the course as `identities`, matched as whole words in any case;
+ *  long values are also added as known names so the shared gate's own check (substring, case-sensitive) blocks them too. */
+const coursePeople = (course) => [...(course.roster ?? []), ...(course.dictionary ?? []).map((d) => ({ name: d.name }))];
+function idsOf(people) {
+  const ids = new Set();
+  for (const m of people) {
+    const name = String(m.name ?? "").trim();
+    for (const v of [name, ...name.split(/\s+/), m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t.length >= 2) ids.add(t); }
   }
-  return { ...course, dictionary: [...(course.dictionary ?? []), ...[...extra].map((name, i) => ({ name, alias: `STUDENT-${i + 1}` }))] };
+  return ids;
+}
+export function withLocalIdentities(course, localDir) {
+  const people = coursePeople(course);
+  for (const meta of listImported(localDir)) people.push(...Object.values(loadMap(localDir, meta.id)));
+  const ids = idsOf(people);
+  const known = new Set(people.map((m) => m.name));
+  const extra = [...ids].filter((t) => !known.has(t) && (/^[\x00-\x7f]*$/.test(t) ? t.length >= 4 && t.includes(" ") : true));
+  return { ...course, identities: [...ids], dictionary: [...(course.dictionary ?? []), ...extra.map((name, i) => ({ name, alias: `STUDENT-${i + 1}` }))] };
 }
 
-/** E4: the question and mistake labels travel with every paper, so they must hold no identifier or known student. Statistics wording is not name-checked. */
-export function checkScheme(standards, course) {
-  const texts = [standards?.question, ...(standards?.codes ?? []).map((c) => c.label)].filter((t) => typeof t === "string");
-  const names = [...(course.roster ?? []), ...(course.dictionary ?? [])].map((e) => e.name).filter(Boolean);
-  for (const t of texts) {
-    for (const [rule, , , re] of PATTERN_RULES) { const m = t.match(new RegExp(re.source, "g")); if (m) fail(422, { code: "BLOCKED", rule, count: m.length, where: "scheme" }); }
-    for (const n of names) { const c = t.split(n).length - 1; if (c) fail(422, { code: "BLOCKED", rule: "R-09", count: c, where: "scheme" }); }
+/** Whole-word, any-case matcher for known identities. Numbers count as text, so a student ID sent as a number is found. */
+function knownIn(course) {
+  const ids = [...(course.identities ?? idsOf(coursePeople(course)))].filter((t) => !/^\d+$/.test(t) || t.length >= 5).sort((a, b) => b.length - a.length);
+  if (!ids.length) return () => 0;
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${ids.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu");
+  return (text) => (String(text).match(re) ?? []).length;
+}
+
+/** Every string, object key and number inside a value, as text. `skip` names keys whose values are not checked. */
+function texts(v, skip = new Set(), out = []) {
+  if (typeof v === "string") out.push(v);
+  else if (typeof v === "number" && Number.isFinite(v)) out.push(String(v));
+  else if (Array.isArray(v)) v.forEach((x) => texts(x, skip, out));
+  else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { out.push(k); if (!skip.has(k)) texts(x, skip, out); }
+  return out;
+}
+
+/** Identifier patterns and known students, in any of the given texts. Throws { status: 422 } with the rule and count only. */
+function checkTexts(list, course, where) {
+  const known = knownIn(course);
+  for (const t of list) {
+    for (const [rule, , , re] of PATTERN_RULES) { const m = t.match(new RegExp(re.source, "g")); if (m) fail(422, { code: "BLOCKED", rule, count: m.length, where }); }
+    const n = known(t); if (n) fail(422, { code: "BLOCKED", rule: "R-09", count: n, where });
   }
+}
+
+const CODE_ID = /^[A-Z][A-Z0-9-]{0,23}$/;
+/** E4: the question, mistake labels and code ids travel with every paper, so they must hold no identifier or known student. Statistics wording is not name-checked. */
+export function checkScheme(standards, course) {
+  const codes = standards?.codes ?? [];
+  for (const c of codes) if (!CODE_ID.test(String(c.code))) fail(422, { code: "BLOCKED", rule: "CODE", count: 1, where: "scheme" });
+  checkTexts([standards?.question, ...codes.map((c) => c.label), ...codes.map((c) => c.code)].filter((t) => typeof t === "string"), course, "scheme");
 }
 
 /** The same check, as a message a head TA can act on when creating, saving or joining a scheme. null when clean. */
 export function schemeProblem(standards, course) {
   try { checkScheme(standards, course); return null; }
-  catch (e) { return e.rule === "R-09" ? "The question or a mistake label contains a student's name. Remove it before saving." : `The question or a mistake label contains an identifier (${e.rule}). Remove it before saving.`; }
+  catch (e) { return e.rule === "R-09" ? "The question or a mistake label contains a student's name. Remove it before saving." : e.rule === "CODE" ? "A mistake code must be capital letters, digits and dashes, like E-MEAN." : `The question or a mistake label contains an identifier (${e.rule}). Remove it before saving.`; }
+}
+
+/** E4: everything a pack shares: course, title and question as well as the scheme. null when clean. */
+export function packProblem(a, course) {
+  try { checkTexts([a?.course, a?.title, a?.question, a?.standards?.course, a?.standards?.title].filter((t) => typeof t === "string"), course, "pack"); }
+  catch (e) { return e.rule === "R-09" ? "The course, title or question names a student. Remove it before sharing." : `The course, title or question contains an identifier (${e.rule}). Remove it before sharing.`; }
+  return schemeProblem(a?.standards, course);
+}
+
+/** E1 for logs: a record may name the grader who decided, never a known student. Returns a plain reason or null. */
+export function logProblem(rec, course) {
+  try { checkTexts(texts(rec, new Set(["decidedBy"])), course, "log"); return null; }
+  catch (e) { return e.rule === "R-09" ? "The note or a reason names a student." : `The note or a reason contains an identifier (${e.rule}).`; }
 }
 
 /** Everything a propose request would send, checked. Returns the projected payload; throws { status } on any problem. */
 export function checkOutbound(body, ideaConfig, course) {
   const payload = projectPayload(body?.payload, ideaConfig);
   assertClean(payload, course);
+  checkTexts(texts(payload), course, "paper");
   checkScheme(ideaConfig.standards, course);
   return payload;
 }

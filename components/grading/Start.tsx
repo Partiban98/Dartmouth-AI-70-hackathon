@@ -133,7 +133,7 @@ function Doors({ g, onContinue, onNew, onJoin, onSample }: { g: any; onContinue:
             <div className="text-xl font-semibold">{d.continueLabel(`${a.course} · ${a.title}`)}</div>
             <div className="text-sm text-fg-3">{d.continueSub((g.importedPapers[a.code] ?? []).length, !a.joined)} · <span className="font-mono">{a.code}</span> · version {a.version}</div>
           </button>
-          <button className="text-sm underline" onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(a.code); }}>{copied === a.code ? d.copied : d.copyPack}</button>
+          {a.pack ? <button className="text-sm underline" onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(a.code); }}>{copied === a.code ? d.copied : d.copyPack}</button> : <p className="text-sm text-bad">{a.packProblem}</p>}
         </div>
       ))}
       <button className={door} onClick={onNew}><div className="text-xl font-semibold">{d.newLabel}</div><div className="text-sm text-fg-3">{d.newSub}</div></button>
@@ -197,8 +197,8 @@ function CodeCard({ a, onNext }: { a: any; onNext: () => void }) {
         <div className="mt-2 text-fg-2">{a.course} · {a.title} · version {a.version}</div>
       </div>
       <p className="text-fg-2">{cr.cardHelp}</p>
-      <textarea readOnly aria-label={cr.copyMessage} className="w-full rounded-lg border border-line bg-bg p-3 font-mono text-xs" rows={4} value={cr.message(a.course, a.title, a.code, a.pack)} />
-      <div className="flex gap-2"><button className="btn" onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(true); }}>{copied ? d.copied : cr.copyMessage}</button><span className="flex-1" /><button className="btn btn-primary" onClick={onNext}>{cr.next}</button></div>
+      {!a.pack ? <p role="alert" className="text-bad">{a.packProblem}</p> : <textarea readOnly aria-label={cr.copyMessage} className="w-full rounded-lg border border-line bg-bg p-3 font-mono text-xs" rows={4} value={cr.message(a.course, a.title, a.code, a.pack)} />}
+      <div className="flex gap-2"><button className="btn" disabled={!a.pack} onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(true); }}>{copied ? d.copied : cr.copyMessage}</button><span className="flex-1" /><button className="btn btn-primary" onClick={onNext}>{cr.next}</button></div>
     </main>
   );
 }

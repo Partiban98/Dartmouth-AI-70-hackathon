@@ -34,10 +34,11 @@ test("E1: a name, NetID, email or student ID this laptop imported is blocked bef
   assert.equal(gate.blocked, false);
   assert.doesNotThrow(() => assertClean(gate.payload, course), "the seeded roster alone misses them: this is the gap");
   const local = withLocalIdentities(course, localDir);
-  assert.throws(() => assertClean(gate.payload, local), (e) => e.status === 422);
-  for (const step of ["王伟 did it", "ww42zz did it", "student 123456789", "wang.wei@example.org"]) assert.throws(() => assertClean({ steps: [step], finalAnswer: 1 }, local), (e) => e.status === 422, step);
+  const send = (payload) => checkOutbound({ idea: "grade", itemId: "S-01", payload }, ideas.grade, local);
+  assert.throws(() => send(gate.payload), (e) => e.status === 422);
+  for (const step of ["王伟 did it", "ww42zz did it", "student 123456789", "wang.wei@example.org"]) assert.throws(() => send({ steps: [step], finalAnswer: 1 }), (e) => e.status === 422, step);
   const lower = await importOne("Name: Lucia Moreau\nSD = 3.162\n");
-  assert.throws(() => assertClean({ steps: ["lucia moreau checked"], finalAnswer: 1 }, withLocalIdentities(course, lower.localDir)), (e) => e.status === 422, "lowercased full name");
+  assert.throws(() => checkOutbound({ idea: "grade", payload: { steps: ["lucia moreau checked"], finalAnswer: 1 } }, ideas.grade, withLocalIdentities(course, lower.localDir)), (e) => e.status === 422, "lowercased full name");
 });
 
 test("E1: every sample paper still passes with this laptop's identities added, so grading the samples is unchanged", async () => {
@@ -48,7 +49,7 @@ test("E1: every sample paper still passes with this laptop's identities added, s
     for (const p of read(file)) {
       const g = runGate(p, idea, course);
       if (g.blocked || g.flags.length) continue;
-      assert.doesNotThrow(() => assertClean(g.payload, local), `${file} ${p.id}`);
+      assert.doesNotThrow(() => checkOutbound({ idea: "grade", itemId: p.id, payload: g.payload }, idea, local), `${file} ${p.id}`);
     }
   }
 });
@@ -96,4 +97,45 @@ test("E4 at the source: a scheme naming a known student or holding an identifier
   assert.equal(schemeProblem(read("demo201-q3q5.v1.0.json"), course), null);
   assert.match(schemeProblem({ ...gradeStandards, question: `Ask ${r.name} for help` }, course), /student's name/);
   assert.match(schemeProblem({ ...gradeStandards, question: "Email test@example.org" }, course), /identifier/);
+});
+
+// Codex review of PR #8: every variant of a known identity, in every part of what is sent, logged or shared.
+test("E1 review: capitals, short NetIDs, first names and a numeric final answer are all caught; ordinary words are not", async () => {
+  const { localDir } = await importOne("Name: Lucia Moreau\nNetID: lw42\nStudent ID: 123456789\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const body = (payload) => ({ idea: "grade", itemId: "S-01", payload });
+  for (const steps of [["LUCIA MOREAU did it"], ["lw42 did it"], ["see LW42"], ["Nice work, Lucia"], ["moreau's answer"]]) assert.throws(() => checkOutbound(body({ steps, finalAnswer: 3.162 }), ideas.grade, local), (e) => e.status === 422, steps[0]);
+  assert.throws(() => checkOutbound(body({ steps: ["SD = 3.162"], finalAnswer: 123456789 }), ideas.grade, local), (e) => e.status === 422, "numeric student ID");
+  assert.doesNotThrow(() => checkOutbound(body({ steps: ["Lucidly, the limit is 3.162", "lw420 is not an id"], finalAnswer: 3.162 }), ideas.grade, local), "whole words only");
+});
+
+test("S1/E4 review: mistake code ids and fact-table keys are checked like everything else sent", async () => {
+  const { localDir } = await importOne("Name: Lucia Moreau\nNetID: lw42\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const body = { idea: "grade", itemId: "S-01", payload: { steps: ["SD = 3.162"], finalAnswer: 3.162 } };
+  const withCode = (code) => ({ ...ideas.grade, standards: { ...gradeStandards, codes: gradeStandards.codes.map((c) => (c.code === "E-MEAN" ? { ...c, code } : c)), answerRules: [] } });
+  assert.throws(() => checkOutbound(body, withCode("lw42"), local), (e) => e.status === 422);
+  assert.throws(() => checkOutbound(body, withCode("LW42"), local), (e) => e.status === 422);
+  assert.throws(() => checkOutbound({ idea: "upskill", payload: { text: "draft notes", facts: { "person@example.org": "x" }, draft: "d" } }, ideas.upskill, local), (e) => e.status === 422);
+  assert.doesNotThrow(() => checkOutbound({ idea: "upskill", payload: { text: "Send the summary by the end of the week.", facts: { due: "Friday" }, draft: "d" } }, ideas.upskill, course), "plain fact keys pass");
+});
+
+test("E1 review: a log record naming a known student in any case is refused; the deciding grader's own name is allowed", async () => {
+  const { logProblem } = await import("../server/privacy.js");
+  const { localDir } = await importOne("Name: Lucia Moreau\nNetID: lw42\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const rec = { type: "decision", idea: "grade", itemId: "S-01", decidedBy: "Lucia", confirmed: [], overrides: [], grade: 10, feedback: "Full marks." };
+  assert.equal(logProblem(rec, local), null, "a grader may share a first name with a student");
+  assert.ok(logProblem({ ...rec, feedback: "LUCIA did well" }, local));
+  assert.ok(logProblem({ ...rec, overrides: [{ from: "E-MEAN", to: "OK", reason: "ask lw42" }] }, local));
+});
+
+test("E4 review: every shared field of a pack is checked, including the outer question, course and title", async () => {
+  const { packProblem } = await import("../server/privacy.js");
+  const { createAssignment } = await import("../server/assignment.js");
+  const { localDir } = await importOne("Name: Lucia Moreau\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const a = createAssignment({ course: "DEMO-STATS 101", title: "Quiz 5", question: gradeStandards.question, max: 10, codes: gradeStandards.codes, methods: gradeStandards.methods, answerRules: gradeStandards.answerRules }, { localDir: mkdtempSync(join(tmpdir(), "pk-")), createdBy: "UAAAA" });
+  assert.equal(packProblem(a, local), null);
+  for (const patch of [{ question: "Lucia Moreau" }, { course: "Moreau section" }, { title: "Quiz for lucia" }]) assert.ok(packProblem({ ...a, ...patch }, local), JSON.stringify(patch));
 });

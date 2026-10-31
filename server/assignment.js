@@ -27,11 +27,25 @@ function save(localDir, a) {
   return loadAssignment(localDir, a.code);
 }
 
+// A pack is untrusted input, so only these fields, with these types, are ever read from one or written into one.
+const str = (v) => (typeof v === "string" ? v : undefined);
+const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+const pick = (o, spec) => Object.fromEntries(Object.entries(spec).map(([k, f]) => [k, f(o?.[k])]).filter(([, v]) => v !== undefined));
+const list = (spec) => (v) => (Array.isArray(v) ? v.map((x) => pick(x, spec)) : undefined);
+const SCHEME = { id: str, version: str, owner: str, status: str, course: str, title: str, question: str, max: num,
+  codes: list({ code: str, label: str, deduction: num }), methods: list({ id: str, label: str, signature: str }),
+  answerRules: list({ near: num, tolerance: num, code: str, note: str }), correctAnswer: num, tolerance: num };
+const PACK = { code: str, course: str, title: str, question: str, createdBy: str, createdAt: str, version: str };
+// Precedents stay on the head TA's laptop: their text is typed by graders and can name a student.
+const shareable = (st) => pick(st, SCHEME);
+const local = (st) => ({ ...shareable(st), ...(Array.isArray(st?.precedents) ? { precedents: st.precedents.filter((x) => typeof x === "string") } : {}),
+  ...(Array.isArray(st?.pendingPrecedents) ? { pendingPrecedents: st.pendingPrecedents.map((x) => pick(x, { code: str, reason: str, by: str, itemId: str, at: str })) } : {}) });
+
 /** Validates the scheme with the same rules as the rubric drawer, assigns a code, saves. Throws naming the first problem. */
 export function createAssignment(draft, { localDir, createdBy }) {
   const code = newCode(localDir);
   const { course = "", title = "", question = "", max, codes, methods = [], answerRules = [], correctAnswer, tolerance } = draft;
-  const standards = { id: code, version: "1.0", owner: "head TA", status: "approved", course, title, question, max, codes, methods, answerRules };
+  const standards = shareable({ id: code, version: "1.0", owner: "head TA", status: "approved", course, title, question, max, codes, methods, answerRules });
   if (correctAnswer != null) standards.correctAnswer = correctAnswer;
   if (tolerance != null) standards.tolerance = tolerance;
   const v = validateStandards(standards);
@@ -40,29 +54,29 @@ export function createAssignment(draft, { localDir, createdBy }) {
 }
 
 export function encodePack(a) {
-  const { code, course, title, question, createdBy, createdAt, version } = a;
-  const { pendingPrecedents, ...standards } = a.standards; // a TA's typed reasons stay on their laptop
-  return PREFIX + Buffer.from(JSON.stringify({ code, course, title, question, standards, createdBy, createdAt, version })).toString("base64url");
+  return PREFIX + Buffer.from(JSON.stringify({ ...pick(a, PACK), standards: shareable(a.standards) })).toString("base64url");
 }
 
 export function decodePack(text) {
   const t = String(text ?? "").trim();
   if (!t.startsWith("REMAIN")) throw new Error("That is not a Quiz/Assignment pack. It starts with REMAIN1:");
   if (!t.startsWith(PREFIX)) throw new Error("This pack is from another version of Remain; ask for a fresh one");
-  let a;
-  try { a = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
+  let raw;
+  try { raw = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
+  const a = { ...pick(raw, PACK), standards: shareable(raw?.standards) };
   if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok) throw new Error("This pack is incomplete or damaged; ask for a fresh one");
   return a;
 }
 
-/** Saves a pasted pack on this laptop. A different scheme under a code already here is refused unless force. */
+/** Saves a pasted pack on this laptop as joined. A joined laptop never becomes the owner, whatever the pack says.
+ *  A different scheme under a code already here is refused unless force; the laptop that created a code refuses packs for it. */
 export function joinAssignment(pack, { localDir, force = false }) {
   const a = decodePack(pack);
   const here = loadAssignment(localDir, a.code);
-  const { pendingPrecedents = [], ...mine } = here?.standards ?? {};
-  if (here && !force && JSON.stringify(mine) !== JSON.stringify(a.standards)) throw new Error(`Code ${a.code} is already on this laptop with a different scheme (version ${here.version}). Keep yours, or replace it with version ${a.version}.`);
-  // Changes this laptop proposed survive the head TA's new version.
-  return save(localDir, pendingPrecedents.length ? { ...a, standards: { ...a.standards, pendingPrecedents } } : a);
+  if (here && !here.joined) throw new Error(`This laptop created code ${a.code}. Edit its scheme here instead of pasting a pack.`);
+  if (here && !force && JSON.stringify(shareable(here.standards)) !== JSON.stringify(a.standards)) throw new Error(`Code ${a.code} is already on this laptop with a different scheme (version ${here.version}). Keep yours, or replace it with version ${a.version}.`);
+  const pendingPrecedents = here?.standards?.pendingPrecedents ?? []; // changes this laptop proposed survive the head TA's new version
+  return save(localDir, { ...a, createdBy: here?.createdBy ?? a.createdBy, joined: true, standards: pendingPrecedents.length ? { ...a.standards, pendingPrecedents } : a.standards });
 }
 
 export function loadAssignment(localDir, code) {
@@ -80,12 +94,12 @@ export function listAssignments(localDir) {
 export function saveScheme(localDir, table, me) {
   const a = loadAssignment(localDir, table?.id);
   if (!a) return { errors: ["unknown Quiz/Assignment"] };
-  const { pendingPrecedents = [], ...next } = table;
-  const { pendingPrecedents: _old, ...current } = a.standards;
-  if (a.createdBy !== me && JSON.stringify(next) !== JSON.stringify(current)) return { errors: ["Only the head TA's laptop can change this scheme. Propose a change instead."] };
-  const v = validateStandards(table);
+  const next = local(table);
+  const same = (x) => { const { pendingPrecedents, ...rest } = x; return JSON.stringify(rest); };
+  if ((a.joined || a.createdBy !== me) && same(next) !== same(local(a.standards))) return { errors: ["Only the head TA's laptop can change this scheme. Propose a change instead."] };
+  const v = validateStandards(next);
   if (!v.ok) return { errors: v.errors };
-  save(localDir, { ...a, version: table.version, standards: table });
+  save(localDir, { ...a, version: next.version, standards: next });
   return { errors: null };
 }
 

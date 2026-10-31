@@ -86,6 +86,15 @@ test("the shared Quiz/Assignment CSV scrubs student names and identifiers a TA t
   assert.ok(owner.includes("Nice work, lucia"), "the owner's file keeps the note as typed");
 });
 
+test("the shared CSV scrubs every known identifier for this laptop's students, including short names and NetIDs", () => {
+  const papers = [{ id: "UB1C2-P-01", uploader: "UB1C2" }];
+  const map = { "UB1C2-P-01": { file: "x.txt", name: "Li Wu", netid: "lw42", email: "li@example.edu" } };
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: "UB1C2-P-01", confirmed: [], overrides: [], grade: 9, decidedBy: "TA 2", feedback: "Li used the median; ask lw42 or li@example.edu", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "Wu (lw42) used the median", itemId: "UB1C2-P-01" }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/\bLi\b|\bWu\b|lw42|example\.edu/.test(shared), shared);
+});
+
 test("safeSetId rejects a set id that looks like an identifier, since it would be refused by the log and could leak", async () => {
   const { safeSetId } = await import("../server/ingest.js");
   assert.throws(() => safeSetId("demo-folder"), /R-04/);

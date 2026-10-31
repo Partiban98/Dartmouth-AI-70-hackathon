@@ -125,7 +125,7 @@ export function exportCsv({ setId, papers, map, logs, table, assignment = "", na
   const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at", "assignment", "laptop", "proposed_change"];
   // A Quiz/Assignment CSV is shared with the head TA, so names and file names stay out unless this laptop asks for them.
   // Notes are typed by people, so a shared file scrubs every name word from this laptop's map and every identifier pattern from them.
-  const words = names ? [] : [...new Set(Object.values(map).flatMap((m) => [m.name, ...String(m.name ?? "").split(/\s+/)]).filter((w) => w && w.length >= 3))].sort((a, b) => b.length - a.length);
+  const words = names ? [] : [...new Set(Object.values(map).flatMap((m) => [m.name, m.netid, m.email, m.studentId, ...String(m.name ?? "").split(/\s+/)]).filter((w) => w && String(w).length >= 2))].map(String).sort((a, b) => b.length - a.length);
   const nameRe = words.length ? new RegExp(`\\b(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi") : null;
   const scrub = (t) => { if (names || t == null) return t; let x = String(t); for (const [, , , re] of PATTERN_RULES) x = x.replace(new RegExp(re.source, "g"), "[removed]"); return nameRe ? x.replace(nameRe, "[student]") : x; };
   const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${scrub(p.reason)}`).join(" | ");

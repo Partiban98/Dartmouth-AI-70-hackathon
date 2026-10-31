@@ -20,7 +20,7 @@ export default function GradeApp() {
       {view === "start" && <Start g={g} onStart={() => { setView("grade"); const first = g.papers.find((p) => !g.decided.has(p.id)) ?? g.papers[0]; if (first) g.start(first); }} />}
       {view === "grade" && <Grader g={g} onFinish={() => setView("finish")} onScheme={() => setSchemeOpen(true)} />}
       {view === "finish" && <Finish g={g} onStartOver={() => setView("start")} onMore={() => { setView("grade"); const p = g.papers.find((x) => !g.decided.has(x.id)) ?? g.papers[0]; if (p) g.start(p); }} />}
-      {schemeOpen && <SchemeDrawer table={g.table} onClose={() => setSchemeOpen(false)} onSave={g.saveRubric} readOnlyBy={g.assignment && g.assignment.createdBy !== g.uploader ? g.assignment.createdBy : undefined} />}
+      {schemeOpen && <SchemeDrawer table={g.table} onClose={() => setSchemeOpen(false)} onSave={g.saveRubric} readOnlyBy={g.assignment?.joined ? g.assignment.createdBy : undefined} />}
     </>
   );
 }

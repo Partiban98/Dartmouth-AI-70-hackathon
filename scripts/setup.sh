@@ -15,6 +15,7 @@ else
   echo "Now paste the Anthropic API key when asked. It is written only to .env (gitignored, mode 600)."
   sh scripts/set-env.sh
 fi
+git config core.hooksPath .githooks && echo "git hooks on: pushes to main are blocked unless you are Kishore; use a branch and a pull request."
 echo "Running the test suite..."
 npm test >/dev/null 2>&1 && echo "tests: pass" || { echo "tests: FAIL, run 'npm test' to see why"; exit 1; }
 echo "Smoke test: one call on the exact demo model, writes local/smoke.json..."

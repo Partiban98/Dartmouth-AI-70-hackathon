@@ -16,7 +16,7 @@ export type Stage =
 
 export const SETS: Record<string, { title: string; sub: string }> = {
   grade: { title: "DEMO-STATS 101 · Quiz 5", sub: "Sample course, 25 papers" },
-  grade93: { title: "ENGS 93 · Quiz 3, Question 5", sub: "Real marking scheme, 38 papers (student text reconstructed)" },
+  grade93: { title: "DEMO-STATS 201 · Quiz 3, Question 5", sub: "Second sample course, 38 papers" },
 };
 const get = (path: string) => fetch(path, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
 
@@ -32,6 +32,7 @@ export function useGrading() {
   const [modelLabel, setModelLabel] = useState<string>("");
   const [pasted, setPasted] = useState<any[]>([]);
   const [name, setNameState] = useState("");
+  const [uploader, setUploader] = useState<string>("");
   const pending = useRef<((v: any) => void) | null>(null);
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -41,8 +42,8 @@ export function useGrading() {
   const load = useCallback(async () => {
     const [course, companion, upskill, subs, subs93, std, std93, imp] = await Promise.all([
       get("/data/course.json"), get("/data/companion-ch3.json"), get("/data/upskill-email.v1.0.json"),
-      get("/data/grade-q5.submissions.json"), get("/data/engs93-q3q5.submissions.json"),
-      get("/api/rubric?id=grade-q5"), get("/api/rubric?id=engs93-q3q5"), get("/api/imported"),
+      get("/data/grade-q5.submissions.json"), get("/data/demo201-q3q5.submissions.json"),
+      get("/api/rubric?id=grade-q5"), get("/api/rubric?id=demo201-q3q5"), get("/api/imported"),
     ]);
     setData({ course, companion, upskill, submissions: { grade: subs ?? [], grade93: subs93 ?? [] } });
     setStandards({ grade: std, grade93: std93 });
@@ -52,14 +53,14 @@ export function useGrading() {
     setImportedPapers(papers);
   }, []);
   const refreshCounts = useCallback(async () => { setCounts(await get("/counts")); }, []);
-  useEffect(() => { load(); refreshCounts(); }, [load, refreshCounts]);
+  useEffect(() => { load(); refreshCounts(); get("/api/ingest").then((j) => j?.uploader && setUploader(j.uploader)); }, [load, refreshCounts]);
 
-  const rubricKey = SETS[setId] ? setId : imported.find((x) => x.id === setId)?.rubric === "engs93-q3q5" ? "grade93" : "grade";
+  const rubricKey = SETS[setId] ? setId : imported.find((x) => x.id === setId)?.rubric === "demo201-q3q5" ? "grade93" : "grade";
   const table = standards[rubricKey];
   const ideas = useMemo(() => {
     if (!data || !standards.grade) return null;
     const gradingSets: Record<string, any> = standards.grade93 ? { grade93: standards.grade93 } : {};
-    for (const m of imported) { const st = m.rubric === "engs93-q3q5" ? standards.grade93 : standards.grade; if (st) gradingSets[m.id] = { ...st, course: m.title }; }
+    for (const m of imported) { const st = m.rubric === "demo201-q3q5" ? standards.grade93 : standards.grade; if (st) gradingSets[m.id] = { ...st, course: m.title }; }
     return makeIdeas({ gradeStandards: standards.grade, companion: data.companion, upskillStandards: data.upskill, gradingSets });
   }, [data, standards, imported]);
   const idea = ideas?.[setId];
@@ -72,6 +73,7 @@ export function useGrading() {
   const answer = (v: any, next?: Stage) => { const r = pending.current; pending.current = null; if (next) setStage(next); r?.(v); };
 
   const index = current ? papers.findIndex((p) => p.id === current.id) : -1;
+  const othersOnCurrent = current ? (counts?.decisions ?? []).filter((d: any) => d.idea === setId && d.itemId === current.id && d.decidedBy !== name) : [];
 
   const start = useCallback(async (item: any) => {
     if (!idea || !data) return;
@@ -106,5 +108,5 @@ export function useGrading() {
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };
 
-  return { data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load };
+  return { data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load, uploader, othersOnCurrent };
 }

@@ -1,7 +1,7 @@
 {
-  "note": "Real TA outcomes from grading-data/finals-quiz3-q5-anonymized.md. Tests only. Never served, never loaded by the UI.",
+  "note": "Planted outcomes for tests only. Never served, never loaded by the UI.",
   "labels": {
-    "Q3-01": {
+    "T-01": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -12,7 +12,7 @@
         0.5
       ]
     },
-    "Q3-02": {
+    "T-02": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -23,7 +23,7 @@
         0.5
       ]
     },
-    "Q3-03": {
+    "T-03": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -34,27 +34,27 @@
         0.5
       ]
     },
-    "Q3-04": {
+    "T-04": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-05": {
+    "T-05": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-06": {
+    "T-06": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-07": {
+    "T-07": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-08": {
+    "T-08": {
       "total": 1,
       "comment": "Validity slip, wrong standard error, and wrong tail for the p-value",
       "codes": [
@@ -63,12 +63,12 @@
         "D-WRONG-TAIL"
       ]
     },
-    "Q3-09": {
+    "T-09": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-10": {
+    "T-10": {
       "total": 1.5,
       "comment": "Validity numbers missing, conclusion worded backwards",
       "codes": [
@@ -82,7 +82,7 @@
         0.25
       ]
     },
-    "Q3-11": {
+    "T-11": {
       "total": 1.25,
       "comment": "Validity check incomplete, z unfinished, and no p-value or decision",
       "codes": [
@@ -91,12 +91,12 @@
         "C-PARTIAL"
       ]
     },
-    "Q3-12": {
+    "T-12": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-13": {
+    "T-13": {
       "total": 1.75,
       "comment": "Hypotheses framed with the wrong parameter",
       "codes": [
@@ -109,12 +109,12 @@
         0.5
       ]
     },
-    "Q3-14": {
+    "T-14": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-15": {
+    "T-15": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -125,7 +125,7 @@
         0.5
       ]
     },
-    "Q3-16": {
+    "T-16": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -136,7 +136,7 @@
         0.5
       ]
     },
-    "Q3-17": {
+    "T-17": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -147,7 +147,7 @@
         0.5
       ]
     },
-    "Q3-18": {
+    "T-18": {
       "total": 1.75,
       "comment": "Conclusion never says what rejecting means for the redesign",
       "codes": [
@@ -160,40 +160,40 @@
         0.25
       ]
     },
-    "Q3-19": {
+    "T-19": {
       "total": 1.5,
       "comment": "Large-sample validity check was not shown",
       "codes": [
         "V-MISSING"
       ]
     },
-    "Q3-20": {
+    "T-20": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-21": {
+    "T-21": {
       "total": 1.75,
       "comment": "Wrong tail for the p-value, contradictory conclusion wording",
       "codes": [
         "C-WRONG-TAIL"
       ]
     },
-    "Q3-22": {
+    "T-22": {
       "total": 1.75,
       "comment": "No p-value shown and no explicit reject decision",
       "codes": [
         "C-PARTIAL"
       ]
     },
-    "Q3-23": {
+    "T-23": {
       "total": 1.5,
       "comment": "Wrong tail for p-value, wrong decision",
       "codes": [
         "D-WRONG-TAIL"
       ]
     },
-    "Q3-24": {
+    "T-24": {
       "total": 1.75,
       "comment": "Conclusion never says what rejecting means for the redesign",
       "codes": [
@@ -206,7 +206,7 @@
         0.25
       ]
     },
-    "Q3-25": {
+    "T-25": {
       "total": 0.25,
       "comment": "Hypotheses and all test work are missing",
       "codes": [
@@ -219,19 +219,19 @@
         0
       ]
     },
-    "Q3-26": {
+    "T-26": {
       "total": 1.75,
       "comment": "P-value came from the wrong table row",
       "codes": [
         "S-ARITH"
       ]
     },
-    "Q3-27": {
+    "T-27": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-28": {
+    "T-28": {
       "total": 1.5,
       "comment": "Validity count wrong, contradictory decision wording",
       "codes": [
@@ -239,12 +239,12 @@
         "C-BACKWARDS"
       ]
     },
-    "Q3-29": {
+    "T-29": {
       "total": 2,
       "comment": "",
       "codes": []
     },
-    "Q3-30": {
+    "T-30": {
       "total": 0.5,
       "comment": "Wrongly ruled the test out, nothing else computed",
       "codes": [
@@ -259,7 +259,7 @@
         0
       ]
     },
-    "Q3-31": {
+    "T-31": {
       "total": 1.25,
       "comment": "Validity used 87 instead of 240, and two-sided p-value gave the wrong decision",
       "codes": [
@@ -267,7 +267,7 @@
         "D-TWO-SIDED-FTR"
       ]
     },
-    "Q3-32": {
+    "T-32": {
       "total": 2,
       "comment": "",
       "codes": [],
@@ -278,14 +278,14 @@
         0.5
       ]
     },
-    "Q3-33": {
+    "T-33": {
       "total": 1.5,
       "comment": "Validity check missing",
       "codes": [
         "V-MISSING"
       ]
     },
-    "Q3-34": {
+    "T-34": {
       "total": 0.75,
       "comment": "Wrong alternative direction, incomplete validity, and unfinished test",
       "codes": [
@@ -301,14 +301,14 @@
         0
       ]
     },
-    "Q3-35": {
+    "T-35": {
       "total": 1.75,
       "comment": "p-value comparison reversed and conclusion lacks context",
       "codes": [
         "C-BACKWARDS"
       ]
     },
-    "Q3-36": {
+    "T-36": {
       "total": 1.25,
       "comment": "Hypotheses framed wrong, validity numbers missing, and early rounding changed z",
       "codes": [
@@ -317,7 +317,7 @@
         "S-ARITH"
       ]
     },
-    "Q3-37": {
+    "T-37": {
       "total": 0.75,
       "comment": "Hypotheses on the wrong parameter, no validity or statistic shown, conclusion lacks p-value and context",
       "codes": [
@@ -333,7 +333,7 @@
         0.25
       ]
     },
-    "Q3-38": {
+    "T-38": {
       "total": 2,
       "comment": "",
       "codes": []

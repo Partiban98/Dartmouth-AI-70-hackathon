@@ -14,6 +14,16 @@ export function safeSetId(raw) {
 
 export const INGEST_DIR = (localDir) => join(localDir, "ingest");
 
+/** One id per laptop, made once, kept in local/uploader.json. Paper ids carry it, so two laptops never collide and names stay where the papers were uploaded. */
+export function uploaderId(localDir) {
+  const p = join(localDir, "uploader.json");
+  if (existsSync(p)) return JSON.parse(readFileSync(p, "utf8")).id;
+  const id = "U" + Math.floor(Math.random() * 0xffff).toString(16).toUpperCase().padStart(4, "0");
+  mkdirSync(localDir, { recursive: true });
+  writeFileSync(p, JSON.stringify({ id, createdAt: new Date().toISOString() }, null, 2) + "\n");
+  return id;
+}
+
 export async function extractText(file) {
   const ext = extname(file).toLowerCase();
   if (ext === ".pdf") {
@@ -64,20 +74,26 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
   const files = readdirSync(folder).filter((f) => /\.(pdf|txt|md)$/i.test(f) && statSync(join(folder, f)).isFile()).sort();
   if (!files.length) throw new Error(`no .pdf, .txt, or .md files in ${folder}`);
   const papers = [], map = {}, report = [];
-  for (const [i, f] of files.entries()) {
-    const id = `P-${String(i + 1).padStart(2, "0")}`;
+  const me = uploaderId(localDir);
+  const dir = join(INGEST_DIR(localDir), setId);
+  // Re-reading the same folder keeps every existing id; new files get the next number.
+  const previous = existsSync(join(dir, "map.json")) ? JSON.parse(readFileSync(join(dir, "map.json"), "utf8")).map : {};
+  const byFile = Object.fromEntries(Object.entries(previous).map(([id, m]) => [m.file, id]));
+  let next = Object.keys(previous).length;
+  for (const f of files) {
+    const id = byFile[f] ?? `${me}-P-${String(++next).padStart(2, "0")}`;
     const parsed = parsePaper(await extractText(join(folder, f)), f);
-    papers.push({ id, imported: true, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
+    papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
     map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);
     let clean = true; try { if (!g.blocked) assertClean(g.payload, course); } catch { clean = false; }
     report.push({ id, file: f, steps: parsed.steps.length, droppedFields: g.report.droppedFields, counts: Object.fromEntries(Object.entries(g.report.counts).filter(([, n]) => n > 0)), blocked: g.blocked, blockedRules: g.report.blockedRules, clean });
   }
-  const dir = join(INGEST_DIR(localDir), setId);
   mkdirSync(dir, { recursive: true });
+  papers.sort((a, b) => a.id.localeCompare(b.id));
   writeFileSync(join(dir, "papers.json"), JSON.stringify(papers, null, 2) + "\n");
   writeFileSync(join(dir, "map.json"), JSON.stringify({ note: "LOCAL ONLY. Paper id to student. Never sent to any model, never logged.", map }, null, 2) + "\n");
-  writeFileSync(join(dir, "meta.json"), JSON.stringify({ id: setId, title: title ?? `Imported: ${basename(folder)}`, rubric: rubricId, folder, count: papers.length, importedAt: new Date().toISOString() }, null, 2) + "\n");
+  writeFileSync(join(dir, "meta.json"), JSON.stringify({ id: setId, title: title ?? `Imported: ${basename(folder)}`, rubric: rubricId, folder, uploader: me, count: papers.length, importedAt: new Date().toISOString() }, null, 2) + "\n");
   return { papers, report, dir };
 }
 
@@ -127,4 +143,12 @@ export async function importUploads({ files, setName, rubricId, course, localDir
   if (!kept) throw new Error("no .pdf, .txt, or .md files were chosen");
   const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: setName ? `${setName}` : `Uploaded papers` });
   return { ...r, meta: JSON.parse(readFileSync(join(INGEST_DIR(localDir), setId, "meta.json"), "utf8")) };
+}
+
+/** Re-read the folder a set came from, keeping ids. Used by the Start screen's "Re-read folder" and by --watch. */
+export async function refreshSet({ setId, course, localDir, ideaConfig }) {
+  const metaPath = join(INGEST_DIR(localDir), setId, "meta.json");
+  if (!existsSync(metaPath)) throw new Error("unknown set");
+  const meta = JSON.parse(readFileSync(metaPath, "utf8"));
+  return importFolder({ folder: meta.folder, setId, rubricId: meta.rubric, course, localDir, ideaConfig, title: meta.title });
 }

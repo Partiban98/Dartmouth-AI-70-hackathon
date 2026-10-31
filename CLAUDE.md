@@ -12,7 +12,7 @@ Thesis: AI proposes with evidence, a person decides. Every change must keep that
 - Logs hold types, counts, codes, ids, names of deciding humans, and reasons. Never a stripped value, never the alias map.
 - Eval files (`*.eval.json`) are tests-only and are never served or loaded by the UI.
 - On-screen numbers come from logs. On-screen model name comes from the API response.
-- Commit and push only when Kishore says so.
+- Commit and push only when Kishore says so. Only Kishore pushes to `main`; everyone else uses a branch and a pull request (hook in `.githooks/pre-push`).
 
 ## Build
 - Zero dependencies in `lib/` and `server/adapter.js`. The Next.js app (`app/`, `components/`) is the only place with packages.

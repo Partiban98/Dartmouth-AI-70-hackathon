@@ -3,6 +3,7 @@ import { useState } from "react";
 import { COPY } from "./copy";
 
 const c = COPY.start;
+const SETS_STATIC = new Set(["grade", "grade93"]);
 export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
@@ -11,7 +12,7 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
   const [uploadName, setUploadName] = useState("");
   const [uploadState, setUploadState] = useState<{ kind: "idle" | "busy" | "done" | "error"; text?: string }>({ kind: "idle" });
   const ready = g.name.trim().length > 0 && g.papers.length > 0;
-  const rubricId = g.rubricKey === "grade93" ? "engs93-q3q5" : "grade-q5";
+  const rubricId = g.rubricKey === "grade93" ? "demo201-q3q5" : "grade-q5";
   async function upload() {
     if (!files.length) return;
     setUploadState({ kind: "busy" });
@@ -52,6 +53,8 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
         </div>
         {uploadState.kind === "done" && <p className="text-sm text-good">{uploadState.text}</p>}
         {uploadState.kind === "error" && <p className="text-sm text-bad">{c.uploadFailed} {uploadState.text ?? ""}</p>}
+        {g.uploader && <p className="text-xs text-fg-3">{c.thisLaptop(g.uploader)}</p>}
+        {!SETS_STATIC.has(g.setId) && <button className="btn text-sm" onClick={async () => { const r = await fetch("/api/ingest", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ set: g.setId }) }); const j = await r.json(); await g.reload(); setUploadState({ kind: j.ok ? "done" : "error", text: j.ok ? c.rereadDone(j.count) : j.error }); }}>{c.reread}</button>}
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-line">
           <span className="text-sm text-fg-3">{c.orSample}</span>
           <span className="rounded-lg border border-line px-3 py-2 text-sm">{g.setInfo.title}: {g.papers.length} papers{g.decided.size ? `, ${g.decided.size} already marked` : ""}</span>

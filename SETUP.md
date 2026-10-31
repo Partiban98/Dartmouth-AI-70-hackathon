@@ -37,7 +37,7 @@ npm test
 git push -u origin <yourname>/<feature>
 ```
 
-Open a pull request; Kishore reviews and merges. Do not change `lib/gate.js`, `lib/engine.js`, or `lib/pipeline.js` without asking, and never commit `.env` or `local/`.
+Open a pull request; Kishore reviews and merges. A pre-push hook (installed by setup.sh) refuses direct pushes to `main` from anyone else. Do not change `lib/gate.js`, `lib/engine.js`, or `lib/pipeline.js` without asking, and never commit `.env` or `local/`.
 
 ## If something fails
 

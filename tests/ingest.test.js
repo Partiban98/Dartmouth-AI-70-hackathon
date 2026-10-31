@@ -23,7 +23,9 @@ test("importFolder: names go to the local map only; the gate payload and the sen
   const { papers, report } = await importFolder({ folder, setId: "t-set", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade });
   assert.equal(papers.length, 2);
   const map = loadMap(localDir, "t-set");
-  assert.equal(map["P-01"].name, r4.name);
+  const p01 = Object.keys(map).find((k) => k.endsWith("-P-01"));
+  assert.match(p01, /^U[0-9A-F]{4}-P-01$/, "ids carry this laptop's uploader id");
+  assert.equal(map[p01].name, r4.name);
   for (const p of papers) {
     const g = runGate(p, ideas.grade, course);
     assert.equal(g.blocked, false, p.id);
@@ -76,7 +78,33 @@ test("importUploads writes the chosen files to a local folder and imports them a
   const r = await importUploads({ files, setName: "Quiz 5 Section B", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade });
   assert.equal(r.meta.id, "quiz-5-section-b");
   assert.equal(r.papers.length, 2, "only .pdf, .txt, .md are read");
-  assert.equal(loadMap(localDir, "quiz-5-section-b")["P-01"].name, r4.name);
+  const m = loadMap(localDir, "quiz-5-section-b");
+  assert.equal(m[Object.keys(m).find((k) => k.endsWith("-P-01"))].name, r4.name);
   assert.ok(existsSync(join(localDir, "uploads", "quiz-5-section-b", "Priya_Raman_quiz5.txt")));
   assert.equal(r.report[0].counts.NAME, 1);
+});
+
+test("each laptop has one stable uploader id, and imported paper ids carry it so two laptops never collide", async () => {
+  const { uploaderId } = await import("../server/ingest.js");
+  const localDir = mkdtempSync(join(tmpdir(), "local-id-"));
+  const a = uploaderId(localDir), b = uploaderId(localDir);
+  assert.equal(a, b, "stable across calls");
+  assert.match(a, /^U[0-9A-F]{4}$/);
+  assert.notEqual(uploaderId(mkdtempSync(join(tmpdir(), "local-id2-"))), a);
+});
+
+test("re-reading a folder keeps existing paper ids and appends new files with new ids", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "papers-")); const localDir = mkdtempSync(join(tmpdir(), "local-"));
+  writeFileSync(join(folder, "b.txt"), "SD = 10\n"); writeFileSync(join(folder, "c.txt"), "SD = 10\n");
+  const first = await importFolder({ folder, setId: "t-set", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade });
+  const ids = Object.fromEntries(first.papers.map((p) => [p.header.file ?? p.id, p.id]));
+  assert.match(first.papers[0].id, /^U[0-9A-F]{4}-P-01$/, "paper ids carry the uploader id");
+  writeFileSync(join(folder, "a.txt"), "SD = 10\n");
+  const second = await importFolder({ folder, setId: "t-set", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade });
+  const map = loadMap(localDir, "t-set");
+  const byFile = Object.fromEntries(Object.entries(map).map(([id, m]) => [m.file, id]));
+  assert.equal(byFile["b.txt"], first.papers[0].id, "b keeps its id");
+  assert.equal(byFile["c.txt"], first.papers[1].id, "c keeps its id");
+  assert.match(byFile["a.txt"], /-P-03$/, "the new file gets the next id, not the first");
+  assert.equal(second.papers.length, 3);
 });

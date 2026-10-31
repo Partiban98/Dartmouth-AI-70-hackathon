@@ -1,6 +1,6 @@
 // Papers chosen in the browser are saved on this machine and imported. Nothing here talks to a model.
 import { getContext, LOCAL_DIR } from "@/server/context.js";
-import { importUploads } from "@/server/ingest.js";
+import { importUploads, refreshSet, uploaderId } from "@/server/ingest.js";
 
 export const dynamic = "force-dynamic";
 
@@ -18,3 +18,12 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: e.message }, { status: 400 });
   }
 }
+
+/** PUT { set } re-reads the folder the set came from and keeps ids. GET returns this laptop's uploader id. */
+export async function PUT(request: Request) {
+  const { course, ideas } = getContext();
+  const { set } = await request.json();
+  try { const r = await refreshSet({ setId: set, course, localDir: LOCAL_DIR, ideaConfig: (ideas() as any).grade }); return Response.json({ ok: true, count: r.papers.length }); }
+  catch (e: any) { return Response.json({ ok: false, error: e.message }, { status: 400 }); }
+}
+export async function GET() { return Response.json({ uploader: uploaderId(LOCAL_DIR) }); }

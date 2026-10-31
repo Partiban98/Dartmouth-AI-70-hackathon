@@ -1,10 +1,9 @@
 [
   {
-    "id": "Q3-01",
-    "reconstructed": true,
+    "id": "T-01",
     "header": {
-      "code": "Q3-01",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-01",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -18,11 +17,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-02",
-    "reconstructed": true,
+    "id": "T-02",
     "header": {
-      "code": "Q3-02",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-02",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -36,11 +34,10 @@
     "finalAnswer": 0.022
   },
   {
-    "id": "Q3-03",
-    "reconstructed": true,
+    "id": "T-03",
     "header": {
-      "code": "Q3-03",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-03",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -54,11 +51,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-04",
-    "reconstructed": true,
+    "id": "T-04",
     "header": {
-      "code": "Q3-04",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-04",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -72,11 +68,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-05",
-    "reconstructed": true,
+    "id": "T-05",
     "header": {
-      "code": "Q3-05",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-05",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "Let mu be the conversion rate. H0: mu = 0.30 versus Ha: mu > 0.30",
@@ -90,11 +85,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-06",
-    "reconstructed": true,
+    "id": "T-06",
     "header": {
-      "code": "Q3-06",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-06",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -108,11 +102,10 @@
     "finalAnswer": 0.0206
   },
   {
-    "id": "Q3-07",
-    "reconstructed": true,
+    "id": "T-07",
     "header": {
-      "code": "Q3-07",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-07",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -126,11 +119,10 @@
     "finalAnswer": 0.0173
   },
   {
-    "id": "Q3-08",
-    "reconstructed": true,
+    "id": "T-08",
     "header": {
-      "code": "Q3-08",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-08",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -144,11 +136,10 @@
     "finalAnswer": 0.9826
   },
   {
-    "id": "Q3-09",
-    "reconstructed": true,
+    "id": "T-09",
     "header": {
-      "code": "Q3-09",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-09",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -162,11 +153,10 @@
     "finalAnswer": 0.0173
   },
   {
-    "id": "Q3-10",
-    "reconstructed": true,
+    "id": "T-10",
     "header": {
-      "code": "Q3-10",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-10",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -180,11 +170,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-11",
-    "reconstructed": true,
+    "id": "T-11",
     "header": {
-      "code": "Q3-11",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-11",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -197,11 +186,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-12",
-    "reconstructed": true,
+    "id": "T-12",
     "header": {
-      "code": "Q3-12",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-12",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -215,11 +203,10 @@
     "finalAnswer": 0.0219
   },
   {
-    "id": "Q3-13",
-    "reconstructed": true,
+    "id": "T-13",
     "header": {
-      "code": "Q3-13",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-13",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: mu = 0.30 versus Ha: mu > 0.30",
@@ -233,11 +220,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-14",
-    "reconstructed": true,
+    "id": "T-14",
     "header": {
-      "code": "Q3-14",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-14",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -251,11 +237,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-15",
-    "reconstructed": true,
+    "id": "T-15",
     "header": {
-      "code": "Q3-15",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-15",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -269,11 +254,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-16",
-    "reconstructed": true,
+    "id": "T-16",
     "header": {
-      "code": "Q3-16",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-16",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -287,11 +271,10 @@
     "finalAnswer": 0.022
   },
   {
-    "id": "Q3-17",
-    "reconstructed": true,
+    "id": "T-17",
     "header": {
-      "code": "Q3-17",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-17",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -305,11 +288,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-18",
-    "reconstructed": true,
+    "id": "T-18",
     "header": {
-      "code": "Q3-18",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-18",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -323,11 +305,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-19",
-    "reconstructed": true,
+    "id": "T-19",
     "header": {
-      "code": "Q3-19",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-19",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -340,11 +321,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-20",
-    "reconstructed": true,
+    "id": "T-20",
     "header": {
-      "code": "Q3-20",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-20",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -358,11 +338,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-21",
-    "reconstructed": true,
+    "id": "T-21",
     "header": {
-      "code": "Q3-21",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-21",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -376,11 +355,10 @@
     "finalAnswer": 0.0346
   },
   {
-    "id": "Q3-22",
-    "reconstructed": true,
+    "id": "T-22",
     "header": {
-      "code": "Q3-22",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-22",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -393,11 +371,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-23",
-    "reconstructed": true,
+    "id": "T-23",
     "header": {
-      "code": "Q3-23",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-23",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -411,11 +388,10 @@
     "finalAnswer": 0.9826
   },
   {
-    "id": "Q3-24",
-    "reconstructed": true,
+    "id": "T-24",
     "header": {
-      "code": "Q3-24",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-24",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -429,11 +405,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-25",
-    "reconstructed": true,
+    "id": "T-25",
     "header": {
-      "code": "Q3-25",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-25",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "p-hat = 87 / 240 = 0.3625",
@@ -442,11 +417,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-26",
-    "reconstructed": true,
+    "id": "T-26",
     "header": {
-      "code": "Q3-26",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-26",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -460,11 +434,10 @@
     "finalAnswer": 0.0192
   },
   {
-    "id": "Q3-27",
-    "reconstructed": true,
+    "id": "T-27",
     "header": {
-      "code": "Q3-27",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-27",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "Let mu be the conversion rate. H0: mu = 0.30 versus Ha: mu > 0.30",
@@ -478,11 +451,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-28",
-    "reconstructed": true,
+    "id": "T-28",
     "header": {
-      "code": "Q3-28",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-28",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -496,11 +468,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-29",
-    "reconstructed": true,
+    "id": "T-29",
     "header": {
-      "code": "Q3-29",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-29",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -514,11 +485,10 @@
     "finalAnswer": 0.0206
   },
   {
-    "id": "Q3-30",
-    "reconstructed": true,
+    "id": "T-30",
     "header": {
-      "code": "Q3-30",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-30",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -528,11 +498,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-31",
-    "reconstructed": true,
+    "id": "T-31",
     "header": {
-      "code": "Q3-31",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-31",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -546,11 +515,10 @@
     "finalAnswer": 0.0346
   },
   {
-    "id": "Q3-32",
-    "reconstructed": true,
+    "id": "T-32",
     "header": {
-      "code": "Q3-32",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-32",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -564,11 +532,10 @@
     "finalAnswer": 0.0173
   },
   {
-    "id": "Q3-33",
-    "reconstructed": true,
+    "id": "T-33",
     "header": {
-      "code": "Q3-33",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-33",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -581,11 +548,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-34",
-    "reconstructed": true,
+    "id": "T-34",
     "header": {
-      "code": "Q3-34",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-34",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p < 0.30",
@@ -597,11 +563,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-35",
-    "reconstructed": true,
+    "id": "T-35",
     "header": {
-      "code": "Q3-35",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-35",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
@@ -615,11 +580,10 @@
     "finalAnswer": 0.0174
   },
   {
-    "id": "Q3-36",
-    "reconstructed": true,
+    "id": "T-36",
     "header": {
-      "code": "Q3-36",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-36",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: mu = 0.30 versus Ha: mu > 0.30",
@@ -633,11 +597,10 @@
     "finalAnswer": 0.0212
   },
   {
-    "id": "Q3-37",
-    "reconstructed": true,
+    "id": "T-37",
     "header": {
-      "code": "Q3-37",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-37",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: mu = 0.30 versus Ha: mu > 0.30",
@@ -648,11 +611,10 @@
     "finalAnswer": null
   },
   {
-    "id": "Q3-38",
-    "reconstructed": true,
+    "id": "T-38",
     "header": {
-      "code": "Q3-38",
-      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+      "code": "T-38",
+      "note": "Synthetic paper; header fields dropped by the gate"
     },
     "steps": [
       "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",

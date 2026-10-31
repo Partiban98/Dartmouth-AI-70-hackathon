@@ -1,10 +1,10 @@
 {
-  "id": "engs93-q3q5",
+  "id": "demo201-q3q5",
   "version": "1.0",
   "owner": "instructor",
   "status": "approved",
   "max": 2,
-  "course": "ENGS 93, Quiz 3, Question 5 (real rubric and precedents; student text reconstructed)",
+  "course": "DEMO-STATS 201, Quiz 3, Question 5 (synthetic course)",
   "question": "A streaming service historically converts 30% of free-trial users into paid subscribers. After a redesign, 87 of 240 randomly selected free-trial users became paid subscribers. At the 2.5% significance level, test whether the redesign increased the population conversion rate above 30%. Show the hypotheses, verify that the large-sample proportion test is appropriate, calculate the test statistic and p-value, and state the conclusion in context.",
   "answerField": "p-value",
   "correctAnswer": [

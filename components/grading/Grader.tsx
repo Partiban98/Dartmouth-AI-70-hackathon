@@ -50,7 +50,8 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
           <ol className="mt-3 space-y-1.5 font-mono text-[15px] leading-relaxed">
             {(current?.steps ?? []).map((s: string, i: number) => <li key={i} className="flex gap-3"><span className="w-6 shrink-0 text-fg-3 select-none">{i + 1}</span><span className={cls("paper-line", lit.includes(i) && "lit")}>{s}</span></li>)}
           </ol>
-          {current && <p className="mt-3 text-xs text-fg-3">{current.reconstructed ? "Steps reconstructed from the grader's notes, not the student's words." : current.imported ? "From your folder. Name and header hidden." : ""}</p>}
+          {current && <p className="mt-3 text-xs text-fg-3">{current.imported ? c.blind(current.uploader) : c.sample}</p>}
+          {g.othersOnCurrent?.map((d: any, i: number) => <p key={i} className="mt-1 text-sm text-wait">{c.alsoMarked(d.decidedBy, d.grade, table.max)}</p>)}
         </section>
 
         <section className="min-w-0">

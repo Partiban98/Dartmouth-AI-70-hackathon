@@ -1,0 +1,15 @@
+#!/bin/sh
+# Only Kishore pushes to main. Everyone else pushes a branch and opens a pull request.
+# Installed by scripts/setup.sh via: git config core.hooksPath .githooks
+ALLOWED="kishoretheeraj@gmail.com kishore.theeraj.vasudevan.jaya.th@dartmouth.edu"
+me=$(git config user.email)
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main)
+      case " $ALLOWED " in
+        *" $me "*) ;;
+        *) echo "pre-push: main is Kishore's. Push your branch and open a pull request:"; echo "  git checkout -b $(whoami)/feature && git push -u origin HEAD"; exit 1 ;;
+      esac ;;
+  esac
+done
+exit 0

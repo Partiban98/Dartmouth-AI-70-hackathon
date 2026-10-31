@@ -3,7 +3,7 @@ import { loadStandards, saveStandards } from "@/server/context.js";
 import { validateStandards } from "@/lib/engine.js";
 
 export const dynamic = "force-dynamic";
-const FILES: Record<string, string> = { "grade-q5": "grade-q5.v1.0.json", "engs93-q3q5": "engs93-q3q5.v1.0.json" };
+const FILES: Record<string, string> = { "grade-q5": "grade-q5.v1.0.json", "demo201-q3q5": "demo201-q3q5.v1.0.json" };
 
 export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("id") ?? "grade-q5";

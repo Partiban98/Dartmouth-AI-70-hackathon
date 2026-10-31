@@ -28,8 +28,8 @@ export function getContext() {
   loadDotenv(join(ROOT, ".env"));
   const course = readData("course.json");
   const gradingSets = {};
-  if (existsSync(join(DATA_DIR, "engs93-q3q5.v1.0.json"))) gradingSets.grade93 = loadStandards("engs93-q3q5.v1.0.json");
-  const ideas = () => makeIdeas({ gradeStandards: loadStandards("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: Object.fromEntries(Object.keys(gradingSets).map((k) => [k, loadStandards("engs93-q3q5.v1.0.json")])) });
+  if (existsSync(join(DATA_DIR, "demo201-q3q5.v1.0.json"))) gradingSets.grade93 = loadStandards("demo201-q3q5.v1.0.json");
+  const ideas = () => makeIdeas({ gradeStandards: loadStandards("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: Object.fromEntries(Object.keys(gradingSets).map((k) => [k, loadStandards("demo201-q3q5.v1.0.json")])) });
   ctx = { course, ideas, adapter: makeAdapter({ localDir: LOCAL_DIR }), log: makeLog(LOCAL_DIR, course) };
   return ctx;
 }

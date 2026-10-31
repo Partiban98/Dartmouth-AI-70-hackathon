@@ -1,7 +1,7 @@
 "use client";
 import { recurring } from "@/lib/engine.js";
 import { COPY } from "./copy";
-import { latestPerPaper } from "./checks.js";
+import { latestPerPaper, classMistakes } from "./checks.js";
 
 const c = COPY.finish;
 export default function Finish({ g, onStartOver, onMore }: { g: any; onStartOver: () => void; onMore: () => void }) {
@@ -9,8 +9,7 @@ export default function Finish({ g, onStartOver, onMore }: { g: any; onStartOver
   // One row per paper at its latest mark, for this set only; the log keeps every earlier decision.
   const rows = latestPerPaper(counts.decisions, g.setId);
   const graders = [...new Set(rows.map((d: any) => d.decidedBy))];
-  const analytics = counts.analyticsByIdea?.[g.setId] ?? {};
-  const wrong = recurring(analytics, g.table);
+  const wrong = recurring(classMistakes(counts.decisions, g.setId), g.table); // a regraded paper counts at its latest decision only
   const names = Object.values(counts.piiStripped ?? {}).reduce((a: number, b: any) => a + Number(b), 0);
   const left = g.papers.length - g.decided.size;
   return (

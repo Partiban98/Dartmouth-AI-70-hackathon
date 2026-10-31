@@ -47,3 +47,17 @@ test("PUX-7: the footer shows the model label from the response and never claims
   const src = readFileSync(new URL("../components/grading/copy.ts", import.meta.url), "utf8");
   assert.ok(!/footer: \(label: string\) => `Suggestions by Claude/.test(src));
 });
+
+// Codex review of PR #15.
+test("E6 review: any repeated group is refused (overlapping alternatives too); optional groups and sample patterns pass", () => {
+  for (const sig of ["^(a|aa)+$", "(ab|a)*c", "(x|y){3,}", "(a|b){2,5}"]) assert.ok(unsafePattern(sig), sig);
+  for (const ok of ["(\\^\\s*2|²)", "0\\.30(17|45)", "(abc)?d", "a+b*c"]) assert.equal(unsafePattern(ok), null, ok);
+});
+
+test("PUX-6 review: what the class got wrong counts each paper's latest decision only", async () => {
+  const { classMistakes } = await import("../components/grading/checks.js");
+  const d = (itemId, confirmed, ts) => ({ idea: "A", itemId, confirmed, overrides: 0, ts });
+  const counts = classMistakes([d("S-01", ["E-MEAN"], "1"), d("S-01", [], "2"), d("S-02", ["E-ARITH"], "3")], "A");
+  assert.equal(counts["E-MEAN"], undefined, "the regrade removed it");
+  assert.equal(counts["E-ARITH"].confirmed, 1);
+});

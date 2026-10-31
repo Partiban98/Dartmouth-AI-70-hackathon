@@ -42,12 +42,13 @@ const local = (st) => ({ ...shareable(st), ...(Array.isArray(st?.precedents) ? {
   ...(Array.isArray(st?.pendingPrecedents) ? { pendingPrecedents: st.pendingPrecedents.map((x) => pick(x, { code: str, reason: str, by: str, itemId: str, at: str })) } : {}) });
 
 /** E6: a method pattern runs on every paper in the browser, so one that can backtrack for ever (a quantified group
- *  inside another quantifier, or a back-reference) or is very long is refused. Returns a plain reason or null. */
+ *  of any group, or a back-reference) or is very long is refused. Returns a plain reason or null. */
 export function unsafePattern(sig) {
   const s = String(sig ?? "");
   if (s.length > 200) return "A method pattern must be under 200 characters.";
   if (/\\[1-9]/.test(s)) return "A method pattern cannot refer back to an earlier group.";
-  if (/\((?:[^()\\]|\\.)*(?:[+*]|\{\d+,?\d*\})(?:[^()\\]|\\.)*\)\s*(?:[+*]|\{\d+,?\d*\})/.test(s)) return "A method pattern cannot repeat a group that already repeats; list the alternatives instead.";
+  // Any repeated group can backtrack badly (nested repeats, or overlapping alternatives like (a|aa)+). Optional groups are fine.
+  if (/\)\s*(?:[+*]|\{\d+,?\d*\})/.test(s.replace(/\\./g, "__"))) return "A method pattern cannot repeat a group; list the alternatives instead.";
   return null;
 }
 const methodsProblem = (st) => (st?.methods ?? []).map((m) => unsafePattern(m.signature)).find(Boolean) ?? null;

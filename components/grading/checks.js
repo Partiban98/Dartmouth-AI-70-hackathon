@@ -22,3 +22,10 @@ export function latestPerPaper(decisions, setId) {
   for (const d of decisions ?? []) if (d.idea === setId) latest.set(d.itemId, d);
   return [...latest.values()];
 }
+
+/** PUX-6: confirmed mistakes per code, counted from each paper's latest decision in this set only. */
+export function classMistakes(decisions, setId) {
+  const out = {};
+  for (const d of latestPerPaper(decisions, setId)) for (const c of d.confirmed ?? []) (out[c] ??= { confirmed: 0 }).confirmed++;
+  return out;
+}

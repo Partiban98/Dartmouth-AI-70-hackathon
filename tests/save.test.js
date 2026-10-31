@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runPipeline } from "../lib/pipeline.js";
-import { strictLogFetch } from "../components/grading/saveGuard.js";
+import { strictLogFetch } from "../lib/saveguard.js";
 import { course, ideas, sub } from "./helpers.js";
 
 function server({ gateStatus = 200, decisionStatus = 200 } = {}) {
@@ -37,4 +37,15 @@ test("E2: a healthy server still saves exactly one decision", async () => {
   const r = await runPipeline(ideas.grade, sub("S-01"), ui, { course, fetchImpl: strictLogFetch(fetchImpl) });
   assert.equal(r.receipt, "Assigned by you (TA)");
   assert.equal(calls.filter((c) => c === "log:decision").length, 1);
+});
+
+test("E2: a dropped connection on a log write is a save failure too, not an unhandled error", async () => {
+  const fetchImpl = async (path) => { if (path === "/log") throw new TypeError("Failed to fetch"); throw new Error("unexpected " + path); };
+  await assert.rejects(runPipeline(ideas.grade, sub("S-01"), ui, { course, fetchImpl: strictLogFetch(fetchImpl) }), (e) => e.notSaved === true);
+});
+
+test("E2: the legacy grading page uses the same save guard", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../legacy/public/grade.js", import.meta.url), "utf8");
+  assert.ok(/fetchImpl: strictLogFetch\(fetch\)/.test(src) && src.includes('from "/lib/saveguard.js"'));
 });

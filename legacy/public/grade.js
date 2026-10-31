@@ -1,5 +1,6 @@
 // Teacher and TA journey, GR-01 to GR-04, built on the shared core. One paper at a time, no bulk approval.
 import { runPipeline } from "/lib/pipeline.js";
+import { strictLogFetch } from "/lib/saveguard.js";
 import { GatePanel, ReviewCard, QueueList, DecisionBar, ReceiptPanel, DecisionLog, RubricPanel, ClassInsights } from "/components.js";
 
 export function mountGrade({ ideas, course, submissions, mounts, modelLabel }) {
@@ -32,7 +33,9 @@ export function mountGrade({ ideas, course, submissions, mounts, modelLabel }) {
       review: (card) => new Promise((resolve) => { modelLabel.textContent = `Model: ${card.label}`; show(ReviewCard(card, { onSubmit: resolve })); }),
       decide: (bar) => new Promise((resolve) => show(DecisionBar(bar, { onDecide: resolve }))),
     };
-    const r = await runPipeline(ideas.grade, item, ui, { course });
+    let r;
+    try { r = await runPipeline(ideas.grade, item, ui, { course, fetchImpl: strictLogFetch(fetch) }); }
+    catch (e) { if (!e?.notSaved) throw e; show(msg(`Not saved: ${e.message}. Nothing was recorded for this paper.`), await refresh().catch(() => null)); return; }
     if (r.receipt) { decided.add(item.id); show(ReceiptPanel(r), await refresh()); }
     else if (r.stopped === "blocked") show(msg(`BLOCKED by the server's assertClean (${r.detail?.rule}). Nothing was sent. Logged as a blocked event.`), await refresh());
     else if (r.stopped === "provider") show(msg(`No model answer: ${r.detail?.error}. Ladder attempts: ${(r.detail?.attempts ?? []).join(" | ")}`), await refresh());

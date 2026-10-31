@@ -52,3 +52,15 @@ test("S7 review: a proposal row with a broken proposal list is skipped and count
   assert.equal(all.proposals.length, 1); assert.equal(all.damaged.proposals, 1);
   assert.doesNotThrow(() => counters(all));
 });
+
+test("S7 review: valid staff and student decisions without a mark are written and read back; grading still needs a mark on write", () => {
+  const dir = mkdtempSync(join(tmpdir(), "logq-"));
+  const log = makeLog(dir, course);
+  const upskill = { ...good, idea: "upskill", proposed: [], confirmed: [], grade: null, computedScore: null, rubricVersion: null };
+  const companion = { ...upskill, idea: "companion" };
+  for (const r of [upskill, companion]) { assert.equal(recordProblem(r, ideas), null); log.append("decisions", r); }
+  const all = log.readAll();
+  assert.deepEqual(all.decisions.map((d) => d.idea), ["upskill", "companion"]);
+  assert.equal(all.damaged.decisions, undefined);
+  assert.ok(recordProblem({ ...good, grade: null }, ideas), "a grading write still needs the mark");
+});

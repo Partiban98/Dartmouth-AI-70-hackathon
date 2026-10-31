@@ -15,7 +15,7 @@ export function makeLog(localDir, course) {
       for (const line of text.split("\n")) {
         if (!line.trim()) continue;
         let r; try { r = JSON.parse(line); } catch { damaged++; continue; }
-        if ((name === "decisions" || name === "gate") && recordProblem(r)) { damaged++; continue; }
+        if ((name === "decisions" || name === "gate") && recordProblem(r, {}, { reading: true })) { damaged++; continue; }
         if (name === "proposals" && proposalProblem(r)) { damaged++; continue; }
         rows.push(r);
       }

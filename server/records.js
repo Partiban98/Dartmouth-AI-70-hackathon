@@ -12,7 +12,7 @@ export function proposalProblem(rec) {
 }
 
 /** Returns a plain reason the record cannot be written, or null. `ideas` is the server's idea table; an idea it does not list is shape-checked only. */
-export function recordProblem(rec, ideas = {}) {
+export function recordProblem(rec, ideas = {}, { reading = false } = {}) {
   if (!rec || typeof rec !== "object") return "not a record";
   if (rec.type !== "gate" && rec.type !== "decision") return "only gate and decision records are accepted here";
   if (!str(rec.idea) || !str(rec.itemId)) return "the record must name its question set and paper";
@@ -29,7 +29,8 @@ export function recordProblem(rec, ideas = {}) {
   if (!nullOr(num)(rec.computedScore)) return "computedScore must be a number";
   if (!nullOr((v) => typeof v === "string")(rec.feedback) || !nullOr((v) => typeof v === "string")(rec.rubricVersion)) return "feedback and rubricVersion must be text";
   // A grading set needs the human's own mark. An idea this server does not list yet is an uploaded grading set.
-  if ((rec.idea in ideas ? !!ideas[rec.idea].requiresGradeInput : true) && !num(rec.grade)) return "a grading decision needs the mark the person typed";
+  // On write, a grading set needs the human's mark; on read the idea table is not at hand, so history is shape-checked only.
+  if (!reading && (rec.idea in ideas ? !!ideas[rec.idea].requiresGradeInput : true) && !num(rec.grade)) return "a grading decision needs the mark the person typed";
   const st = ideas[rec.idea]?.standards;
   const max = num(st?.max) ? st.max : Infinity;
   if (rec.grade !== null && rec.grade !== undefined && !(num(rec.grade) && rec.grade >= 0 && rec.grade <= max)) return `the mark must be a number from 0 to ${max === Infinity ? "full marks" : max}`;

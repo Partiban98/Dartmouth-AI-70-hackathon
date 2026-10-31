@@ -15,6 +15,8 @@ export function safeSetId(raw) {
 }
 
 export const INGEST_DIR = (localDir) => join(localDir, "ingest");
+/** Readers take set ids from requests, so only the shapes safeSetId makes (or a Quiz/Assignment code) may name a folder. */
+const setDir = (localDir, setId) => (CODE_RE.test(String(setId)) || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(setId)) ? join(INGEST_DIR(localDir), String(setId)) : null);
 
 /** One id per laptop, made once, kept in local/uploader.json. Paper ids carry it, so two laptops never collide and names stay where the papers were uploaded. */
 export function uploaderId(localDir) {
@@ -105,13 +107,14 @@ export function listImported(localDir) {
   return readdirSync(root).filter((d) => existsSync(join(root, d, "meta.json"))).map((d) => JSON.parse(readFileSync(join(root, d, "meta.json"), "utf8")));
 }
 export function loadImported(localDir, setId) {
-  const dir = join(INGEST_DIR(localDir), setId);
-  if (!existsSync(join(dir, "papers.json"))) return null;
+  const dir = setDir(localDir, setId);
+  if (!dir || !existsSync(join(dir, "papers.json"))) return null;
   return { meta: JSON.parse(readFileSync(join(dir, "meta.json"), "utf8")), papers: JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) };
 }
 export function loadMap(localDir, setId) {
-  const p = join(INGEST_DIR(localDir), setId, "map.json");
-  return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")).map : {};
+  const dir = setDir(localDir, setId);
+  const p = dir && join(dir, "map.json");
+  return p && existsSync(p) ? JSON.parse(readFileSync(p, "utf8")).map : {};
 }
 
 const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
@@ -156,8 +159,9 @@ export async function importUploads({ files, setName, title, rubricId, course, l
 
 /** Re-read the folder a set came from, keeping ids. Used by the Start screen's "Re-read folder" and by --watch. */
 export async function refreshSet({ setId, course, localDir, ideaConfig }) {
-  const metaPath = join(INGEST_DIR(localDir), setId, "meta.json");
-  if (!existsSync(metaPath)) throw new Error("unknown set");
+  const dir = setDir(localDir, setId);
+  const metaPath = dir && join(dir, "meta.json");
+  if (!metaPath || !existsSync(metaPath)) throw new Error("unknown set");
   const meta = JSON.parse(readFileSync(metaPath, "utf8"));
   return importFolder({ folder: meta.folder, setId, rubricId: meta.rubric, course, localDir, ideaConfig, title: meta.title });
 }

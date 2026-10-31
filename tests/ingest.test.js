@@ -64,3 +64,19 @@ test("safeSetId rejects a set id that looks like an identifier, since it would b
   assert.equal(safeSetId("imp-quiz5-papers"), "imp-quiz5-papers");
   assert.throws(() => safeSetId("imp-demo-papers"), /R-04/, "demo- plus six letters is the NetID shape, so the CLI must refuse it");
 });
+
+test("importUploads writes the chosen files to a local folder and imports them as a set with a local-only name map", async () => {
+  const { importUploads } = await import("../server/ingest.js");
+  const localDir = mkdtempSync(join(tmpdir(), "local-up-"));
+  const files = [
+    { name: "Priya_Raman_quiz5.txt", bytes: Buffer.from(`Name: ${r4.name}\n${sub("S-12").steps.join("\n")}\n`) },
+    { name: "second paper.txt", bytes: Buffer.from(`Name: ${course.roster[0].name}\nSD = 10\n`) },
+    { name: "notes.exe", bytes: Buffer.from("ignored") },
+  ];
+  const r = await importUploads({ files, setName: "Quiz 5 Section B", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade });
+  assert.equal(r.meta.id, "quiz-5-section-b");
+  assert.equal(r.papers.length, 2, "only .pdf, .txt, .md are read");
+  assert.equal(loadMap(localDir, "quiz-5-section-b")["P-01"].name, r4.name);
+  assert.ok(existsSync(join(localDir, "uploads", "quiz-5-section-b", "Priya_Raman_quiz5.txt")));
+  assert.equal(r.report[0].counts.NAME, 1);
+});

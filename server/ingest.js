@@ -111,3 +111,20 @@ export function exportCsv({ setId, papers, map, logs, table }) {
   });
   return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
 }
+
+/** Files chosen in the browser are written to local/uploads/<set>/ on this machine, then imported like a folder. */
+export async function importUploads({ files, setName, rubricId, course, localDir, ideaConfig }) {
+  const setId = safeSetId(setName || `upload-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`);
+  const dir = join(localDir, "uploads", setId);
+  mkdirSync(dir, { recursive: true });
+  let kept = 0;
+  for (const f of files) {
+    const name = basename(String(f.name)).replace(/[^\w.() -]+/g, "_");
+    if (!/\.(pdf|txt|md)$/i.test(name)) continue;
+    writeFileSync(join(dir, name), f.bytes);
+    kept++;
+  }
+  if (!kept) throw new Error("no .pdf, .txt, or .md files were chosen");
+  const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: setName ? `${setName}` : `Uploaded papers` });
+  return { ...r, meta: JSON.parse(readFileSync(join(INGEST_DIR(localDir), setId, "meta.json"), "utf8")) };
+}

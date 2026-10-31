@@ -7,7 +7,26 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
   const [paste, setPaste] = useState("");
-  const ready = g.name.trim().length > 0;
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploadName, setUploadName] = useState("");
+  const [uploadState, setUploadState] = useState<{ kind: "idle" | "busy" | "done" | "error"; text?: string }>({ kind: "idle" });
+  const ready = g.name.trim().length > 0 && g.papers.length > 0;
+  const rubricId = g.rubricKey === "grade93" ? "engs93-q3q5" : "grade-q5";
+  async function upload() {
+    if (!files.length) return;
+    setUploadState({ kind: "busy" });
+    const fd = new FormData();
+    for (const f of files) fd.append("files", f);
+    fd.append("rubric", rubricId); fd.append("name", uploadName);
+    const res = await fetch("/api/ingest", { method: "POST", body: fd });
+    const j = await res.json();
+    if (!res.ok || !j.ok) { setUploadState({ kind: "error", text: j.error }); return; }
+    await g.reload();
+    g.setSetId(j.set.id);
+    const names = j.report.reduce((a: number, r: any) => a + (r.counts?.NAME ?? 0), 0);
+    setUploadState({ kind: "done", text: c.uploaded(j.report.length, names) });
+    setFiles([]);
+  }
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 space-y-8">
       <h1 className="text-4xl font-bold">{c.title}</h1>
@@ -22,11 +41,21 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
         </div>
         <p className="text-sm text-fg-2">{g.table.question}</p>
       </section>
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-fg-3">{c.papers}</h2>
+      <section className="rounded-xl border border-line bg-card p-5 space-y-3">
+        <h2 className="text-lg font-semibold">{c.uploadTitle}</h2>
+        <p className="text-sm text-fg-2">{c.uploadHint}</p>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded-xl border border-line bg-card px-4 py-3">{g.papers.length === 25 && g.setId === "grade" ? c.samplePapers(25) : `${g.papers.length} papers`}{g.decided.size ? `, ${g.decided.size} already marked` : ""}</span>
-          <button onClick={() => setAddOpen(true)} className="btn">{c.addPapers}</button>
+          <label className="btn cursor-pointer">{c.uploadButton}<input id="paper-files" type="file" multiple accept=".pdf,.txt,.md,application/pdf,text/plain" className="sr-only" onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); setUploadState({ kind: "idle" }); }} /></label>
+          {files.length > 0 && <span className="text-sm">{files.length} {files.length === 1 ? "file" : "files"} chosen</span>}
+          <input id="upload-name" value={uploadName} onChange={(e) => setUploadName(e.target.value)} placeholder={c.uploadNamePlaceholder} aria-label={c.uploadName} className="rounded-lg border border-line bg-bg px-3 py-2 text-sm" />
+          <button className="btn btn-primary" disabled={!files.length || uploadState.kind === "busy"} onClick={upload}>{uploadState.kind === "busy" ? c.uploading : "Read these papers"}</button>
+        </div>
+        {uploadState.kind === "done" && <p className="text-sm text-good">{uploadState.text}</p>}
+        {uploadState.kind === "error" && <p className="text-sm text-bad">{c.uploadFailed} {uploadState.text ?? ""}</p>}
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-line">
+          <span className="text-sm text-fg-3">{c.orSample}</span>
+          <span className="rounded-lg border border-line px-3 py-2 text-sm">{g.setInfo.title}: {g.papers.length} papers{g.decided.size ? `, ${g.decided.size} already marked` : ""}</span>
+          <button onClick={() => setAddOpen(true)} className="text-sm underline">{c.pasteTitle}</button>
         </div>
       </section>
       <section className="space-y-2">

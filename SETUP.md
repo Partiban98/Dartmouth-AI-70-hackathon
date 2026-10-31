@@ -18,7 +18,9 @@ npm run dev
 
 Open http://localhost:3000/grade. Pick a paper, approve the gate, review the proposals, enter the grade. Keys: 1 confirm, 2 change, 3 override, Enter to continue.
 
-## Grade a folder of real papers
+## Grade your own papers
+
+On the Start screen, "Your papers" → Choose files → Read these papers. PDFs with selectable text, .txt, or .md. The files are saved under `local/uploads/` on your laptop and names are hidden before any checking. Or from Terminal:
 
 ```
 node scripts/ingest.js ~/Desktop/quiz5-papers --set quiz5-section-a --propose

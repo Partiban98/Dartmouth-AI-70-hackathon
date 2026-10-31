@@ -41,7 +41,7 @@ Live calls are refused until `npm run smoke` has written a passing `local/smoke.
 - `lib/` shared pure modules, run in the browser and in tests: `gate.js`, `engine.js`, `schema.js`, `pipeline.js`, `ideas.js`, `prompts.js`, `logshape.js`, `text.js`
 - `server/` tiny `node:http` server, provider adapter, JSONL log writer. Routes: static, `POST /propose`, `POST /log`, `GET /counts`
 - `app/` Next.js App Router: `/grade` (Teacher and TA journey GR-01 to GR-04), `/student` and `/staff` placeholders, route handlers `/api/propose`, `/api/log`, `/api/counts`, `/api/rubric`, and `/data/[file]` (never serves `*.eval.json`). `/propose`, `/log`, `/counts` are rewritten to the API routes so the shared pipeline is unchanged.
-- `components/grading/GradingWorkspace.tsx` the product surface: question-set selector, instructor rubric drawer (versioned, validated, precedents), queue with no bulk approval, paper view with quoted lines highlighted, gate panel, review card with keyboard grading (1, 2, 3, Enter), decision bar with the feedback line, receipt, class insights from confirmed decisions, decision log.
+- `components/grading/` the product surface in plain words: Start (choose question, upload papers, your name), Grader (one paper, privacy check, suggestions with the line lit, your mark, saved, auto-advance), Finish (what the class got wrong, marks, download), Marking scheme drawer. `copy.ts` holds every string; `tests/copy.test.js` bans engineering vocabulary from the screens.
 - `legacy/` the original no-build page and server, kept as the fallback. Same core.
 - `data/` DEMO-STATS 101 seeds, synthetic only. `*.eval.json` is for tests and is never served
 - `tests/` node --test suites, plus `a11y.md` manual checks

@@ -35,6 +35,8 @@ export default function GradingWorkspace() {
   const [rubricOpen, setRubricOpen] = useState(false);
   const [pasted, setPasted] = useState<any[]>([]);
   const [pasteOpen, setPasteOpen] = useState(false);
+  const [imported, setImported] = useState<any[]>([]);
+  const [importedPapers, setImportedPapers] = useState<Record<string, any[]>>({});
   const pending = useRef<((v: any) => void) | null>(null);
 
   const load = useCallback(async () => {
@@ -45,20 +47,30 @@ export default function GradingWorkspace() {
     ]);
     setData({ course, companion, upskill, submissions: { grade: subs ?? [], grade93: subs93 ?? [] } });
     setStandards({ grade: std, grade93: std93 });
+    const imp = await get("/api/imported");
+    const sets = imp?.sets ?? [];
+    setImported(sets);
+    const papers: Record<string, any[]> = {};
+    await Promise.all(sets.map(async (m: any) => { const d = await get(`/api/imported?set=${encodeURIComponent(m.id)}`); papers[m.id] = d?.papers ?? []; }));
+    setImportedPapers(papers);
   }, []);
   const refreshCounts = useCallback(async () => { setCounts(await get("/counts")); }, []);
   useEffect(() => { load(); refreshCounts(); }, [load, refreshCounts]);
 
   const ideas = useMemo(() => {
     if (!data || !standards.grade) return null;
-    return makeIdeas({ gradeStandards: standards.grade, companion: data.companion, upskillStandards: data.upskill, gradingSets: standards.grade93 ? { grade93: standards.grade93 } : {} });
-  }, [data, standards]);
+    const gradingSets: Record<string, any> = standards.grade93 ? { grade93: standards.grade93 } : {};
+    for (const m of imported) { const st = m.rubric === "engs93-q3q5" ? standards.grade93 : standards.grade; if (st) gradingSets[m.id] = { ...st, course: m.title }; }
+    return makeIdeas({ gradeStandards: standards.grade, companion: data.companion, upskillStandards: data.upskill, gradingSets });
+  }, [data, standards, imported]);
   const idea = ideas?.[setId];
-  const submissions: any[] = useMemo(() => [...(data?.submissions?.[setId] ?? []), ...pasted.filter((p) => p.set === setId)], [data, setId, pasted]);
+  const submissions: any[] = useMemo(() => [...(data?.submissions?.[setId] ?? importedPapers[setId] ?? []), ...pasted.filter((p) => p.set === setId)], [data, setId, pasted, importedPapers]);
+  const setInfo = SETS[setId] ?? (() => { const m = imported.find((x) => x.id === setId); return m ? { title: m.title, sub: `${m.count} papers from ${m.folder}, rubric ${m.rubric}` } : { title: setId, sub: "" }; })();
+  const rubricKey = SETS[setId] ? setId : (imported.find((x) => x.id === setId)?.rubric === "engs93-q3q5" ? "grade93" : "grade");
   const decided = useMemo(() => new Set((counts?.decisions ?? []).filter((d: any) => d.idea === setId).map((d: any) => d.itemId)), [counts, setId]);
   const analyticsForSet = counts?.analyticsByIdea?.[setId] ?? {};
 
-  const table = standards[setId];
+  const table = standards[SETS[setId] ? setId : (imported.find((x) => x.id === setId)?.rubric === "engs93-q3q5" ? "grade93" : "grade")];
   const ask = (s: Stage) => new Promise<any>((resolve) => { pending.current = resolve; setStage(s); });
   const answer = (v: any, next?: Stage) => { const r = pending.current; pending.current = null; if (next) setStage(next); r?.(v); };
 
@@ -87,7 +99,7 @@ export default function GradingWorkspace() {
     const res = await fetch("/api/rubric", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(next) });
     const j = await res.json();
     if (!res.ok) return j.errors ?? [j.error];
-    setStandards((s) => ({ ...s, [setId]: next }));
+    setStandards((s) => ({ ...s, [rubricKey]: next }));
     return null;
   }
 
@@ -101,7 +113,7 @@ export default function GradingWorkspace() {
         <section className="rounded-xl border border-line bg-card p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-3">Question set</h2>
           <div className="mt-2 space-y-1">
-            {Object.entries(SETS).filter(([k]) => standards[k]).map(([k, s]) => (
+            {[...Object.entries(SETS).filter(([k]) => standards[k]), ...imported.map((m) => [m.id, { title: m.title, sub: `${m.count} papers · local folder · rubric ${m.rubric}` }] as [string, any])].map(([k, s]) => (
               <button key={k} onClick={() => { setSetId(k); setCurrent(null); setStage({ kind: "idle" }); }} aria-pressed={setId === k}
                 className={cls("w-full text-left rounded-lg px-3 py-2 border", setId === k ? "border-ink bg-ink text-white" : "border-line hover:bg-paper")}>
                 <div className="text-sm font-medium">{s.title}</div>
@@ -137,16 +149,18 @@ export default function GradingWorkspace() {
           </ul>
           <button onClick={() => setPasteOpen(true)} className="mt-3 w-full rounded-md border border-dashed border-ink-3 px-3 py-2 text-sm hover:bg-paper">+ Paste a paper</button>
           <p className="mt-2 text-xs text-ink-3">No bulk approval. Every paper is a separate decision.</p>
+          <p className="mt-1 text-xs text-ink-3">Folder of PDFs? <span className="font-mono">node scripts/ingest.js &lt;folder&gt; --propose</span> adds it here. Names stay in a local map on this machine.</p>
         </section>
       </aside>
 
       <div className="space-y-5 min-w-0">
         <header className="flex flex-wrap items-center gap-3">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">{SETS[setId].title}</h1>
+            <h1 className="text-xl font-semibold tracking-tight">{setInfo.title}</h1>
             <p className="text-sm text-ink-2 max-w-3xl">{table.question}</p>
           </div>
-          <span className="ml-auto rounded-md border border-line bg-card px-3 py-1.5 font-mono text-xs" aria-live="polite">{modelLabel}</span>
+          <a href={`/api/export?set=${encodeURIComponent(setId)}`} className="ml-auto rounded-md border border-line bg-card px-3 py-1.5 text-sm hover:bg-paper" download>Export CSV</a>
+          <span className="rounded-md border border-line bg-card px-3 py-1.5 font-mono text-xs" aria-live="polite">{modelLabel}</span>
         </header>
         <Stepper stage={stage} />
 
@@ -220,7 +234,7 @@ function PaperView({ item, stage }: { item: any; stage: Stage }) {
           ))}
         </ol>
       )}
-      {item && <p className="mt-3 text-xs text-ink-3">Final answer as written: <span className="font-mono">{String(item.finalAnswer ?? "none")}</span>{item.reconstructed ? " · steps reconstructed from the TA's grading notes, not the student's words" : ""}</p>}
+      {item && <p className="mt-3 text-xs text-ink-3">Final answer as written: <span className="font-mono">{String(item.finalAnswer ?? "none")}</span>{item.reconstructed ? " · steps reconstructed from the TA's grading notes, not the student's words" : item.imported ? " · imported from a local file; name and header fields dropped by the gate" : ""}</p>}
     </section>
   );
 }

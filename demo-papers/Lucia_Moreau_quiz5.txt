@@ -1,0 +1,10 @@
+Name: Lucia Moreau
+NetID: demo-lucmor
+Email: lucia.moreau@example.org
+Course: DEMO-STATS 101, Quiz 5, Question 5
+
+Sum of x = 40
+Sum of x squared = 16 + 36 + 64 + 100 + 144 = 360
+(Sum of x) squared over n = 1600 / 5 = 320
+Sample variance = (360 - 320) / (5 - 1) = 10
+Sample SD = sqrt(10) = 3.162

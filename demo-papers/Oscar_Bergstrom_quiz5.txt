@@ -1,0 +1,11 @@
+Name: Oscar Bergstrom
+NetID: demo-oscber
+Email: oscar.bergstrom@example.org
+Course: DEMO-STATS 101, Quiz 5, Question 5
+
+Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8
+Deviations: -4, -2, 0, 2, 4
+Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16
+Sum of squared deviations = 40
+Sample variance = 40 / (5 - 1) = 10
+Sample SD = sqrt(10) = 3.162

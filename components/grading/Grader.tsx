@@ -8,6 +8,9 @@ import type { Stage } from "./useGrading";
 import MakeTestCase from "./MakeTestCase";
 import RegressionBadge from "./RegressionBadge";
 import { firstTrueOverride } from "./overrides.js";
+import CallItFirst from "./CallItFirst";
+import BlindAgreementStat from "./BlindAgreementStat";
+import { visibleCard, callChip, markStartValue } from "./callfirst.js";
 
 const c = COPY.grader;
 /** Keys drive the panel. Links and buttons keep their own behaviour; Enter never leaks to a focused link. */
@@ -18,6 +21,15 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
   const { current, papers, index, stage, table, answer } = g;
   const [lit, setLit] = useState<number[]>([]);
   const [evalBump, setEvalBump] = useState(0);
+  // Call it first: opted into on the setup screen, off for everyone else, so
+  // the recorded flow is unchanged unless a grader turns it on.
+  const [callFirst, setCallFirst] = useState(false);
+  const [myCall, setMyCall] = useState<string | null>(null);
+  const [agreeBump, setAgreeBump] = useState(0);
+  useEffect(() => { try { setCallFirst(localStorage.getItem("remain.callFirst") === "1"); } catch {} }, []);
+  const session = useMemo(() => { try { let s = sessionStorage.getItem("remain.session"); if (!s) { s = Math.random().toString(36).slice(2); sessionStorage.setItem("remain.session", s); } return s; } catch { return "nosession"; } }, []);
+  // A new paper means a new call: never carry one paper's call to the next.
+  useEffect(() => { setMyCall(null); }, [current?.id]);
   const total = papers.length;
 
   // Which paper line a suggestion points at.
@@ -46,6 +58,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
         <div className="flex-1 min-w-[120px] h-2 rounded bg-line"><div className="h-2 rounded bg-good" style={{ width: `${total ? (100 * g.decided.size) / total : 0}%` }} /></div>
         <span className="text-sm text-fg-3">{g.decided.size} of {total} marked</span>
         <RegressionBadge bump={evalBump} />
+        {callFirst && <BlindAgreementStat session={session} bump={agreeBump} />}
         <button className="btn" onClick={onScheme}>{c.scheme}</button>
         <button className="btn" onClick={onFinish}>{c.finish}</button>
       </div>
@@ -67,10 +80,25 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {stage.kind === "privacy" && <Privacy stage={stage} onCheck={() => answer(true, { kind: "reading" })} onSkip={() => answer(false)} />}
             {stage.kind === "names" && <Names stage={stage} onDone={(picks: any) => answer(picks)} onSkip={() => answer(null)} />}
             {stage.kind === "reading" && <Panel title={c.suggestionsTitle}><p className="text-fg-2 animate-pulse">{c.reading}</p><div className="mt-4 space-y-3">{[0, 1].map((i) => <div key={i} className="h-20 rounded-lg bg-bg" />)}</div></Panel>}
-            {stage.kind === "suggestions" && <Tip id="suggestions" text={c.tips.suggestions} />}
-            {stage.kind === "suggestions" && <Suggestions card={stage.card} table={table} lineOf={lineOf} onLight={setLit} onDone={(r: any) => { setLit([]); answer(r); }} />}
+            {stage.kind === "suggestions" && !visibleCard(stage.card, { enabled: callFirst, locked: !!myCall }) && (
+              <CallItFirst table={table} onLock={async (code: string) => {
+                const res = await fetch("/api/precall", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idea: g.setId, itemId: current?.id, code, by: g.name, session }) });
+                if (!res.ok && res.status !== 409) throw new Error((await res.json().catch(() => ({}))).error ?? "That call could not be saved.");
+                // The reveal is logged only now, after the call is stored, so the
+                // order of the two is provable from the log.
+                await fetch("/api/precall", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "reveal", idea: g.setId, itemId: current?.id, session }) }).catch(() => {});
+                setMyCall(code); setAgreeBump((b) => b + 1);
+              }} />
+            )}
+            {stage.kind === "suggestions" && visibleCard(stage.card, { enabled: callFirst, locked: !!myCall }) && <Tip id="suggestions" text={c.tips.suggestions} />}
+            {stage.kind === "suggestions" && visibleCard(stage.card, { enabled: callFirst, locked: !!myCall }) && (
+              <>
+                {callFirst && myCall && <p className="mb-2 rounded-full bg-bg px-3 py-1 text-sm inline-block">{callChip(myCall, stage.card.items?.[0]?.code ?? "OK")}</p>}
+                <Suggestions card={stage.card} table={table} lineOf={lineOf} onLight={setLit} onDone={(r: any) => { setLit([]); answer(r); }} />
+              </>
+            )}
             {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
-            {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} onDone={(d: any) => answer(d)} />}
+            {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} callFirst={callFirst} onDone={(d: any) => answer(d)} />}
             {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onAdded={() => setEvalBump((b) => b + 1)} />}
             {stage.kind === "stopped" && <Panel title={c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? c.noAnswer : c.stopped}</p>{stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
           </div>
@@ -229,8 +257,8 @@ function Suggestions({ card: raw, table, lineOf, onLight, onDone }: any) {
   );
 }
 
-function Mark({ bar, table, name, onDone }: any) {
-  const [grade, setGrade] = useState(String(bar.computedScore));
+function Mark({ bar, table, name, callFirst, onDone }: any) {
+  const [grade, setGrade] = useState(() => markStartValue(bar.computedScore, { enabled: callFirst }));
   const [note, setNote] = useState(() => feedbackLine(bar.confirmed ?? [], table));
   const go = () => { if (grade === "" || !name.trim()) return; onDone({ decidedBy: name.trim(), grade: Number(grade), feedback: note }); };
   useEffect(() => { const h = (e: KeyboardEvent) => { if (!own(e)) return; if (e.key === "Enter") go(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); });

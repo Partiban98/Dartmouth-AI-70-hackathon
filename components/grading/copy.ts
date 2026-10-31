@@ -167,6 +167,16 @@ export const COPY = {
     lastEval: (mismatch: number) => `last eval: ${mismatch} still ${mismatch === 1 ? "disagrees" : "disagree"} with the TA`,
     noEval: "eval not run yet",
   },
+  callFirst: {
+    toggle: "Call it first",
+    toggleHelp: "You choose the mistake before the AI shows you its suggestion, so the first judgment on the paper is yours. Off by default.",
+    title: "Make your call first",
+    help: "Which mistake do you see? Choose, then lock it in. The AI's suggestion appears after that, as a second opinion.",
+    label: "Your call",
+    noError: "No error",
+    lock: "Lock my call and show the AI",
+    stat: (text: string) => `Blind agreement this session: ${text}`,
+  },
   finish: {
     title: (n: number, name: string) => `${n} ${n === 1 ? "paper" : "papers"} marked by ${name || "you"}.`,
     tiles: { marked: "Marked", changed: "Changed from the suggestion", notInPaper: "AI lines not found in the paper", names: "Names hidden" },

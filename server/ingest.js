@@ -3,9 +3,11 @@
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, extname, basename } from "node:path";
 import { runGate, assertClean, PATTERN_RULES } from "../lib/gate.js";
+import { CODE_RE } from "./assignment.js";
 
 /** A set id travels in payloads and logs, so it must not look like an identifier. Throws naming the rule it trips. */
 export function safeSetId(raw) {
+  if (CODE_RE.test(String(raw).trim())) return String(raw).trim(); // a Quiz/Assignment code is the set id as is
   const id = String(raw).trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
   if (!id) throw new Error("set id is empty");
   for (const [rule, , , re] of PATTERN_RULES) if (new RegExp(re.source).test(id)) throw new Error(`set id "${id}" matches identifier rule ${rule}; choose another name`);

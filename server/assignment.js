@@ -6,9 +6,11 @@ import { randomInt } from "node:crypto";
 import { validateStandards } from "../lib/engine.js";
 
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // no 0, O, 1, I, L: read over a phone, typed on a laptop
+/** A code is also the set id, the ingest folder and the file name, so a pasted one must match exactly. */
+export const CODE_RE = new RegExp(`^[${ALPHABET}]{3}-[${ALPHABET}]{3}$`);
 const PREFIX = "REMAIN1:";
 const DIR = (localDir) => join(localDir, "assignments");
-const file = (localDir, code) => join(DIR(localDir), `${String(code).toUpperCase()}.json`);
+const file = (localDir, code) => { if (!CODE_RE.test(code)) throw new Error("That is not a Quiz/Assignment code"); return join(DIR(localDir), `${code}.json`); };
 
 function newCode(localDir) {
   for (let tries = 0; tries < 50; tries++) {
@@ -38,7 +40,8 @@ export function createAssignment(draft, { localDir, createdBy }) {
 }
 
 export function encodePack(a) {
-  const { code, course, title, question, standards, createdBy, createdAt, version } = a;
+  const { code, course, title, question, createdBy, createdAt, version } = a;
+  const { pendingPrecedents, ...standards } = a.standards; // a TA's typed reasons stay on their laptop
   return PREFIX + Buffer.from(JSON.stringify({ code, course, title, question, standards, createdBy, createdAt, version })).toString("base64url");
 }
 
@@ -48,7 +51,7 @@ export function decodePack(text) {
   if (!t.startsWith(PREFIX)) throw new Error("This pack is from another version of Remain; ask for a fresh one");
   let a;
   try { a = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
-  if (!a || typeof a.code !== "string" || !validateStandards(a.standards).ok) throw new Error("This pack is incomplete");
+  if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok) throw new Error("This pack is incomplete or damaged; ask for a fresh one");
   return a;
 }
 
@@ -56,11 +59,14 @@ export function decodePack(text) {
 export function joinAssignment(pack, { localDir, force = false }) {
   const a = decodePack(pack);
   const here = loadAssignment(localDir, a.code);
-  if (here && !force && JSON.stringify(here.standards) !== JSON.stringify(a.standards)) throw new Error(`Code ${a.code} is already on this laptop with a different scheme (version ${here.version}). Keep yours, or replace it with version ${a.version}.`);
-  return save(localDir, a);
+  const { pendingPrecedents = [], ...mine } = here?.standards ?? {};
+  if (here && !force && JSON.stringify(mine) !== JSON.stringify(a.standards)) throw new Error(`Code ${a.code} is already on this laptop with a different scheme (version ${here.version}). Keep yours, or replace it with version ${a.version}.`);
+  // Changes this laptop proposed survive the head TA's new version.
+  return save(localDir, pendingPrecedents.length ? { ...a, standards: { ...a.standards, pendingPrecedents } } : a);
 }
 
 export function loadAssignment(localDir, code) {
+  if (!CODE_RE.test(code)) return null;
   const p = file(localDir, code);
   return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
 }

@@ -104,7 +104,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
             {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} callFirst={callFirst} onDone={(d: any) => answer(d)} />}
             {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onOpen={() => setCaseOpen(true)} onAdded={() => setEvalBump((b) => b + 1)} />}
-            {stage.kind === "stopped" && <Panel title={stage.text.startsWith("notSaved") ? c.notSavedTitle : c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? c.noAnswer : stage.text === "notSaved" ? c.notSaved : stage.text === "notSavedName" ? `${c.notSaved} ${c.notSavedName}` : c.stopped}</p>{stage.text.startsWith("notSaved") ? stage.detail && <p className="mt-2 text-sm">{c.notSavedTyped(stage.detail[0], stage.detail[1])}</p> : stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
+            {stage.kind === "stopped" && <Panel title={stage.text.startsWith("notSaved") ? c.notSavedTitle : stage.text === "noAnswer" ? c.suggestionsTitle : c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? (index < total - 1 ? c.noAnswer : c.noAnswerLast) : stage.text === "notSaved" ? c.notSaved : stage.text === "notSavedName" ? `${c.notSaved} ${c.notSavedName}` : c.stopped}</p>{stage.text.startsWith("notSaved") ? stage.detail && <p className="mt-2 text-sm">{c.notSavedTyped(stage.detail[0], stage.detail[1])}</p> : stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
           </div>
         </section>
       </div>
@@ -148,10 +148,11 @@ function Names({ stage, onDone, onSkip }: any) {
       {stage.flags.map((f: any) => (
         <div key={f.token} className="mb-3">
           <p className="font-semibold">{c.nameQuestion(f.token)}</p>
-          <div className="mt-2 flex gap-2">{[["name", c.nameYes], ["not-name", c.nameNo]].map(([v, l]) => <button key={v} className={cls("btn", picks[f.token] === v && "btn-primary")} onClick={() => setPicks((p) => ({ ...p, [f.token]: v }))}>{l}</button>)}</div>
+          <div className="mt-2 flex gap-2"><button className={cls("btn", picks[f.token] === "name" && "btn-primary")} onClick={() => setPicks((p) => ({ ...p, [f.token]: "name" }))}>{c.nameYes}</button></div>
         </div>
       ))}
       <p className="text-sm text-fg-3">{c.nameHelp}</p>
+      <p className="mt-1 text-sm text-fg-3">{c.nameNotTerm}</p>
       <div className="mt-4 flex gap-2"><button className="btn btn-primary" disabled={left > 0} onClick={() => onDone(picks)}>{c.checkButton}</button><button className="btn" onClick={onSkip}>{c.stopButton}</button></div>
     </Panel>
   );

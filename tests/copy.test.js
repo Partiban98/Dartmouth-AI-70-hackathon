@@ -31,3 +31,12 @@ test("the Quiz/Assignment doors use Kishore's words, and the join field asks for
   assert.ok(src.includes('"Paste the Quiz/Assignment pack"'), "the short code cannot be looked up yet, so the field asks for the pack");
   assert.ok(!/\bquiz code\b/i.test(src) && !/start a new assignment/i.test(src), "no leftover wording from the draft");
 });
+
+test("E5 and PUX-5: the screens only offer what the system can do", () => {
+  const copy = readFileSync(join(ROOT, "components", "grading", "copy.ts"), "utf8");
+  const grader = readFileSync(join(ROOT, "components", "grading", "Grader.tsx"), "utf8");
+  assert.ok(!/No, keep it/.test(copy) && !/"not-name"/.test(grader), "no not-a-name clearance the server cannot honour");
+  assert.ok(/nameNotTerm:/.test(copy), "the panel explains what to do when the phrase is not a name");
+  assert.ok(!/still mark the paper yourself/.test(copy), "no promise of manual marking that does not exist yet");
+  assert.match(copy, /noAnswer: "[^"]*Try again[^"]*"/, "no-answer message names the real choices");
+});

@@ -5,6 +5,7 @@ import { makeIdeas } from "@/lib/ideas.js";
 import { HONEST_LIMIT } from "@/lib/gate.js";
 import { validateStandards, recurring } from "@/lib/engine.js";
 import { normalize } from "@/lib/text.js";
+import { feedbackLine, bumpVersion as bump } from "@/lib/feedback.js";
 
 type Stage =
   | { kind: "idle" }
@@ -362,13 +363,6 @@ function ReviewCard({ card, table, analytics, onSubmit }: any) {
   );
 }
 
-function feedbackLine(confirmed: string[], table: any) {
-  const codes = confirmed.filter((c) => c !== "OK" && c !== "UNSURE");
-  if (!codes.length) return "Full marks.";
-  const labels = Object.fromEntries(table.codes.map((c: any) => [c.code, c.label]));
-  return `Marks lost: ${codes.map((c) => labels[c] ?? c).join("; ")}.`;
-}
-
 function DecisionBar({ bar, table, card, onDecide }: any) {
   const [name, setName] = useState(() => { try { return localStorage.getItem("remain.decidedBy") ?? ""; } catch { return ""; } });
   const [grade, setGrade] = useState(String(bar.computedScore));
@@ -449,8 +443,6 @@ function DecisionLog({ counts, setId }: any) {
     </section>
   );
 }
-
-function bump(version: string) { const [a, b = "0"] = String(version).split("."); return `${a}.${Number(b) + 1}`; }
 
 function RubricDrawer({ table, onClose, onSave }: any) {
   const [draft, setDraft] = useState<any>(() => JSON.parse(JSON.stringify(table)));

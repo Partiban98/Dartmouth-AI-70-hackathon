@@ -41,15 +41,74 @@ const shareable = (st) => pick(st, SCHEME);
 const local = (st) => ({ ...shareable(st), ...(Array.isArray(st?.precedents) ? { precedents: st.precedents.filter((x) => typeof x === "string") } : {}),
   ...(Array.isArray(st?.pendingPrecedents) ? { pendingPrecedents: st.pendingPrecedents.map((x) => pick(x, { code: str, reason: str, by: str, itemId: str, at: str })) } : {}) });
 
-/** E6: a method pattern runs on every paper in the browser, so one that can backtrack for ever (a quantified group
- *  of any group, or a back-reference) or is very long is refused. Returns a plain reason or null. */
+/** E6: a method pattern runs on every paper in the browser, where a regular expression cannot be timed out. So only a small,
+ *  conservative grammar is accepted: literals, \d \s \w . and [sets], groups and alternatives; only a letter, \d or \s may repeat;
+ *  a group may only be optional; and nothing a repeat could also match may follow it before the next required piece.
+ *  Returns a plain reason or null. */
 export function unsafePattern(sig) {
   const s = String(sig ?? "");
   if (s.length > 200) return "A method pattern must be under 200 characters.";
-  if (/\\[1-9]/.test(s)) return "A method pattern cannot refer back to an earlier group.";
-  // Any repeated group can backtrack badly (nested repeats, or overlapping alternatives like (a|aa)+). Optional groups are fine.
-  if (/\)\s*(?:[+*]|\{\d+,?\d*\})/.test(s.replace(/\\./g, "__"))) return "A method pattern cannot repeat a group; list the alternatives instead.";
-  return null;
+  try { new RegExp(s, "i"); } catch { return "A method pattern must be a valid pattern."; }
+  let i = 0;
+  const fail = (m) => { throw new Error(m); };
+  const DIGIT = (c) => /\d/.test(c), SPACE = (c) => /\s/.test(c), WORD = (c) => /\w/.test(c), ALL = () => true;
+  const SAMPLES = Array.from({ length: 128 }, (_, n) => String.fromCharCode(n)).concat(["²", "é", "王", " "]);
+  const overlap = (a, b) => (a.ch !== undefined ? b.has(a.ch) : b.ch !== undefined ? a.has(b.ch) : SAMPLES.some((c) => a.has(c.toLowerCase()) && b.has(c.toLowerCase())));
+  const lit = (ch) => ({ ch, has: (c) => c.toLowerCase() === ch.toLowerCase(), repeatable: true });
+  const cls = (has, repeatable) => ({ has, repeatable });
+  function atom() {
+    const c = s[i++];
+    if (c === "\\") {
+      const e = s[i++];
+      if (/[1-9]/.test(e)) fail("A method pattern cannot refer back to an earlier group.");
+      if (e === "b" || e === "B") return { zero: true };
+      if (e === "d") return cls(DIGIT, true);
+      if (e === "s") return cls(SPACE, true);
+      if (e === "w") return cls(WORD, false);
+      if (/[DSW]/.test(e)) return cls(ALL, false);
+      return lit(e);
+    }
+    if (c === "^" || c === "$") return { zero: true };
+    if (c === ".") return cls(ALL, false);
+    if (c === "[") { const j = s.indexOf("]", i + 1); i = j + 1; return cls(ALL, false); }
+    if (c === "(") {
+      if (s[i] === "?") { if (s[i + 1] !== ":") fail("A method pattern cannot look ahead or behind."); i += 2; }
+      const branches = alternation(); if (s[i++] !== ")") fail("A method pattern has an unclosed group.");
+      // What a group can start with: each branch's first piece; anything unclear counts as "anything".
+      const firsts = branches.map((b) => b.find((x) => !x.zero));
+      const has = (ch) => firsts.some((f) => !f || f.min === 0 || f.has(ch));
+      return { has, group: true, repeatable: false };
+    }
+    return lit(c);
+  }
+  function quant(a) {
+    let min = 1, max = 1;
+    const c = s[i];
+    if (c === "*") { min = 0; max = Infinity; i++; } else if (c === "+") { max = Infinity; i++; } else if (c === "?") { min = 0; i++; }
+    else if (c === "{") { const m = /^\{(\d+)(,(\d*))?\}/.exec(s.slice(i)); if (m) { min = +m[1]; max = m[2] ? (m[3] ? +m[3] : Infinity) : min; i += m[0].length; } }
+    if (s[i] === "?" && max !== 1) i++; // lazy marker
+    if (max !== 1 || min !== 1) {
+      if (a.zero) fail("A method pattern cannot repeat an anchor.");
+      if (a.group ? !(min === 0 && max === 1) : !a.repeatable) fail("Only a letter, a digit (\\d) or a space (\\s) may repeat in a method pattern; a group may only be optional.");
+    }
+    return { ...a, min, max };
+  }
+  function branch() {
+    const out = [];
+    while (i < s.length && s[i] !== "|" && s[i] !== ")") out.push(quant(atom()));
+    // A piece that can vary in length must not be able to match what follows it before the next required piece.
+    out.forEach((q, k) => {
+      if (q.zero || q.min === q.max) return;
+      for (let j = k + 1; j < out.length; j++) {
+        const n = out[j]; if (n.zero) continue;
+        if (overlap(q, n)) fail("Two repeating parts of a method pattern can match the same characters; make them distinct.");
+        if (n.min > 0) break;
+      }
+    });
+    return out;
+  }
+  function alternation() { const bs = [branch()]; while (s[i] === "|") { i++; bs.push(branch()); } return bs; }
+  try { alternation(); if (i < s.length) fail("A method pattern has an unmatched bracket."); return null; } catch (e) { return e.message; }
 }
 const methodsProblem = (st) => (st?.methods ?? []).map((m) => unsafePattern(m.signature)).find(Boolean) ?? null;
 

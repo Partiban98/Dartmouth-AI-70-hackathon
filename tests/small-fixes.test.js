@@ -61,3 +61,17 @@ test("PUX-6 review: what the class got wrong counts each paper's latest decision
   assert.equal(counts["E-MEAN"], undefined, "the regrade removed it");
   assert.equal(counts["E-ARITH"].confirmed, 1);
 });
+
+test("E6 grammar review: adjacent overlapping repeats are refused, and nothing accepted can stall on a long adversarial line", async () => {
+  const bad = ["^a*a*a*a*a*a*a*a*a*X$", "\\d+\\d+x", ".*.*=", "\\s*\\s*", "a+a", "\\d+0\\d+0", "[ab]+c", "\\w+@", "(?=a)a", "a{2,}a"];
+  for (const sig of bad) assert.ok(unsafePattern(sig), sig);
+  const { execFileSync } = await import("node:child_process");
+  const probe = ["^a*a*a*a*a*a*a*a*a*X$", "^(a|aa)+$", "a?a?a?a?a?a?aaaaaa", "\\s*-?\\d+\\s*-\\s*8", "x*y*z*"];
+  const line = "a".repeat(60) + "!";
+  for (const sig of probe) {
+    if (unsafePattern(sig)) continue;
+    const t0 = Date.now();
+    execFileSync(process.execPath, ["-e", `new RegExp(${JSON.stringify(sig)}, "i").test(${JSON.stringify(line)})`], { timeout: 700 });
+    assert.ok(Date.now() - t0 < 700, sig);
+  }
+});

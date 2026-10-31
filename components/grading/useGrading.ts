@@ -123,6 +123,13 @@ export function useGrading() {
     const j = await res.json();
     if (!res.ok) return j.errors ?? [j.error];
     setStandards((s) => ({ ...s, [rubricKey]: next }));
+    // A Quiz/Assignment's card and copied pack come from the server: refresh just that list. If the refresh fails, keep the saved
+    // scheme on screen and withhold Copy, so the old version is never shared.
+    if (assignments.some((a) => a.code === rubricKey)) {
+      const asg = await get("/api/assignment");
+      if (Array.isArray(asg?.assignments)) setAssignments(asg.assignments);
+      else setAssignments((list) => list.map((a) => (a.code === rubricKey ? { ...a, version: next.version, standards: next, pack: null, packProblem: "Saved. Reload the page to copy the new version." } : a)));
+    }
     return null;
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };

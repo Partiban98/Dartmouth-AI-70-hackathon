@@ -18,7 +18,8 @@ export default function GradeApp() {
   return (
     <>
       {view === "start" && <Start g={g} onStart={() => { setView("grade"); const first = g.papers.find((p) => !g.decided.has(p.id)) ?? g.papers[0]; if (first) g.start(first); }} />}
-      {view === "grade" && <Grader g={g} onFinish={() => setView("finish")} onScheme={() => setSchemeOpen(true)} />}
+      {/* While the marking scheme is open, the paper behind it takes no focus, clicks or keys: Tab and Enter cannot reach its Save. */}
+      {view === "grade" && <div inert={schemeOpen}><Grader g={g} onFinish={() => setView("finish")} onScheme={() => setSchemeOpen(true)} /></div>}
       {view === "finish" && <Finish g={g} onStartOver={() => setView("start")} onMore={() => { setView("grade"); const p = g.papers.find((x) => !g.decided.has(x.id)) ?? g.papers[0]; if (p) g.start(p); }} />}
       {schemeOpen && <SchemeDrawer table={g.table} onClose={() => setSchemeOpen(false)} onSave={g.saveRubric} readOnlyBy={g.assignment?.joined ? g.assignment.createdBy : undefined} />}
     </>

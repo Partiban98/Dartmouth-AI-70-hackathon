@@ -27,7 +27,10 @@ export default function Finish({ g, onStartOver, onMore }: { g: any; onStartOver
           <tbody>{rows.map((d: any, i: number) => <tr key={i} className="border-t border-line"><td className="py-1 font-mono">{d.itemId}</td><td className="py-1 tabular-nums">{d.grade} / {g.table.max}</td><td className="py-1">{d.decidedBy}</td><td className="py-1 text-fg-2">{d.feedback}</td></tr>)}</tbody></table>
       </section>
       <div className="flex flex-wrap gap-3">
-        <a className="btn btn-primary" href={`/api/export?set=${encodeURIComponent(g.setId)}`} download>{c.download}</a>
+        {g.assignment ? <>
+          <a className="btn btn-primary" href={`/api/export?set=${encodeURIComponent(g.setId)}`} download>{c.downloadShared}</a>
+          <a className="btn" href={`/api/export?set=${encodeURIComponent(g.setId)}&names=1`} download>{c.downloadNames}</a>
+        </> : <a className="btn btn-primary" href={`/api/export?set=${encodeURIComponent(g.setId)}`} download>{c.download}</a>}
         {left > 0 && <button className="btn" onClick={onMore}>{c.more} ({left} left)</button>}
         <button className="btn" onClick={onStartOver}>{c.startOver}</button>
       </div>

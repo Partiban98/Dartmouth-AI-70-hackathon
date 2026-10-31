@@ -58,6 +58,56 @@ test("exportCsv re-attaches names from the local map and joins proposals with th
   assert.ok(lines[2].startsWith('P-02,b.txt,"Bob, Lin",,,,,,,,'), "other set's decision must not leak in");
 });
 
+test("a Quiz/Assignment CSV adds assignment, laptop and proposed change, and leaves names and file names out unless asked", () => {
+  const papers = [{ id: "UB1C2-P-01", uploader: "UB1C2" }, { id: "UB1C2-P-02", uploader: "UB1C2" }];
+  const map = { "UB1C2-P-01": { file: "Ada_Byron.txt", name: "Ada Byron" }, "UB1C2-P-02": { file: "b.txt", name: "Bob Lin" } };
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: "UB1C2-P-01", confirmed: [], overrides: [{ from: "E-MEAN", to: "OK" }], grade: 10, decidedBy: "TA 2", rubricVersion: "1.1", ts: "t1" }] };
+  const table = { version: "1.1", pendingPrecedents: [{ code: "E-MEAN", reason: "median on purpose", itemId: "UB1C2-P-01" }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" }).trim().split("\n");
+  const head = shared[0].split(",");
+  assert.deepEqual(head.slice(-3), ["assignment", "laptop", "proposed_change"]);
+  assert.ok(!shared.join("\n").includes("Ada") && !shared.join("\n").includes("Bob"), "no names, no file names by default");
+  const row = shared[1].split(",");
+  assert.equal(row[head.indexOf("rubric_version")], "1.1"); assert.equal(row[head.indexOf("assignment")], "7K3-Q2M");
+  assert.equal(row[head.indexOf("laptop")], "UB1C2"); assert.equal(row[head.indexOf("proposed_change")], "E-MEAN: median on purpose");
+  const owner = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M", names: true });
+  assert.ok(owner.includes("Ada Byron") && owner.includes("Ada_Byron.txt"), "the laptop that owns the map can ask for names");
+});
+
+test("the shared Quiz/Assignment CSV scrubs student names and identifiers a TA typed into the note or the proposed change", () => {
+  const papers = [{ id: "UB1C2-P-01", uploader: "UB1C2" }];
+  const map = { "UB1C2-P-01": { file: "Lucia_Moreau.txt", name: "Lucia Moreau" } };
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: "UB1C2-P-01", confirmed: [], overrides: [], grade: 10, decidedBy: "TA 2", feedback: "Nice work, lucia. Email lucia@example.edu if stuck.", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "Moreau used the median on purpose", itemId: "UB1C2-P-01" }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/lucia|moreau|example\.edu/i.test(shared), shared);
+  assert.ok(shared.includes("Nice work, [student]") && shared.includes("[student] used the median"), "the rest of the note still reads");
+  const owner = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M", names: true });
+  assert.ok(owner.includes("Nice work, lucia"), "the owner's file keeps the note as typed");
+});
+
+test("the shared CSV scrubs every known identifier for this laptop's students, including short names and NetIDs", () => {
+  const papers = [{ id: "UB1C2-P-01", uploader: "UB1C2" }];
+  const map = { "UB1C2-P-01": { file: "x.txt", name: "Li Wu", netid: "lw42", email: "li@example.edu" } };
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: "UB1C2-P-01", confirmed: [], overrides: [], grade: 9, decidedBy: "TA 2", feedback: "Li used the median; ask lw42 or li@example.edu", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "Wu (lw42) used the median", itemId: "UB1C2-P-01" }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/\bLi\b|\bWu\b|lw42|example\.edu/.test(shared), shared);
+});
+
+test("an uploaded paper's non-Latin name and student ID never reach the shared CSV, end to end from the file", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "intl-")), localDir = mkdtempSync(join(tmpdir(), "intl-local-"));
+  writeFileSync(join(folder, "paper.txt"), "Name: 王伟\nStudent ID: 123456789\nNetID: ww42\n320 / 10 = 32\n3.162\n");
+  const { papers } = await importFolder({ folder, setId: "7K3-Q2M", rubricId: "7K3-Q2M", course, localDir, ideaConfig: ideas.grade });
+  const map = loadMap(localDir, "7K3-Q2M");
+  const id = papers[0].id;
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: id, confirmed: [], overrides: [], grade: 9, decidedBy: "TA 2", feedback: "王伟 used the median; student 123456789, netid ww42", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "王伟 (123456789) chose the median", itemId: id }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/王伟|123456789|ww42/.test(shared), shared);
+  assert.ok(shared.includes("[student] used the median"), "the note still reads");
+});
+
 test("safeSetId rejects a set id that looks like an identifier, since it would be refused by the log and could leak", async () => {
   const { safeSetId } = await import("../server/ingest.js");
   assert.throws(() => safeSetId("demo-folder"), /R-04/);

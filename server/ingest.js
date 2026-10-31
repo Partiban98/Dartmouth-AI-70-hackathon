@@ -3,9 +3,11 @@
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, extname, basename } from "node:path";
 import { runGate, assertClean, PATTERN_RULES } from "../lib/gate.js";
+import { CODE_RE } from "./assignment.js";
 
 /** A set id travels in payloads and logs, so it must not look like an identifier. Throws naming the rule it trips. */
 export function safeSetId(raw) {
+  if (CODE_RE.test(String(raw).trim())) return String(raw).trim(); // a Quiz/Assignment code is the set id as is
   const id = String(raw).trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
   if (!id) throw new Error("set id is empty");
   for (const [rule, , , re] of PATTERN_RULES) if (new RegExp(re.source).test(id)) throw new Error(`set id "${id}" matches identifier rule ${rule}; choose another name`);
@@ -84,7 +86,7 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
     const id = byFile[f] ?? `${me}-P-${String(++next).padStart(2, "0")}`;
     const parsed = parsePaper(await extractText(join(folder, f)), f);
     papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
-    map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "" };
+    map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);
     let clean = true; try { if (!g.blocked) assertClean(g.payload, course); } catch { clean = false; }
     report.push({ id, file: f, steps: parsed.steps.length, droppedFields: g.report.droppedFields, counts: Object.fromEntries(Object.entries(g.report.counts).filter(([, n]) => n > 0)), blocked: g.blocked, blockedRules: g.report.blockedRules, clean });
@@ -115,21 +117,28 @@ export function loadMap(localDir, setId) {
 const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 /** CSV for the TA's sheet. Names come from the local map on this machine; proposals and decisions come from the logs. */
-export function exportCsv({ setId, papers, map, logs, table }) {
+export function exportCsv({ setId, papers, map, logs, table, assignment = "", names = !assignment, laptop = "" }) {
   const latest = {};
   for (const d of logs.decisions ?? []) if (d.idea === setId) latest[d.itemId] = d;
   const proposed = {};
   for (const p of logs.proposals ?? []) if (p.idea === setId) proposed[p.itemId] = p;
-  const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at"];
+  const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at", "assignment", "laptop", "proposed_change"];
+  // A Quiz/Assignment CSV is shared with the head TA, so names and file names stay out unless this laptop asks for them.
+  // Notes are typed by people, so a shared file scrubs every name word from this laptop's map and every identifier pattern from them.
+  const words = names ? [] : [...new Set(Object.values(map).flatMap((m) => [m.name, m.netid, m.email, m.studentId, ...String(m.name ?? "").split(/\s+/)]).filter((w) => w && String(w).length >= 2))].map(String).sort((a, b) => b.length - a.length);
+  // Unicode-aware edges, so a known name in any script is matched whole: \b only knows ASCII letters.
+  const nameRe = words.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu") : null;
+  const scrub = (t) => { if (names || t == null) return t; let x = String(t); for (const [, , , re] of PATTERN_RULES) x = x.replace(new RegExp(re.source, "g"), "[removed]"); return nameRe ? x.replace(nameRe, "[student]") : x; };
+  const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${scrub(p.reason)}`).join(" | ");
   const rows = papers.map((pp) => {
-    const m = map[pp.id] ?? {}; const d = latest[pp.id]; const pr = proposed[pp.id];
-    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", d?.feedback ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? ""];
+    const m = names ? map[pp.id] ?? {} : {}; const d = latest[pp.id]; const pr = proposed[pp.id];
+    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", scrub(d?.feedback) ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? "", assignment, pp.uploader ?? laptop, proposedFor(pp.id)];
   });
   return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
 }
 
 /** Files chosen in the browser are written to local/uploads/<set>/ on this machine, then imported like a folder. */
-export async function importUploads({ files, setName, rubricId, course, localDir, ideaConfig }) {
+export async function importUploads({ files, setName, title, rubricId, course, localDir, ideaConfig }) {
   const setId = safeSetId(setName || `upload-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`);
   const dir = join(localDir, "uploads", setId);
   mkdirSync(dir, { recursive: true });
@@ -141,7 +150,7 @@ export async function importUploads({ files, setName, rubricId, course, localDir
     kept++;
   }
   if (!kept) throw new Error("no .pdf, .txt, or .md files were chosen");
-  const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: setName ? `${setName}` : `Uploaded papers` });
+  const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: title ?? (setName ? `${setName}` : `Uploaded papers`) });
   return { ...r, meta: JSON.parse(readFileSync(join(INGEST_DIR(localDir), setId, "meta.json"), "utf8")) };
 }
 

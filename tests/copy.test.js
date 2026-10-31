@@ -22,3 +22,11 @@ test("the spec's honest strings still reach the screen through the footer and th
   assert.ok(src.includes("Your decisions stay on this computer"));
   assert.ok(src.includes("cannot guarantee 100 percent"), "honest limit in plain words");
 });
+
+test("the Quiz/Assignment doors use Kishore's words, and the join field asks for the whole pack, not a code alone", () => {
+  const src = readFileSync(join(ROOT, "components", "grading", "copy.ts"), "utf8");
+  assert.ok(src.includes('"Start grading a Quiz/Assignment"'), "door label, Kishore's call");
+  assert.ok(src.includes('"Join with a Quiz/Assignment code"'));
+  assert.ok(src.includes('"Paste the Quiz/Assignment pack"'), "the short code cannot be looked up yet, so the field asks for the pack");
+  assert.ok(!/\bquiz code\b/i.test(src) && !/start a new assignment/i.test(src), "no leftover wording from the draft");
+});

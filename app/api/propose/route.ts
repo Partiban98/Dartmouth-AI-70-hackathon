@@ -1,5 +1,5 @@
 import { getContext, LOCAL_DIR } from "@/server/context.js";
-import { checkOutbound, withLocalIdentities } from "@/server/privacy.js";
+import { checkOutbound, clearedPhrases, withLocalIdentities } from "@/server/privacy.js";
 import { verifyQuote } from "@/lib/engine.js";
 import { blockedRecord, proposalRecord } from "@/lib/logshape.js";
 
@@ -12,7 +12,8 @@ export async function POST(request: Request) {
   if (!ideaConfig) return Response.json({ error: "unknown idea" }, { status: 400 });
   // Everything the model would see, checked here against this laptop's own students too. The browser's check is not trusted.
   let payload: any;
-  try { payload = checkOutbound(body, ideaConfig, withLocalIdentities(course, LOCAL_DIR)); }
+  const known = withLocalIdentities(course, LOCAL_DIR);
+  try { payload = checkOutbound(body, ideaConfig, known); }
   catch (e: any) {
     if (e?.status === 422) { log.append("blocked", blockedRecord(body.idea, body.itemId, e.rule, e.count)); return Response.json({ code: "BLOCKED", rule: e.rule, count: e.count, where: e.where }, { status: 422 }); }
     if (e?.status === 400) return Response.json({ error: e.error }, { status: 400 });
@@ -24,6 +25,6 @@ export async function POST(request: Request) {
   const proposals = r.proposals.map((p: any) => ({ ...p, verified: verifyQuote(p.quote, verifyText).found }));
   // payloadHash is the hash of exactly what was sent, straight from the adapter,
   // so the Privacy Gate receipt can show it rather than recompute it later.
-  log.append("proposals", { ...proposalRecord(body.idea, body.itemId, { ...r, proposals }), payloadHash: r.payloadHash ?? null });
+  log.append("proposals", { ...proposalRecord(body.idea, body.itemId, { ...r, proposals }), payloadHash: r.payloadHash ?? null, clearedCount: clearedPhrases(body.cleared, payload, known).length });
   return Response.json({ proposals: r.proposals, label: r.label, modelId: r.modelId, rung: r.rung, cacheHit: r.cacheHit, caveat: r.caveat, attempts: r.attempts });
 }

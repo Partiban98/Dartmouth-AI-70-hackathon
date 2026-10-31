@@ -148,7 +148,7 @@ function Names({ stage, onDone, onSkip }: any) {
       {stage.flags.map((f: any) => (
         <div key={f.token} className="mb-3">
           <p className="font-semibold">{c.nameQuestion(f.token)}</p>
-          <div className="mt-2 flex gap-2"><button className={cls("btn", picks[f.token] === "name" && "btn-primary")} onClick={() => setPicks((p) => ({ ...p, [f.token]: "name" }))}>{c.nameYes}</button></div>
+          <div className="mt-2 flex gap-2">{[["name", c.nameYes], ["not-name", c.nameNo]].map(([v, label]) => <button key={v} className={cls("btn", picks[f.token] === v && "btn-primary")} onClick={() => setPicks((p) => ({ ...p, [f.token]: v }))}>{label}</button>)}</div>
         </div>
       ))}
       <p className="text-sm text-fg-3">{c.nameHelp}</p>

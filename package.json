@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Remain (working title): shared core. AI proposes with evidence, a person decides.",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test \"tests/*.test.js\"",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

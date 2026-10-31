@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { recurring, analytics } from "../lib/engine.js";
 import { runPipeline } from "../lib/pipeline.js";
 import { createApp } from "../legacy/server.js";
 import { gradeStandards, submissions, ideas, course, sub } from "./helpers.js";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 test("GR-02 queue is S-01 to S-25 in order; no bulk approval control exists in the page", () => {
   assert.deepEqual(submissions.map((s) => s.id), Array.from({ length: 25 }, (_, i) => `S-${String(i + 1).padStart(2, "0")}`));

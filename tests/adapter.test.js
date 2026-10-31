@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { makeAdapter, CALL_CAP, LABEL_REPLAY } from "../server/adapter.js";
 import { runGate } from "../lib/gate.js";
 import { ideas, course, sub } from "./helpers.js";
@@ -32,7 +32,7 @@ test("T28 label uses the API-returned model id, never the env value", async () =
 test("T28 replay mode returns the cached rehearsal label", async () => {
   const { adapter, seen } = setup();
   await adapter.propose({ ideaConfig: ideas.grade, payload, promptName: "grade-propose" });
-  const replay = makeAdapter({ env: { REPLAY_MODE: "1" }, fetchImpl: () => { throw new Error("no network in replay"); }, localDir: adapter.paths.cache.replace(/\/cache$/, "") });
+  const replay = makeAdapter({ env: { REPLAY_MODE: "1" }, fetchImpl: () => { throw new Error("no network in replay"); }, localDir: dirname(adapter.paths.cache) });
   const r = await replay.propose({ ideaConfig: ideas.grade, payload, promptName: "grade-propose" });
   assert.equal(r.ok, true); assert.equal(r.label, LABEL_REPLAY); assert.equal(r.rung, 4); assert.equal(seen.length, 1);
 });

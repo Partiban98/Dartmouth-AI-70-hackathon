@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { createApp, ROUTES } from "../legacy/server.js";
 import { course } from "./helpers.js";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 function start() {
   const localDir = mkdtempSync(join(tmpdir(), "remain-srv-"));
   const server = createApp({ env: {}, fetchImpl: () => { throw new Error("no network in tests"); }, localDir });

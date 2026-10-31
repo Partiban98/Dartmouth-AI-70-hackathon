@@ -54,7 +54,8 @@ test("/log accepts gate and decision records only and rejects unsafe ones; /coun
     const post = (rec) => fetch(`${base}/log`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rec) });
     assert.equal((await post({ type: "decision", idea: "grade", itemId: "S-01", decidedBy: "Test TA", proposed: ["E-VAR-SD"], confirmed: ["E-VAR-SD"], overrides: [], computedScore: 7, grade: 7, receipt: "Assigned by you (TA)" })).status, 200);
     assert.equal((await post({ type: "proposal" })).status, 400);
-    assert.equal((await post({ type: "gate", idea: "grade", itemId: "S-12", counts: {}, note: course.roster[3].name })).status, 500);
+    assert.equal((await post({ type: "decision", idea: "grade", itemId: "S-02", decidedBy: "Test TA", proposed: [], confirmed: {}, overrides: [], grade: 7 })).status, 400, "S5: malformed decision refused, nothing written");
+    assert.equal((await post({ type: "gate", idea: "grade", itemId: "S-12", droppedFields: 0, counts: {}, blockedRules: [], note: course.roster[3].name })).status, 500);
     const counts = await (await fetch(`${base}/counts`)).json();
     assert.equal(counts.confirmed, 1); assert.equal(counts.decisionsByHuman, 1);
   } finally { server.close(); }

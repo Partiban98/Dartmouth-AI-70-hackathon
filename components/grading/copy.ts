@@ -1,6 +1,6 @@
 // Every word a grader sees, in one place. Plain language only. The core's exact strings surface here where the spec needs them.
 export const COPY = {
-  appName: "Remain",
+  appName: "GuruAI",
   wizard: {
     steps: ["Question", "Papers", "You", "Go"],
     stepOf: (i: number) => `Step ${i} of 4`,
@@ -44,7 +44,7 @@ export const COPY = {
     failed: "Not saved yet:",
     cardTitle: "Your Quiz/Assignment code",
     cardHelp: "The code names it. The pack carries the question and scheme, because there is no shared server yet. Send both to each TA.",
-    message: (course: string, title: string, code: string, pack: string) => `Join ${course} · ${title} in Remain. Code ${code}. Paste this whole pack in "Join with a Quiz/Assignment code": ${pack}`,
+    message: (course: string, title: string, code: string, pack: string) => `Join ${course} · ${title} in GuruAI. Code ${code}. Paste this whole pack in "Join with a Quiz/Assignment code": ${pack}`,
     copyMessage: "Copy the message for your TAs",
     next: "Add your papers",
   },

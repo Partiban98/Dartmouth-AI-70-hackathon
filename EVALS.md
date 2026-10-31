@@ -1,4 +1,4 @@
-# How we know it works: evals for Remain
+# How we know it works: evals for GuruAI
 
 Written Oct 31, 2026. Every number in this file was read from the repo, the
 test run, or `local/` logs on the machine. Nothing here is estimated.

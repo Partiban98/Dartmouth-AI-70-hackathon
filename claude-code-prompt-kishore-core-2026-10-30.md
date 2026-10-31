@@ -1,11 +1,11 @@
-# Claude Code Prompt for Kishore's Core Only: Remain (working title)
+# Claude Code Prompt for Kishore's Core Only: GuruAI
 ## Two prompts, in order. Prompt A plans and writes the handoff. Prompt B, run with Opus, implements fully from that handoff.
 
 How this prompt was built: it follows Anthropic's official Claude Code prompt patterns, from the official Prompt Library at https://code.claude.com/docs/en/prompt-library : describe the outcome, not the steps; give Claude a way to check its own work; point at a reference file; state a measurable target; give it the artifact; say how you want the answer; use plan mode for larger or riskier changes so you see the file list before any edits happen.
 
 Model note, corrected Oct 30, 2026: Planner for Prompt A is fable, a Claude Code model alias listed in claude --help alongside opus and sonnet. Implementer for Prompt B is Opus, as Kishore asked.
 
-Working title: Remain. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
+Working title: GuruAI. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
 
 Core only means: Kishore's base and core from the final spec and the work split. It does NOT mean the three persona journeys in full, the demo video, or submission. Those are teammates' items, built later on this core.
 
@@ -22,10 +22,10 @@ In Claude Code, reference them with @, for example @final-spec-remain-2026-10-30
 Copy and paste this whole block into Claude Code, in plan mode if you can, with model fable. In plan mode, Claude Code researches and proposes changes without making them, and edits stay blocked until you approve the plan. For this prompt, the ONE file you are allowed to create is HANDOFF-CORE.md, and only after you approve the plan. Do not create code files, do not edit other files, do not commit, do not push.
 
 ```
-You are Claude Code, acting as a senior planning engineer for the Remain hackathon project.
+You are Claude Code, acting as a senior planning engineer for the GuruAI hackathon project.
 
 <context>
-Project: Remain, a Dartmouth AI at 70 Student Hackathon super app, working title only, final name to be decided later by the team.
+Project: GuruAI, a Dartmouth AI at 70 Student Hackathon super app, working title only, final name to be decided later by the team.
 Thesis: AI proposes with evidence, a person decides.
 Read these files first, in full, before you plan anything:
 @final-spec-remain-2026-10-30.md
@@ -74,7 +74,7 @@ After Prompt A finishes: read HANDOFF-CORE.md yourself, fix anything wrong in it
 Copy and paste this whole block into a fresh Claude Code session, with model Opus, in the same working directory, with HANDOFF-CORE.md and the two spec files present.
 
 ```
-You are Claude Code, model Opus, acting as the implementing engineer for the Remain hackathon project.
+You are Claude Code, model Opus, acting as the implementing engineer for the GuruAI hackathon project.
 
 <context>
 Read these files first, in full, before you write any code:

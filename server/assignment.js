@@ -156,7 +156,7 @@ export function encodePack(a) {
 export function decodePack(text) {
   const t = String(text ?? "").trim();
   if (!t.startsWith("REMAIN")) throw new Error("That is not a Quiz/Assignment pack. It starts with REMAIN1:");
-  if (!t.startsWith(PREFIX)) throw new Error("This pack is from another version of Remain; ask for a fresh one");
+  if (!t.startsWith(PREFIX)) throw new Error("This pack is from another version of GuruAI; ask for a fresh one");
   let raw;
   try { raw = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
   const a = { ...pick(raw, PACK), standards: shareable(raw?.standards) };

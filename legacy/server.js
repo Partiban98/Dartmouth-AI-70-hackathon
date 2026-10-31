@@ -84,5 +84,5 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   loadDotenv(join(ROOT, ".env"));
   const port = Number(process.env.PORT ?? 8787);
-  createApp().listen(port, () => console.log(`Remain core on http://localhost:${port}  (logs in local/, key never leaves this machine)`));
+  createApp().listen(port, () => console.log(`GuruAI core on http://localhost:${port}  (logs in local/, key never leaves this machine)`));
 }

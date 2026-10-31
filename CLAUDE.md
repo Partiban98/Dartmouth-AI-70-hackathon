@@ -1,4 +1,4 @@
-# Remain: rules for any agent working in this repo
+# GuruAI: rules for any agent working in this repo
 
 Thesis: AI proposes with evidence, a person decides. Every change must keep that visible on screen.
 

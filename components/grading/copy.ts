@@ -1,6 +1,16 @@
 // Every word a grader sees, in one place. Plain language only. The core's exact strings surface here where the spec needs them.
 export const COPY = {
   appName: "Remain",
+  wizard: {
+    steps: ["Question", "Papers", "You", "Go"],
+    stepOf: (i: number) => `Step ${i} of 4`,
+    back: "Back",
+    next: "Next",
+    q: { title: "What are you grading?", help: "Pick the quiz question. Its marking scheme lists every mistake and what it costs. The instructor owns that list; you apply it.", scheme: "Marking scheme", mistakes: (n: number) => `${n} mistake types`, methods: (n: number) => `${n} accepted ways to solve it`, max: (m: number) => `${m} marks` },
+    p: { title: "Whose papers?", help: "Choose the students' files from this computer, or use the sample stack to try it out. Names and header lines are hidden here before anything is checked.", ready: (n: number) => `${n} papers ready to grade.`, hidden: (n: number) => (n === 0 ? "No names found inside the work." : `${n} ${n === 1 ? "name" : "names"} hidden inside the work.`), sample: "Use the sample papers", chosen: (n: number) => `${n} papers chosen` },
+    y: { title: "Who is grading?", help: "Your name goes on every mark. The AI suggests; it never marks. Teammates see your name on the papers you decided.", placeholder: "Your name" },
+    g: { title: "How a paper goes", help: "Each paper takes four small steps. The whole thing takes about a minute.", steps: [["Privacy check", "What was hidden is shown as counts. You press Check."], ["Suggestions", "AI points at possible mistakes with the exact line, lit up in the paper."], ["Your call", "Yes, different, or no mistake. If you disagree, one line why."], ["Your mark", "The mark from your choices is shown. You type the final mark and a note."]], keys: "Keys: 1, 2, 3 to answer, Enter to move on.", start: "Start grading", starting: (n: number) => `${n} papers · the first one opens now` },
+  },
   start: {
     title: "Grade a quiz question.",
     question: "Quiz question and marking scheme",
@@ -79,6 +89,12 @@ export const COPY = {
     footer: (label: string) => `Suggestions by Claude (${label}) · Your decisions stay on this computer`,
     footerNoCall: "No suggestions requested yet · Your decisions stay on this computer",
     stopped: "Nothing was marked for this paper.",
+    gotIt: "Got it",
+    tips: {
+      privacy: "First, the privacy check. Names, emails and header lines were removed on this computer; the counts are shown so you can see what left. Press Check this paper to get suggestions.",
+      suggestions: "Each card is one possible mistake with the exact line, lit up in the paper on the left. Answer every card: 1 yes, 2 a different mistake, 3 no mistake. If you disagree, say why in one line.",
+      mark: "The mark from your choices is computed from the marking scheme. You can change it. The note goes to the student. Enter saves and opens the next paper.",
+    },
     blind: (u: string) => `Marked blind. The student's name stays on the laptop that added this paper (${u ?? "this one"}).`,
     sample: "Sample paper.",
     alsoMarked: (by: string, mark: number | string, max: number) => `Also marked by ${by}: ${mark} / ${max}`,

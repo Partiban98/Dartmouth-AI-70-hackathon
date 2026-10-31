@@ -36,7 +36,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
     <main className="mx-auto max-w-[1280px] px-5 py-5 space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn" disabled={index <= 0} onClick={() => g.start(papers[index - 1])}>← {c.prev}</button>
-        <div className="font-semibold text-lg">{c.paperOf(index + 1, total)}</div>
+        <div className="font-semibold text-lg">{c.paperOf(index + 1, total)} <span className="font-normal text-fg-3">· {({ idle: "Privacy check", privacy: "Privacy check", names: "Privacy check", reading: "Suggestions", suggestions: "Suggestions", mark: "Your mark", saved: "Saved", stopped: "Stopped" } as any)[stage.kind]}</span></div>
         <button className="btn" disabled={index >= total - 1} onClick={() => g.start(papers[index + 1])}>{c.next} →</button>
         <div className="flex-1 min-w-[120px] h-2 rounded bg-line"><div className="h-2 rounded bg-good" style={{ width: `${total ? (100 * g.decided.size) / total : 0}%` }} /></div>
         <span className="text-sm text-fg-3">{g.decided.size} of {total} marked</span>
@@ -57,10 +57,13 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
         <section className="min-w-0">
           <div key={stage.kind} className="panel-in">
             {stage.kind === "idle" && <Panel title={c.privacyTitle}><p className="text-fg-2">{c.reading}</p></Panel>}
+            {stage.kind === "privacy" && <Tip id="privacy" text={c.tips.privacy} />}
             {stage.kind === "privacy" && <Privacy stage={stage} onCheck={() => answer(true, { kind: "reading" })} onSkip={() => answer(false)} />}
             {stage.kind === "names" && <Names stage={stage} onDone={(picks: any) => answer(picks)} onSkip={() => answer(null)} />}
             {stage.kind === "reading" && <Panel title={c.suggestionsTitle}><p className="text-fg-2 animate-pulse">{c.reading}</p><div className="mt-4 space-y-3">{[0, 1].map((i) => <div key={i} className="h-20 rounded-lg bg-bg" />)}</div></Panel>}
+            {stage.kind === "suggestions" && <Tip id="suggestions" text={c.tips.suggestions} />}
             {stage.kind === "suggestions" && <Suggestions card={stage.card} table={table} lineOf={lineOf} onLight={setLit} onDone={(r: any) => { setLit([]); answer(r); }} />}
+            {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
             {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} onDone={(d: any) => answer(d)} />}
             {stage.kind === "saved" && <Saved result={stage.result} table={table} />}
             {stage.kind === "stopped" && <Panel title={c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? c.noAnswer : c.stopped}</p>{stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
@@ -70,6 +73,14 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
       <p className="text-xs text-fg-3">{g.modelLabel ? c.footer(g.modelLabel) : c.footerNoCall}</p>
     </main>
   );
+}
+
+/** Shown once per step, remembered on this browser. A newcomer reads it; a regular never sees it again. */
+function Tip({ id, text }: { id: string; text: string }) {
+  const [seen, setSeen] = useState(true);
+  useEffect(() => { try { setSeen(localStorage.getItem(`remain.tip.${id}`) === "1"); } catch { setSeen(false); } }, [id]);
+  if (seen) return null;
+  return <div className="mb-3 rounded-lg border border-wait bg-wait-bg p-3 text-sm"><p>{text}</p><button className="btn text-xs mt-2" onClick={() => { try { localStorage.setItem(`remain.tip.${id}`, "1"); } catch {} setSeen(true); }}>{c.gotIt}</button></div>;
 }
 
 function Panel({ title, children, tone }: { title: string; children: React.ReactNode; tone?: "good" | "wait" | "bad" }) {

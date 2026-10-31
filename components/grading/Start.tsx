@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { COPY } from "./copy";
 
-const w = COPY.wizard, d = COPY.doors, cr = COPY.create, jn = COPY.join;
+const w = COPY.wizard, d = COPY.doors, cr = COPY.create, jn = COPY.join, cf = COPY.callFirst;
 const SAMPLES = ["grade", "grade93"];
 // Reads a pasted pack in the browser for the preview only. The server checks it again on join.
 const peek = (t: string) => { const x = t.trim(); if (!x.startsWith("REMAIN1:")) return null; try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(x.slice(8).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0)))); } catch { return null; } };
@@ -107,6 +107,7 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
             {w.g.steps.map(([t, d], i) => <li key={t} className="flex gap-3 rounded-lg bg-bg p-3"><span className="w-6 h-6 shrink-0 rounded-full bg-accent text-accent-fg grid place-items-center text-xs">{i + 1}</span><span><span className="font-semibold">{t}.</span> <span className="text-fg-2">{d}</span></span></li>)}
           </ol>
           <p className="text-sm text-fg-3">{w.g.keys}</p>
+          <CallFirstToggle />
           <p className="text-sm">{g.setInfo.title} · {w.g.starting(g.papers.length)} · {g.name}</p>
         </>}
 
@@ -233,5 +234,21 @@ function Join({ onBack, onJoined }: { onBack: () => void; onJoined: (code: strin
         {clash && <button className="btn" onClick={() => join(true)}>{jn.replace(p?.version ?? "")}</button>}
         <button className="btn btn-primary" disabled={!p} onClick={() => join(false)}>{jn.join}</button></div>
     </main>
+  );
+}
+
+/** Off unless this grader turns it on, so the existing flow is exactly as it
+ *  was for anyone who does not opt in. Remembered on this browser only. */
+function CallFirstToggle() {
+  const [on, setOn] = useState(false);
+  useEffect(() => { try { setOn(localStorage.getItem("remain.callFirst") === "1"); } catch {} }, []);
+  const flip = (v: boolean) => { setOn(v); try { localStorage.setItem("remain.callFirst", v ? "1" : "0"); } catch {} };
+  return (
+    <div className="rounded-lg border border-line p-3">
+      <label className="flex items-center gap-2 text-sm font-semibold">
+        <input type="checkbox" checked={on} onChange={(e) => flip(e.target.checked)} /> {cf.toggle}
+      </label>
+      <p className="mt-1 text-sm text-fg-3">{cf.toggleHelp}</p>
+    </div>
   );
 }

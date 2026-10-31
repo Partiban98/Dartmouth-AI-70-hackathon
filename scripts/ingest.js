@@ -16,6 +16,7 @@ import { loadDotenv } from "../server/env.js";
 import { importFolder, rosterFromCsv, safeSetId, refreshSet, uploaderId, defaultSetId } from "../server/ingest.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const LOCAL = process.env.REMAIN_LOCAL_DIR || join(ROOT, "local"); // the same data folder the app uses
 loadDotenv(join(ROOT, ".env"));
 const args = process.argv.slice(2);
 const folder = args.find((a) => !a.startsWith("--"));
@@ -30,15 +31,15 @@ const standards = read(rubricId === "demo201-q3q5" ? "demo201-q3q5.v1.0.json" : 
 const ideas = makeIdeas({ gradeStandards: read("grade-q5.v1.0.json"), companion: read("companion-ch3.json"), upskillStandards: read("upskill-email.v1.0.json"), gradingSets: { [setId]: standards } });
 const ideaConfig = ideas[setId];
 
-const { papers, report } = await importFolder({ folder: resolve(folder), setId, rubricId, course, localDir: join(ROOT, "local"), ideaConfig });
-console.log(`Imported ${papers.length} papers from ${folder} as set "${setId}" on rubric ${rubricId}. This laptop: ${uploaderId(join(ROOT, "local"))}.`);
+const { papers, report } = await importFolder({ folder: resolve(folder), setId, rubricId, course, localDir: LOCAL, ideaConfig });
+console.log(`Imported ${papers.length} papers from ${folder} as set "${setId}" on rubric ${rubricId}. This laptop: ${uploaderId(LOCAL)}.`);
 console.log("Paper | file | steps | fields dropped | identifiers replaced (types and counts) | gate");
-for (const r of report) console.log(`${r.id} | ${r.file} | ${r.steps} | ${r.droppedFields} | ${Object.entries(r.counts).map(([k, v]) => `${k}:${v}`).join(" ") || "none"} | ${r.blocked ? "BLOCKED " + r.blockedRules.join(",") + " (human pick needed in the portal)" : r.clean ? "clean" : "assertClean would block"}`);
+for (const r of report) if (r.held) console.log(`${r.file} | held: ${r.held}`); else console.log(`${r.id} | ${r.file} | ${r.steps} | ${r.droppedFields} | ${Object.entries(r.counts).map(([k, v]) => `${k}:${v}`).join(" ") || "none"} | ${r.blocked ? "BLOCKED " + r.blockedRules.join(",") + " (human pick needed in the portal)" : r.clean ? "clean" : "assertClean would block"}`);
 console.log(`Map of paper id to student saved LOCALLY at local/ingest/${setId}/map.json. It is never sent and never logged.`);
 
 if (args.includes("--propose")) {
-  const adapter = makeAdapter({ localDir: join(ROOT, "local") });
-  const log = makeLog(join(ROOT, "local"), course);
+  const adapter = makeAdapter({ localDir: LOCAL });
+  const log = makeLog(LOCAL, course);
   let sent = 0, skipped = 0;
   for (const p of papers) {
     const g = runGate(p, ideaConfig, course);
@@ -58,7 +59,7 @@ if (args.includes("--watch")) {
   console.log("Watching the folder. New .pdf, .txt, or .md files are added every 10 seconds with new ids; existing ids never change. Ctrl-C to stop.");
   let last = papers.length;
   setInterval(async () => {
-    try { const r = await refreshSet({ setId, course, localDir: join(ROOT, "local"), ideaConfig }); if (r.papers.length !== last) { console.log(`${new Date().toLocaleTimeString()}: ${r.papers.length} papers (${r.papers.length - last} new)`); last = r.papers.length; } }
+    try { const r = await refreshSet({ setId, course, localDir: LOCAL, ideaConfig }); if (r.papers.length !== last) { console.log(`${new Date().toLocaleTimeString()}: ${r.papers.length} papers (${r.papers.length - last} new)`); last = r.papers.length; } }
     catch (e) { console.log("watch error:", e.message); }
   }, 10_000);
 }

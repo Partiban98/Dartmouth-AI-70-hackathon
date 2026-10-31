@@ -2,6 +2,7 @@
 // The name-to-paper map lives in local/ingest/<set>/map.json and never leaves this machine. The model sees paper ids and alias tokens only.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, extname, basename } from "node:path";
+import { createHash } from "node:crypto";
 import { runGate, assertClean, PATTERN_RULES } from "../lib/gate.js";
 import { CODE_RE } from "./assignment.js";
 
@@ -54,6 +55,8 @@ export async function extractText(file) {
   return readFileSync(file, "utf8");
 }
 
+const FOOTER = /^(page|question|q|problem|part)\b/i; // page and question labels are not work and not the answer
+
 /** Split a paper's text into header fields (dropped by the gate) and steps. "Name:"-style lines become header fields. */
 export function parsePaper(text, file) {
   const header = {};
@@ -66,7 +69,8 @@ export function parsePaper(text, file) {
     steps.push(line);
   }
   if (!header.name) header.name = basename(file, extname(file)).replace(/[_-]+/g, " ").trim();
-  const nums = steps.join(" ").match(/-?\d+(?:\.\d+)?/g);
+  // Whole numbers including exponents and leading-dot decimals; page and question footers are not the answer.
+  const nums = steps.filter((l) => !FOOTER.test(l)).join(" ").match(/-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?/g);
   return { header, steps, finalAnswer: nums ? Number(nums[nums.length - 1]) : null };
 }
 
@@ -83,19 +87,30 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
   const papers = [], map = {}, report = [];
   const me = uploaderId(localDir);
   const dir = join(INGEST_DIR(localDir), setId);
-  // Re-reading the same folder keeps every existing id; new files get the next number.
+  // An id always means one student's one piece of work. Re-reading keeps ids for unchanged files; a changed file under
+  // the same name gets a new id; ids are never reused, because a deleted file's entry stays in the map.
   const previous = existsSync(join(dir, "map.json")) ? JSON.parse(readFileSync(join(dir, "map.json"), "utf8")).map : {};
-  const byFile = Object.fromEntries(Object.entries(previous).map(([id, m]) => [m.file, id]));
-  let next = Object.keys(previous).length;
+  const byFile = Object.fromEntries(Object.entries(previous).filter(([, m]) => !m.removed).map(([id, m]) => [m.file, id]));
+  const prevPapers = Object.fromEntries((existsSync(join(dir, "papers.json")) ? JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) : []).map((p) => [p.id, p]));
+  // Same paper: same fingerprint; for a map written before fingerprints, every header field (name, IDs, email) and every step the same.
+  const sortedJson = (o) => JSON.stringify(Object.keys(o ?? {}).sort().map((k) => [k, o[k]]));
+  const samePaper = (id, hash, parsed) => previous[id].hash ? previous[id].hash === hash : !!prevPapers[id] && sortedJson(prevPapers[id].header) === sortedJson(parsed.header) && JSON.stringify(prevPapers[id].steps) === JSON.stringify(parsed.steps);
+  let next = Math.max(0, ...Object.keys(previous).map((id) => Number((id.match(/-P-(\d+)$/) ?? [])[1] ?? 0)));
   for (const f of files) {
-    const id = byFile[f] ?? `${me}-P-${String(++next).padStart(2, "0")}`;
+    const hash = createHash("sha256").update(readFileSync(join(folder, f))).digest("hex");
     const parsed = parsePaper(await extractText(join(folder, f)), f);
+    if (!parsed.steps.some((l) => !FOOTER.test(l))) { report.push({ file: f, held: "no readable work", steps: 0 }); continue; }
+    const known = byFile[f];
+    const id = known && samePaper(known, hash, parsed) ? known : `${me}-P-${String(++next).padStart(2, "0")}`;
     papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
-    map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
+    map[id] = { file: f, hash, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);
     let clean = true; try { if (!g.blocked) assertClean(g.payload, course); } catch { clean = false; }
     report.push({ id, file: f, steps: parsed.steps.length, droppedFields: g.report.droppedFields, counts: Object.fromEntries(Object.entries(g.report.counts).filter(([, n]) => n > 0)), blocked: g.blocked, blockedRules: g.report.blockedRules, clean });
   }
+  if (!papers.length) throw new Error("none of these files has readable work (scans without a text layer cannot be read)");
+  // Ids no longer in the folder keep their student, so an old mark still exports against the right name.
+  for (const [id, m] of Object.entries(previous)) if (!map[id]) map[id] = { ...m, removed: true };
   mkdirSync(dir, { recursive: true });
   papers.sort((a, b) => a.id.localeCompare(b.id));
   writeFileSync(join(dir, "papers.json"), JSON.stringify(papers, null, 2) + "\n");
@@ -119,7 +134,8 @@ export function loadMap(localDir, setId) {
   return existsSync(p) ? JSON.parse(readFileSync(p, "utf8")).map : {};
 }
 
-const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+// Text that starts like a spreadsheet formula gets a leading apostrophe so it opens as text; numbers stay numbers.
+const csvCell = (v) => { let s = v == null ? "" : String(v); if (typeof v === "string" && /^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = `'${s}`; return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 /** CSV for the TA's sheet. Names come from the local map on this machine; proposals and decisions come from the logs. */
 export function exportCsv({ setId, papers, map, logs, table, assignment = "", names = !assignment, laptop = "" }) {
@@ -151,7 +167,11 @@ export async function importUploads({ files, setName, title, rubricId, course, l
   for (const f of files) {
     const name = basename(String(f.name)).replace(/[^\w.() -]+/g, "_");
     if (!/\.(pdf|txt|md)$/i.test(name)) continue;
-    writeFileSync(join(dir, name), f.bytes);
+    // Never overwrite a different paper that has the same name: keep both, as "name (2).txt".
+    const ext = extname(name), stem = name.slice(0, name.length - ext.length);
+    let target = name;
+    for (let n = 2; existsSync(join(dir, target)) && !readFileSync(join(dir, target)).equals(Buffer.from(f.bytes)); n++) target = `${stem} (${n})${ext}`;
+    writeFileSync(join(dir, target), f.bytes);
     kept++;
   }
   if (!kept) throw new Error("no .pdf, .txt, or .md files were chosen");

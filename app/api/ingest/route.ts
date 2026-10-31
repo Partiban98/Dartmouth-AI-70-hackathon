@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const setName = a ? a.code : String(form.get("name") ?? "");
   try {
     const r = await importUploads({ files, setName, title: a ? `${a.course} · ${a.title}` : undefined, rubricId, course, localDir: LOCAL_DIR, ideaConfig: (ideas() as any).grade });
-    return Response.json({ ok: true, set: r.meta, report: r.report.map((x: any) => ({ id: x.id, steps: x.steps, counts: x.counts, blocked: x.blocked })) });
+    return Response.json({ ok: true, set: r.meta, report: r.report.map((x: any) => ({ id: x.id, file: x.held ? x.file : undefined, held: x.held, steps: x.steps, counts: x.counts, blocked: x.blocked })) });
   } catch (e: any) {
     return Response.json({ ok: false, error: e.message }, { status: 400 });
   }

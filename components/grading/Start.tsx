@@ -38,8 +38,9 @@ export default function Start({ g, onStart }: { g: any; onStart: () => void }) {
     const res = await fetch("/api/ingest", { method: "POST", body: fd }); const j = await res.json();
     if (!res.ok || !j.ok) { setUpload({ kind: "error", text: j.error }); return; }
     await g.reload(); g.setSetId(j.set.id);
-    const names = j.report.reduce((a: number, r: any) => a + (r.counts?.NAME ?? 0), 0);
-    setUpload({ kind: "done", text: `${w.p.ready(j.report.length)} ${w.p.hidden(names)}` }); setFiles([]);
+    const ready = j.report.filter((r: any) => !r.held), held = j.report.filter((r: any) => r.held).map((r: any) => r.file);
+    const names = ready.reduce((a: number, r: any) => a + (r.counts?.NAME ?? 0), 0);
+    setUpload({ kind: "done", text: `${w.p.ready(ready.length)} ${w.p.hidden(names)}${held.length ? ` ${w.p.held(held)}` : ""}` }); setFiles([]);
   }
 
   return (

@@ -22,6 +22,6 @@ The demo uses synthetic student data. This is a working prototype of accountable
 ## Final submission checks
 
 - Confirm registered team name and spelling/order of members.
-- Insert the public video link; check playback while logged out, audio and captions, and duration under the form's limit (aim under 2:30).
+- Use the public video link above; confirm playback while logged out, audio and captions, and duration under the form's limit (2:06; under 2:30).
 - Verify the actual model label is visible; do not label cached output as a new live call.
 - Keep claims tied to captured behavior; no invented score, time-saving or evaluation results.

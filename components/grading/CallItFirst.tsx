@@ -11,7 +11,7 @@ export default function CallItFirst({ table, onLock }: { table: any; onLock: (co
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const lock = async () => { if (busy) return; setBusy(true); setError(""); try { await onLock(code); } catch (e: any) { setError(e?.message ?? "That call could not be saved."); } finally { setBusy(false); } };
-  useEffect(() => { const h = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (t && /^(BUTTON|SELECT|TEXTAREA|INPUT|A)$/.test(t.tagName)) return; if (e.key === "Enter") { e.preventDefault(); lock(); } };
+  useEffect(() => { const h = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (t && /^(BUTTON|SELECT|TEXTAREA|INPUT|A)$/.test(t.tagName)) return; if (typeof document !== "undefined" && document.querySelector('[aria-modal="true"]')) return; /* never through an open dialog */ if (e.key === "Enter") { e.preventDefault(); lock(); } };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className="rounded-xl border border-line bg-card p-5">

@@ -19,3 +19,11 @@ test("PUX-3: empty, non-numeric, negative and above-full marks cannot be saved; 
   for (const bad of ["", "  ", "abc", "-1", "-0.25", "10.25", "999", "Infinity", "NaN"]) assert.ok(markProblem(bad, 10), bad);
   for (const ok of ["0", "10", "7.5", "9.75"]) assert.equal(markProblem(ok, 10), null, ok);
 });
+
+test("PUX-2 review: every grading key listener ignores keys while a dialog is open, including Call it first", async () => {
+  const { readFileSync } = await import("node:fs");
+  const read = (f) => readFileSync(new URL(`../components/grading/${f}`, import.meta.url), "utf8");
+  assert.match(read("CallItFirst.tsx"), /aria-modal="true"/, "Call it first");
+  const grader = read("Grader.tsx");
+  for (const block of grader.split('addEventListener("keydown"').slice(0, -1)) assert.match(block.slice(-1500), /own\(e\)/, "every Grader panel listener goes through own()");
+});

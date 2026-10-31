@@ -2,7 +2,7 @@
 # One-time setup for a teammate's laptop. Run from the repo folder:  sh scripts/setup.sh
 set -e
 cd "$(dirname "$0")/.."
-echo "== Remain setup =="
+echo "== GuruAI setup =="
 command -v node >/dev/null 2>&1 || { echo "Node is not installed. Install Node 22 or newer from https://nodejs.org and run this again."; exit 1; }
 MAJOR=$(node -p 'process.versions.node.split(".")[0]')
 [ "$MAJOR" -ge 22 ] || { echo "Node $(node -v) is too old. Install Node 22 or newer."; exit 1; }

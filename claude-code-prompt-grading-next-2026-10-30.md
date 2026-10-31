@@ -4,7 +4,7 @@
 ## Full prompt to paste
 
 ```
-You are Claude Code, model Opus, acting as the implementing engineer for the Remain hackathon project, grading-first phase.
+You are Claude Code, model Opus, acting as the implementing engineer for the GuruAI hackathon project, grading-first phase.
 
 <context>
 Working directory is this folder, ~/Documents/Remain-Core, on Kishore's Mac. Core is already built and verified here, uncommitted. Do NOT rebuild the core.

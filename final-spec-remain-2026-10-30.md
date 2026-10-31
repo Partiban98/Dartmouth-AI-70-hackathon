@@ -1,4 +1,4 @@
-# Remain: Final Agreed Product Spec
+# GuruAI: Final Agreed Product Spec
 ## Super app for the Dartmouth AI at 70 Student Hackathon
 
 Status: AGREED PRODUCT SPEC, Oct 30, 2026, 22:25 ET.
@@ -9,7 +9,7 @@ This spec is the handoff file for Claude Code. Muse does not write code. Claude 
 
 ## 1. Name, thesis, and one line
 
-Product name: Remain.
+Product name: GuruAI.
 Tagline: Show your work: AI proposes with evidence, a person decides.
 Thesis, the spine of the whole app: AI proposes with evidence, a person decides.
 One line: One web app where a student, an academic staff member, and a teacher or TA each get AI help on a real task, with the same privacy gate, the same deterministic checks, and a visible human decision at the end of every flow.
@@ -283,11 +283,11 @@ Phases, in order. Clock times from the individual proposals are NOT agreed produ
 6. Stack, by the zero-setup rule at lock: Next.js if it already runs, else no-build page.
 7. Clock times, sleep shifts, and pivot times for the SDLC phases above.
 8. Catastrophic two-beat choice, only if the minimal three-beat build itself fails. Default rule stays: never drop a whole beat, cut depth within beats.
-9. Final name, only if the team dislikes Remain plus Show your work.
+9. Final name, only if the team dislikes GuruAI plus Show your work.
 
 ## 18. Claude Code handoff brief (build from this file only)
 
-Task for Claude Code: build Remain exactly as specified in sections 1 to 17, reusable core first, no scope creep, no mega project.
+Task for Claude Code: build GuruAI exactly as specified in sections 1 to 17, reusable core first, no scope creep, no mega project.
 - Build the shared core first: Privacy Gate, Deterministic Rules Engine, shared components, pipeline, JSON seeds, JSONL logs. Then wire the three thin journeys, one seeded item each, then depth.
 - Do not change the core, do not remove big things, do not add scope-out items, do not invent prices, keys, model IDs, or team decisions.
 - Do not load eval labels in the UI. Do not create any auto-submit path. Do not claim local if the demo runs on cloud. Do not claim no training on data.

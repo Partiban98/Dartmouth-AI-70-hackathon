@@ -1,7 +1,7 @@
 # Dartmouth-AI-70-hackathon
 Hackathon
 
-## Remain (working title): shared core
+## GuruAI: shared core
 
 Thesis: AI proposes with evidence, a person decides. One pipeline, one Privacy Gate, one Deterministic Rules Engine, one review pattern, reused by three personas: Student, Academic Staff, Teacher and TA.
 

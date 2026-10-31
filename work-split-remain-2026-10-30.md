@@ -1,7 +1,7 @@
-# Work Split: Remain (working title, final name to be decided later)
+# Work Split: GuruAI (working title, final name to be decided later)
 ## Based on the final agreed spec in the Spec tab. Core is preserved. No scope creep, no mega project.
 
-Working title: Remain. Final product name is to be decided later by the team. Do not rename code, files, or doc titles until the team decides.
+Working title: GuruAI. Final product name is to be decided later by the team. Do not rename code, files, or doc titles until the team decides.
 
 ## How the work runs, in order
 
@@ -82,4 +82,4 @@ Depends on: Kishore's core, gate, engine, and seeds; all three beats recorded. D
 - Demo data is synthetic and public sample only. No real personal data.
 - Metrics in the video are real counts from logs only, never illustrative.
 - If a build slips, cut depth within beats, never a whole beat. Never cut the three decision beats, the Privacy Gate, or the review queue.
-- Final name is to be decided later by the team. Working title Remain is used until then. Do not rename code or doc titles until the team decides.
+- Final name is to be decided later by the team. Working title GuruAI is used until then. Do not rename code or doc titles until the team decides.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Point Remain at a folder of papers on this Mac.
+// Point GuruAI at a folder of papers on this Mac.
 //   node scripts/ingest.js <folder> [--set my-quiz] [--rubric grade-q5|demo201-q3q5] [--roster roster.csv] [--propose]
 // Reads .pdf (text layer), .txt, .md. Keeps the paper-to-student map in local/ingest/<set>/map.json, never sent, never logged.
 // --propose runs every paper through the gate, assertClean, and the model now, so the portal opens instantly on cached proposals.

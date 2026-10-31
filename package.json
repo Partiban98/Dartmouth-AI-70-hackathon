@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Remain (working title): shared core. AI proposes with evidence, a person decides.",
+  "description": "GuruAI: shared core. AI proposes with evidence, a person decides.",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
     "dev": "next dev",

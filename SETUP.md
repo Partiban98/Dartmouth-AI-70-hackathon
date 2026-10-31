@@ -1,4 +1,4 @@
-# Remain: teammate setup (5 minutes)
+# GuruAI: teammate setup (5 minutes)
 
 You need: Node 22 or newer (https://nodejs.org), git, and the team's Anthropic API key from Kishore.
 
@@ -30,7 +30,7 @@ Reads `.pdf` (text layer), `.txt`, `.md`. Names and header lines never leave you
 
 ## Grade as a team: Quiz/Assignment codes
 
-The head TA opens the app and picks "Start grading a Quiz/Assignment": course, Quiz/Assignment name, question, full marks, and the mistakes with points off ("Fill in from the sample scheme" is a quick start). Remain gives a 6-character code and a message to paste into the team chat. There is no shared server yet, so the message carries a pack, one long line starting `REMAIN1:`. The code alone is not enough.
+The head TA opens the app and picks "Start grading a Quiz/Assignment": course, Quiz/Assignment name, question, full marks, and the mistakes with points off ("Fill in from the sample scheme" is a quick start). GuruAI gives a 6-character code and a message to paste into the team chat. There is no shared server yet, so the message carries a pack, one long line starting `REMAIN1:`. The code alone is not enough.
 
 Every other TA picks "Join with a Quiz/Assignment code", pastes the whole message, checks the preview, and adds their own papers. Their marking scheme is read-only. When they disagree with a suggestion and tick "Remember this for next time", the reason goes into their marks file as a proposed change. The head TA edits the scheme, which saves a new version, and shares the pack again. Pasting a newer pack asks before replacing and keeps the TA's own proposed changes.
 

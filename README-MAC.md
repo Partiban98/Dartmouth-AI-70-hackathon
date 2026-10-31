@@ -1,4 +1,4 @@
-# Remain Core, on your Mac
+# GuruAI Core, on your Mac
 
 This folder is the Mac source of truth for Kishore's core build. Do NOT use the VM folder ~/workspace/remain-core. The VM Claude Code run was stopped on Oct 30, 2026, before it created a handoff or any code, and it must not be used.
 
@@ -8,7 +8,7 @@ Files in this folder:
 - claude-code-prompt-kishore-core-2026-10-30.md: Prompt A (plan, fable) and Prompt B (implement, Opus), in order.
 - README-MAC.md: this file.
 
-Working title: Remain. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
+Working title: GuruAI. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
 
 How to run, on your Mac, in this folder:
 1. Open Terminal in this folder, or cd to it: cd ~/Documents/Remain-Core

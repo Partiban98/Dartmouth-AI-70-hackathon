@@ -1,6 +1,6 @@
-# HANDOFF-CORE.md: Remain core build, for the implementing session
+# HANDOFF-CORE.md: GuruAI core build, for the implementing session
 
-Working title: Remain. Final name is a team decision; do not rename anything.
+Working title: GuruAI. Final name is a team decision; do not rename anything.
 Scope: Kishore's core only, per work-split section "Kishore Theeraj Vasudevan Jaya". No full persona journeys, no demo video, no submission.
 Sources: final-spec-remain-2026-10-30.md (spec), work-split-remain-2026-10-30.md (split), claude-code-prompt-kishore-core-2026-10-30.md (prompt), README-MAC.md, and the state of this folder on Oct 30, 2026. Nothing else. Where this file had to make an implementation choice the spec leaves open, it is marked **core choice**. Where only the team can decide, it is in section 8, not decided here.
 
@@ -363,7 +363,7 @@ npm run dev                    # node server/server.js, then open the printed lo
 4. **Optional Gemini key** for rung 3, with `GEMINI_TIER=paid`. Without it, rung 3 is recorded as not configured and rung 4 is the only real backup.
 5. **Stack confirmation.** Zero-setup rule applied to this folder selects the no-build branch (nothing runs here; Node 26 present). Say so if the team already has a Next.js app running elsewhere tonight, because that would flip the branch.
 6. **Spec conflict to resolve:** section 9 says "Zod validation either way"; section 10 says the no-build branch is "zero dependencies" with "no new toolchain tonight". This handoff proposes a hand-written validator with identical checks (4.3). Approve that, or approve Zod as the single dependency.
-7. **Final product name.** Working title Remain stays in code and docs until the team decides.
+7. **Final product name.** Working title GuruAI stays in code and docs until the team decides.
 8. **Team opening sentence** for the video. Not part of the core; listed so it is not forgotten.
 9. **Clock times, sleep shifts, pivot times** for phases and gates.
 10. **Anthropic API wire format** (endpoint, headers, structured output or tool use request shape) must come from the official docs at implementation time. This handoff does not restate it, by constraint. If the docs and the spec's expected ids disagree, record it, do not guess.

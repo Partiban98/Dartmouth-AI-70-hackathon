@@ -3,7 +3,7 @@
 
 Original Spec tab remains the source for the thesis, spine, Privacy Gate, Deterministic Rules Engine, seeds, and cut rules. This tab records the team's grading-first decision, the core that is already built, and the extra ideas as later improvements, with why each exists and how it connects to grading.
 
-Working title: Remain. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
+Working title: GuruAI. Final product name is to be decided later by the team. Do not rename code or files until the team decides.
 
 ## Team decision: grading first, interactive learning later if time
 

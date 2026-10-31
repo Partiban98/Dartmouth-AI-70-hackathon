@@ -84,7 +84,13 @@ export function unsafePattern(sig) {
       if (s[i] === "?") { if (s[i + 1] !== ":") fail("A method pattern cannot look ahead or behind."); i += 2; }
       const branches = alternation(); if (s[i++] !== ")") fail("A method pattern has an unclosed group.");
       // A group that ends in an open-ended repeat could run into whatever follows the group.
-      for (const b of branches) { const last = [...b].reverse().find((x) => !x.zero); if (last && last.max === Infinity) fail("A group in a method pattern cannot end with an open-ended repeat."); }
+      for (const b of branches) {
+        for (const tail of [...b].reverse()) {
+          if (tail.zero) continue;
+          if (tail.max === Infinity) fail("A group in a method pattern cannot end with an open-ended repeat.");
+          if (tail.min > 0) break;
+        }
+      }
       // What a group can start with: each branch's first piece; anything unclear counts as "anything".
       const firsts = branches.map((b) => b.find((x) => !x.zero));
       const has = (ch) => firsts.some((f) => !f || f.min === 0 || f.has(ch));

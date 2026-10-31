@@ -98,3 +98,8 @@ test("E6 start review: an unbounded repeat needs ^ or an earlier required piece 
   execFileSync(process.execPath, ["-e", script], { timeout: 3000 });
   assert.ok(Date.now() - t0 < 3000);
 });
+
+test("E6: an optional suffix cannot hide an open-ended repeat at a group boundary", () => {
+  for (const sig of ["(?:ba+c?)a+X", "(?:ba+c?d?)a+X", "(?:ba+c{0,2})a+X"]) assert.ok(unsafePattern(sig), sig);
+  assert.equal(unsafePattern("(?:ba+c)d+X"), null, "a required distinct suffix separates the repeats");
+});

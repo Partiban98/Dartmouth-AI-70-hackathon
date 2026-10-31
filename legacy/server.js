@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname, normalize as pnorm } from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertClean } from "../lib/gate.js";
+import { checkOutbound, withLocalIdentities, logProblem } from "../server/privacy.js";
 import { verifyQuote, counters, analytics } from "../lib/engine.js";
 import { makeIdeas } from "../lib/ideas.js";
 import { recordProblem } from "../server/records.js";
@@ -35,22 +35,26 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
         const body = await readBody(req);
         const ideaConfig = ideas[body.idea];
         if (!ideaConfig) return send(res, 400, { error: "unknown idea" });
-        try { assertClean(body.payload, course); }
+        let payload;
+        try { payload = checkOutbound(body, ideaConfig, withLocalIdentities(course, localDir)); }
         catch (e) {
-          if (e?.status === 422) { log.append("blocked", blockedRecord(body.idea, body.itemId, e.rule, e.count)); return send(res, 422, { code: "BLOCKED", rule: e.rule, count: e.count }); }
+          if (e?.status === 422) { log.append("blocked", blockedRecord(body.idea, body.itemId, e.rule, e.count)); return send(res, 422, { code: "BLOCKED", rule: e.rule, count: e.count, where: e.where }); }
+          if (e?.status === 400) return send(res, 400, { error: e.error });
           throw e;
         }
-        const r = await adapter.propose({ ideaConfig, payload: body.payload, promptName: body.promptName ?? ideaConfig.promptName });
+        const r = await adapter.propose({ ideaConfig, payload, promptName: body.promptName ?? ideaConfig.promptName });
         if (!r.ok) return send(res, 502, { error: r.error, attempts: r.attempts });
-        const verifyText = textOf(body.payload, ideaConfig.verifyAgainst);
+        const verifyText = textOf(payload, ideaConfig.verifyAgainst);
         const proposals = r.proposals.map((p) => ({ ...p, verified: verifyQuote(p.quote, verifyText).found }));
         log.append("proposals", proposalRecord(body.idea, body.itemId, { ...r, proposals }));
         return send(res, 200, { proposals: r.proposals, label: r.label, modelId: r.modelId, rung: r.rung, cacheHit: r.cacheHit, caveat: r.caveat, attempts: r.attempts });
       }
       if (req.method === "POST" && url.pathname === "/log") {
         const rec = await readBody(req);
-        const problem = recordProblem(rec, ideas);
-        if (problem) return send(res, 400, { error: problem });
+        const shape = recordProblem(rec, ideas);
+        if (shape) return send(res, 400, { error: shape });
+        const problem = logProblem(rec, withLocalIdentities(course, localDir));
+        if (problem) return send(res, 422, { error: problem });
         log.append(rec.type === "decision" ? "decisions" : "gate", rec);
         return send(res, 200, { ok: true });
       }

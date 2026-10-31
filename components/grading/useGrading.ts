@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runPipeline } from "@/lib/pipeline.js";
 import { makeIdeas } from "@/lib/ideas.js";
+import { strictLogFetch } from "@/lib/saveguard.js";
 
 export type Stage =
   | { kind: "idle" }
@@ -91,9 +92,19 @@ export function useGrading() {
       resolveFlags: (flags: any[], report: any) => askForRun({ kind: "names", flags, report }),
       approveGate: (report: any, flags: any[], { blocked }: any) => askForRun({ kind: "privacy", report, flags, blocked }),
       review: (card: any) => { if (mine !== run.current) return Promise.resolve(null); setModelLabel(card.label); return askForRun({ kind: "suggestions", card }); },
-      decide: (bar: any) => askForRun({ kind: "mark", bar }),
+      decide: async (bar: any) => { const d = await askForRun({ kind: "mark", bar }); typed.current = d; return d; },
     };
-    const r = await runPipeline(idea, item, ui, { course: data.course });
+    const typed = { current: null as any };
+    let r: any;
+    try { r = await runPipeline(idea, item, ui, { course: data.course, fetchImpl: strictLogFetch(fetch) }); }
+    catch (e: any) {
+      if (!e?.notSaved) throw e;
+      if (mine !== run.current) return; // the grader has moved to another paper; this failure belongs to the old one
+      // A failed save is never shown as saved; what the grader typed stays on screen.
+      const d = typed.current;
+      setStage({ kind: "stopped", text: /name/i.test(e.message) ? "notSavedName" : "notSaved", detail: d ? [`${d.grade ?? ""} / ${idea.standards.max}`, d.feedback ?? ""] : undefined });
+      return;
+    }
     if (mine !== run.current) return;
     if (r.receipt) {
       setStage({ kind: "saved", result: r }); refreshCounts();
@@ -112,6 +123,13 @@ export function useGrading() {
     const j = await res.json();
     if (!res.ok) return j.errors ?? [j.error];
     setStandards((s) => ({ ...s, [rubricKey]: next }));
+    // A Quiz/Assignment's card and copied pack come from the server: refresh just that list. If the refresh fails, keep the saved
+    // scheme on screen and withhold Copy, so the old version is never shared.
+    if (assignments.some((a) => a.code === rubricKey)) {
+      const asg = await get("/api/assignment");
+      if (Array.isArray(asg?.assignments)) setAssignments(asg.assignments);
+      else setAssignments((list) => list.map((a) => (a.code === rubricKey ? { ...a, version: next.version, standards: next, pack: null, packProblem: "Saved. Reload the page to copy the new version." } : a)));
+    }
     return null;
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };

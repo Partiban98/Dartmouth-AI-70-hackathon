@@ -1,6 +1,7 @@
 // Instructor-owned rubric: read the latest version, save a new version. Validated by code before it is saved.
 // A Quiz/Assignment code reads its own scheme; only the head TA's laptop may change it.
-import { loadStandards, saveStandards, LOCAL_DIR } from "@/server/context.js";
+import { loadStandards, saveStandards, LOCAL_DIR, getContext } from "@/server/context.js";
+import { schemeProblem, withLocalIdentities } from "@/server/privacy.js";
 import { validateStandards } from "@/lib/engine.js";
 import { loadAssignment, saveScheme, unsafePattern } from "@/server/assignment.js";
 import { uploaderId } from "@/server/ingest.js";
@@ -18,6 +19,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const table = await request.json();
+  const p = schemeProblem(table, withLocalIdentities(getContext().course, LOCAL_DIR));
+  if (p) return Response.json({ ok: false, errors: [p] }, { status: 422 });
   if (loadAssignment(LOCAL_DIR, table?.id)) {
     const { errors } = saveScheme(LOCAL_DIR, table, uploaderId(LOCAL_DIR));
     return errors ? Response.json({ ok: false, errors }, { status: 422 }) : Response.json({ ok: true, version: table.version });

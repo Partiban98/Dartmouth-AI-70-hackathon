@@ -5,6 +5,9 @@ import { feedbackLine } from "@/lib/feedback.js";
 import { COPY } from "./copy";
 import { buildReview, addableCodes } from "./review.js";
 import type { Stage } from "./useGrading";
+import MakeTestCase from "./MakeTestCase";
+import RegressionBadge from "./RegressionBadge";
+import { firstTrueOverride } from "./overrides.js";
 
 const c = COPY.grader;
 /** Keys drive the panel. Links and buttons keep their own behaviour; Enter never leaks to a focused link. */
@@ -14,6 +17,7 @@ const cls = (...xs: (string | false | null | undefined)[]) => xs.filter(Boolean)
 export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: () => void; onScheme: () => void }) {
   const { current, papers, index, stage, table, answer } = g;
   const [lit, setLit] = useState<number[]>([]);
+  const [evalBump, setEvalBump] = useState(0);
   const total = papers.length;
 
   // Which paper line a suggestion points at.
@@ -41,6 +45,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
         <button className="btn" disabled={index >= total - 1} onClick={() => g.start(papers[index + 1])}>{c.next} →</button>
         <div className="flex-1 min-w-[120px] h-2 rounded bg-line"><div className="h-2 rounded bg-good" style={{ width: `${total ? (100 * g.decided.size) / total : 0}%` }} /></div>
         <span className="text-sm text-fg-3">{g.decided.size} of {total} marked</span>
+        <RegressionBadge bump={evalBump} />
         <button className="btn" onClick={onScheme}>{c.scheme}</button>
         <button className="btn" onClick={onFinish}>{c.finish}</button>
       </div>
@@ -66,7 +71,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {stage.kind === "suggestions" && <Suggestions card={stage.card} table={table} lineOf={lineOf} onLight={setLit} onDone={(r: any) => { setLit([]); answer(r); }} />}
             {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
             {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} onDone={(d: any) => answer(d)} />}
-            {stage.kind === "saved" && <Saved result={stage.result} table={table} />}
+            {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onAdded={() => setEvalBump((b) => b + 1)} />}
             {stage.kind === "stopped" && <Panel title={c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? c.noAnswer : c.stopped}</p>{stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
           </div>
         </section>
@@ -240,12 +245,16 @@ function Mark({ bar, table, name, onDone }: any) {
   );
 }
 
-function Saved({ result, table }: any) {
+function Saved({ result, table, idea, onAdded }: any) {
+  // An override is a suggestion the TA ruled out: to === "OK". A confirm never
+  // reaches overrides, and a change carries the code it was changed to.
+  const override = firstTrueOverride(result.overrides);
   return (
     <Panel title={c.savedTitle} tone="good">
       <p className="text-2xl font-bold">{c.savedBy(result.decidedBy, result.grade, table.max)}</p>
       <p className="text-sm text-fg-3">{c.receiptSub}{result.overrides?.length ? ` · ${result.overrides.length} suggestion${result.overrides.length === 1 ? "" : "s"} changed by you` : ""}</p>
       {result.feedback && <p className="mt-2 text-fg-2">“{result.feedback}”</p>}
+      {override && <MakeTestCase idea={idea} itemId={result.itemId} aiCode={override.from} taRuling="OK" onAdded={onAdded} />}
     </Panel>
   );
 }

@@ -95,6 +95,19 @@ test("the shared CSV scrubs every known identifier for this laptop's students, i
   assert.ok(!/\bLi\b|\bWu\b|lw42|example\.edu/.test(shared), shared);
 });
 
+test("an uploaded paper's non-Latin name and student ID never reach the shared CSV, end to end from the file", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "intl-")), localDir = mkdtempSync(join(tmpdir(), "intl-local-"));
+  writeFileSync(join(folder, "paper.txt"), "Name: 王伟\nStudent ID: 123456789\nNetID: ww42\n320 / 10 = 32\n3.162\n");
+  const { papers } = await importFolder({ folder, setId: "7K3-Q2M", rubricId: "7K3-Q2M", course, localDir, ideaConfig: ideas.grade });
+  const map = loadMap(localDir, "7K3-Q2M");
+  const id = papers[0].id;
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: id, confirmed: [], overrides: [], grade: 9, decidedBy: "TA 2", feedback: "王伟 used the median; student 123456789, netid ww42", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "王伟 (123456789) chose the median", itemId: id }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/王伟|123456789|ww42/.test(shared), shared);
+  assert.ok(shared.includes("[student] used the median"), "the note still reads");
+});
+
 test("safeSetId rejects a set id that looks like an identifier, since it would be refused by the log and could leak", async () => {
   const { safeSetId } = await import("../server/ingest.js");
   assert.throws(() => safeSetId("demo-folder"), /R-04/);

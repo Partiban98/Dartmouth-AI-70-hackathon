@@ -86,7 +86,7 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
     const id = byFile[f] ?? `${me}-P-${String(++next).padStart(2, "0")}`;
     const parsed = parsePaper(await extractText(join(folder, f)), f);
     papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
-    map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "" };
+    map[id] = { file: f, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);
     let clean = true; try { if (!g.blocked) assertClean(g.payload, course); } catch { clean = false; }
     report.push({ id, file: f, steps: parsed.steps.length, droppedFields: g.report.droppedFields, counts: Object.fromEntries(Object.entries(g.report.counts).filter(([, n]) => n > 0)), blocked: g.blocked, blockedRules: g.report.blockedRules, clean });
@@ -126,7 +126,8 @@ export function exportCsv({ setId, papers, map, logs, table, assignment = "", na
   // A Quiz/Assignment CSV is shared with the head TA, so names and file names stay out unless this laptop asks for them.
   // Notes are typed by people, so a shared file scrubs every name word from this laptop's map and every identifier pattern from them.
   const words = names ? [] : [...new Set(Object.values(map).flatMap((m) => [m.name, m.netid, m.email, m.studentId, ...String(m.name ?? "").split(/\s+/)]).filter((w) => w && String(w).length >= 2))].map(String).sort((a, b) => b.length - a.length);
-  const nameRe = words.length ? new RegExp(`\\b(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi") : null;
+  // Unicode-aware edges, so a known name in any script is matched whole: \b only knows ASCII letters.
+  const nameRe = words.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu") : null;
   const scrub = (t) => { if (names || t == null) return t; let x = String(t); for (const [, , , re] of PATTERN_RULES) x = x.replace(new RegExp(re.source, "g"), "[removed]"); return nameRe ? x.replace(nameRe, "[student]") : x; };
   const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${scrub(p.reason)}`).join(" | ");
   const rows = papers.map((pp) => {

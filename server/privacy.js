@@ -28,20 +28,23 @@ export function projectPayload(payload, ideaConfig) {
  *  Read on each call so papers imported after start-up count. Returned on the course as `identities`, matched as whole words in any case;
  *  long values are also added as known names so the shared gate's own check (substring, case-sensitive) blocks them too. */
 const coursePeople = (course) => [...(course.roster ?? []), ...(course.dictionary ?? []).map((d) => ({ name: d.name }))];
-function idsOf(people) {
+function idsOf(people, noise = new Set()) {
   const ids = new Set();
   for (const m of people) {
     const name = String(m.name ?? "").trim();
     // Every full name and ID counts at any length. Split name words need two Latin letters (one character is a whole name in other scripts).
     for (const v of [name, m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t) ids.add(t); }
-    for (const w of name.split(/\s+/)) if (w.length >= (/^[\x00-\x7f]*$/.test(w) ? 2 : 1)) ids.add(w);
+    // A name taken from a filename carries course words (ENGS, 93, Quiz); those are not identities. Real name words and id tokens stay.
+    // Only a name that stood in for a missing Name line (the filename) loses course words; roster and header names keep every word.
+    for (const raw of name.split(/\s+/)) { const w = raw.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""); if (w.length >= (/^[\x00-\x7f]*$/.test(w) ? 2 : 1) && !(m.nameFromFile && noise.has(w.toLowerCase()))) ids.add(w); }
   }
   return ids;
 }
 export function withLocalIdentities(course, localDir) {
   const people = coursePeople(course);
-  for (const meta of listImported(localDir)) people.push(...Object.values(loadMap(localDir, meta.id)));
-  const ids = idsOf(people);
+  const noise = new Set(String(course.course ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u));
+  for (const meta of listImported(localDir)) { people.push(...Object.values(loadMap(localDir, meta.id))); for (const w of `${meta.title ?? ""} ${meta.id ?? ""}`.toLowerCase().split(/[^\p{L}\p{N}]+/u)) noise.add(w); }
+  const ids = idsOf(people, noise);
   const known = new Set(people.map((m) => m.name));
   const extra = [...ids].filter((t) => !known.has(t) && (/^[\x00-\x7f]*$/.test(t) ? t.length >= 4 && t.includes(" ") : true));
   return { ...course, identities: [...ids], dictionary: [...(course.dictionary ?? []), ...extra.map((name, i) => ({ name, alias: `STUDENT-${i + 1}` }))] };
@@ -105,6 +108,7 @@ export function draftProblem(draft, course) {
 
 /** E1 for logs: a record may name the grader who decided, never a known student. Returns a plain reason or null. */
 export function logProblem(rec, course) {
+  // The deciding grader's name is theirs to give; idea, itemId and the other system fields are ids checked by the record shape, not free text.
   try { checkTexts(texts(rec, new Set(["decidedBy"])), course, "log"); return null; }
   catch (e) { return e.rule === "R-09" ? "The note or a reason names a student." : `The note or a reason contains an identifier (${e.rule}).`; }
 }
@@ -121,6 +125,8 @@ export function clearedPhrases(cleared, payload, course) {
 /** Everything a propose request would send, checked. Returns the projected payload; throws { status } on any problem. */
 export function checkOutbound(body, ideaConfig, course) {
   const payload = projectPayload(body?.payload, ideaConfig);
+  // A grading paper with no readable work is marked by hand from the original; nothing is sent for it.
+  if (Array.isArray(ideaConfig.allowlistFields) && ideaConfig.allowlistFields.includes("steps") && !(payload.steps ?? []).some((x) => String(x).trim())) fail(400, { error: "this paper has no readable work; mark it by hand from the original" });
   const cleared = clearedPhrases(body?.cleared, payload, course);
   const scoped = cleared.length ? { ...course, glossary: [...(course.glossary ?? []), ...cleared] } : course;
   assertClean(payload, scoped);

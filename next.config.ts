@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The PDF reader runs in Node and loads its own worker file at runtime; bundling it drops that file and every PDF upload fails in the built app.
+  serverExternalPackages: ["pdfjs-dist"],
   // Server code reads local/ and data/ at runtime, so the build's file tracing would otherwise list the key file,
   // this laptop's papers and name maps, the answer keys and test fixtures as server files to package.
   outputFileTracingExcludes: {

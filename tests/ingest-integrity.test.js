@@ -54,14 +54,16 @@ test("S3: a file replaced in place in a watched folder gets a new id; an unchang
   assert.equal(map[a].name, "Alpha Student"); assert.equal(map[b].name, "Beta Student");
 });
 
-test("PUX-4: a paper with no readable work is held with a reason, never offered for grading", async () => {
+test("PUX-4 (scans): a paper with no readable work is kept for marking by hand from the original, flagged so it is never sent", async () => {
   const localDir = mkdtempSync(join(tmpdir(), "p4l-"));
   const r = await up(localDir, [["empty.txt", "Name: Test Pupil\n \n"], ["good.txt", "Name: Good One\nSD = 3.162\n"]]);
-  assert.equal(r.papers.length, 1, "only the readable paper is ready");
-  const held = r.report.find((x) => x.file === "empty.txt");
-  assert.equal(held.held, "no readable work");
-  assert.equal(loadImported(localDir, r.meta.id).papers.length, 1);
-  await assert.rejects(up(mkdtempSync(join(tmpdir(), "p4m-")), [["blank.txt", "   \n"]]), /readable/);
+  assert.equal(r.papers.length, 2, "both papers are in the set");
+  const scan = r.papers.find((p) => p.unreadable);
+  assert.ok(scan, "the unreadable one is flagged"); assert.deepEqual(scan.steps, []); assert.equal(scan.finalAnswer, null);
+  assert.equal(r.report.find((x) => x.file === "empty.txt").held, "no readable work: mark by hand from the original");
+  assert.equal(loadMap(localDir, r.meta.id)[scan.id].name, "Test Pupil", "its student is known on this laptop");
+  const all = await up(mkdtempSync(join(tmpdir(), "p4m-")), [["blank.txt", "   \n"]]);
+  assert.equal(all.papers.length, 1); assert.equal(all.papers[0].unreadable, true, "a batch of scans still imports, for marking by hand");
 });
 
 test("QA-02: scientific notation and trailing page or question numbers give the real final answer", () => {
@@ -99,10 +101,17 @@ test("S3 review: a map written before content fingerprints existed is compared b
   assert.equal(loadMap(localDir, "t-set")[a].name, "Alpha Student");
 });
 
-test("PUX-4 review: a paper holding only a page or question footer is held too", async () => {
+test("PUX-4 review: a paper holding only a page or question footer is unreadable too", async () => {
   const r = await up(mkdtempSync(join(tmpdir(), "p4f-")), [["scan.txt", "Name: Scan Student\nPage 1 of 1\n"], ["good.txt", "Name: Good One\nSD = 3.162\n"]]);
-  assert.equal(r.papers.length, 1);
-  assert.equal(r.report.find((x) => x.file === "scan.txt").held, "no readable work");
+  assert.equal(r.papers.filter((p) => p.unreadable).length, 1);
+  assert.equal(r.report.find((x) => x.file === "scan.txt").held, "no readable work: mark by hand from the original");
+});
+
+test("PUX-4 (scans): the server refuses to send a grading paper with no work, and the screen starts such a paper by hand", async () => {
+  const { checkOutbound } = await import("../server/privacy.js");
+  assert.throws(() => checkOutbound({ idea: "grade", payload: { steps: [], finalAnswer: null } }, ideas.grade, course), (e) => e.status === 400);
+  const { startsByHand } = await import("../components/grading/manual.js");
+  assert.equal(startsByHand({ unreadable: true }), true); assert.equal(startsByHand({ steps: ["SD = 3.162"] }), false);
 });
 
 test("CLI review: the import script reports held files and exits cleanly, writing only to the data folder it is given", async () => {
@@ -111,7 +120,7 @@ test("CLI review: the import script reports held files and exits cleanly, writin
   writeFileSync(join(folder, "empty.txt"), "Name: Test Pupil\n \n"); writeFileSync(join(folder, "good.txt"), "Name: Good One\nSD = 3.162\n");
   const out = execFileSync(process.execPath, [new URL("../scripts/ingest.js", import.meta.url).pathname, folder, "--set", "cli-set"], { env: { ...process.env, REMAIN_LOCAL_DIR: localDir }, encoding: "utf8" });
   assert.match(out, /empty\.txt \| held: no readable work/);
-  assert.equal(loadImported(localDir, "cli-set").papers.length, 1);
+  assert.equal(loadImported(localDir, "cli-set").papers.length, 2, "the unreadable one is kept for marking by hand");
 });
 
 test("S3 migration review: without a fingerprint, the same name and work under a different student ID or NetID is a different paper", async () => {

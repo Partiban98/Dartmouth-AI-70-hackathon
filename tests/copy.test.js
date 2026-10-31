@@ -37,6 +37,6 @@ test("E5 and PUX-5: the screens only offer what the system can do", () => {
   const grader = readFileSync(join(ROOT, "components", "grading", "Grader.tsx"), "utf8");
   assert.ok(/No, keep it/.test(copy) && /"not-name"/.test(grader), "the human may keep a term through the server-checked path");
   assert.match(copy, /nameNotTerm: "[^"]*server still checks[^"]*only to this check/, "the explanation preserves server checks and request scope");
-  assert.ok(!/still mark the paper yourself/.test(copy), "no promise of manual marking that does not exist yet");
-  assert.match(copy, /noAnswer: "[^"]*Try again[^"]*"/, "no-answer message names the real choices");
+  assert.match(copy, /noAnswer: "[^"]*Mark it yourself[^"]*try again[^"]*"/, "no-answer message names the real choices, including marking by hand");
+  assert.ok(/markByHand/.test(grader), "the button exists");
 });

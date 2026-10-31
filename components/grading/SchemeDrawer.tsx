@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { validateStandards } from "@/lib/engine.js";
 import { bumpVersion } from "@/lib/feedback.js";
 import { COPY } from "./copy";
@@ -14,11 +14,21 @@ export default function SchemeDrawer({ table, onClose, onSave, readOnlyBy }: any
   const dirty = JSON.stringify(draft) !== JSON.stringify(table);
   const setCode = (i: number, patch: any) => setDraft((d: any) => ({ ...d, codes: d.codes.map((x: any, j: number) => (j === i ? { ...x, ...patch } : x)) }));
   const approve = (i: number) => setDraft((d: any) => { const p = d.pendingPrecedents[i]; return { ...d, precedents: [...(d.precedents ?? []), `${p.code}: ${p.reason} (${p.by}, paper ${p.itemId})`], pendingPrecedents: d.pendingPrecedents.filter((_: any, j: number) => j !== i) }; });
+  // A real dialog: focus moves in, Escape closes, focus returns to what opened it.
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose); onCloseRef.current = onClose; // the parent passes a new function each render; run the effect once
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); onCloseRef.current(); } };
+    window.addEventListener("keydown", h);
+    return () => { window.removeEventListener("keydown", h); opener?.focus?.(); };
+  }, []);
   const save = async () => { const errs = await onSave({ ...draft, version: bumpVersion(table.version) }); if (errs) setErrors(errs); else onClose(); };
   return (
     <div className="fixed inset-0 z-20 bg-black/40" onClick={onClose}>
-      <aside onClick={(e) => e.stopPropagation()} className="absolute right-0 top-0 h-full w-full max-w-2xl overflow-auto bg-card p-6" aria-label={c.title}>
-        <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">{c.title} <span className="text-sm text-fg-3">{c.version(table.version)}</span></h2><button className="underline text-sm" onClick={onClose}>{c.close}</button></div>
+      <aside onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" className="absolute right-0 top-0 h-full w-full max-w-2xl overflow-auto bg-card p-6" aria-label={c.title}>
+        <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">{c.title} <span className="text-sm text-fg-3">{c.version(table.version)}</span></h2><button ref={closeRef} className="underline text-sm" onClick={onClose}>{c.close}</button></div>
         <p className="mt-1 text-sm text-fg-2">{readOnlyBy ? c.setBy(readOnlyBy) : c.owner(draft.owner)} <span className={v.ok ? "text-good" : "text-bad"}>{v.ok ? c.ready : c.invalid + ": " + v.errors.join("; ")}</span></p>
         <fieldset disabled={!!readOnlyBy} className="contents">
         <table className="mt-5 w-full text-sm"><thead><tr className="text-left text-fg-3"><th className="py-1">{c.mistake}</th><th className="py-1 text-right">{c.pointsOff}</th></tr></thead>

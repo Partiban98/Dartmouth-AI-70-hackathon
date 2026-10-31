@@ -175,6 +175,14 @@ export const COPY = {
     startOver: "Start over",
     more: "Keep grading",
   },
+  agreement: {
+    title: "You and the AI",
+    help: "For each mistake the AI or the marking scheme suggested, how often a person kept it, changed it, or ruled it out. Counted from your own marks, not from an answer key.",
+    caption: "Suggestions kept, changed or ruled out, by mistake type",
+    none: "No marks yet. Mark a paper and this fills in.",
+    cols: { mistake: "Mistake", kept: "Kept", changed: "Changed", ruledOut: "Ruled out", total: "Suggestions", allCodes: "All mistakes" },
+    sourceNote: "A suggestion here may have come from the AI or from the marking scheme's own rules: the decision log records the code, not which of the two raised it.",
+  },
   scheme: {
     title: "Marking scheme",
     version: (v: string) => `version ${v}`,

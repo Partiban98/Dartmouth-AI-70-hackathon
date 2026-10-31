@@ -14,7 +14,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col">
         <header className="border-b border-line bg-card">
           <div className="mx-auto max-w-[1280px] px-5 py-3 flex items-center gap-4">
-            <Link href="/grade" className="flex items-baseline gap-2"><span className="text-xl font-bold tracking-tight">Remain</span><span className="text-sm text-fg-3">Grade</span></Link>
+            {/* A plain link, not a Next Link: on /grade it reloads, which returns the grader to the Start screen. */}
+            <a href="/grade" className="flex items-baseline gap-2"><span className="text-xl font-bold tracking-tight">Remain</span><span className="text-sm text-fg-3">Grade</span></a>
             <p className="ml-auto text-sm text-fg-3 hidden sm:block">AI suggests. You decide every mark.</p>
           </div>
         </header>

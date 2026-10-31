@@ -11,7 +11,8 @@
     "start": "next start",
     "legacy": "node legacy/server.js",
     "smoke": "node scripts/smoke-g0.js",
-    "smoke:gemini": "node scripts/smoke-gemini.js"
+    "smoke:gemini": "node scripts/smoke-gemini.js",
+    "eval:overrides": "node scripts/eval-overrides.js"
   },
   "dependencies": {
     "next": "^16.4.3",

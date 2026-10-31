@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import vm from "node:vm";
 import { runPipeline } from "../lib/pipeline.js";
 import { makeIdeas } from "../lib/ideas.js";
+import { strictLogFetch } from "../lib/saveguard.js";
 import { course, companion, upskillStandards, gradeStandards, submissions } from "./helpers.js";
 
 const require = createRequire(import.meta.url);
@@ -40,7 +41,7 @@ async function hook() {
   const mod = { exports: {} };
   vm.runInNewContext(compiled.code, {
     module: mod, exports: mod.exports, fetch, setTimeout, clearTimeout,
-    require: (name) => name === "react" ? hooks : name.includes("ideas") ? { makeIdeas } : { runPipeline: (idea, item, ui, deps) => runPipeline(idea, item, ui, { ...deps, fetchImpl: fetch }) },
+    require: (name) => name === "react" ? hooks : name.includes("ideas") ? { makeIdeas } : name.includes("saveguard") ? { strictLogFetch } : { runPipeline: (idea, item, ui, deps) => runPipeline(idea, item, ui, { ...deps, fetchImpl: fetch }) },
   });
   const render = () => { cursor = 0; return mod.exports.useGrading(); };
   await render().reload();

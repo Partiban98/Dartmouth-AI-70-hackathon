@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Remain: Show your work</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <h1>Remain <span class="muted">(working title)</span></h1>
+    <p class="tagline">Show your work: AI proposes with evidence, a person decides.</p>
+    <p id="model-label" class="label" aria-live="polite">Model: no call made yet</p>
+  </header>
+
+  <section class="spine" aria-labelledby="spine-h">
+    <h2 id="spine-h">Every flow, four stages, in this order</h2>
+    <ol>
+      <li><strong>Privacy Gate</strong>, on this machine, before any cloud call.</li>
+      <li><strong>Model proposes</strong>: an allowlisted code, an exact quote, a confidence.</li>
+      <li><strong>Rules Engine</strong>, deterministic code, verifies quotes and computes.</li>
+      <li><strong>A person decides</strong>: confirms, edits, or overrides, and is named in the receipt.</li>
+    </ol>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Personas">
+    <button role="tab" id="tab-student" aria-controls="panel-student" aria-selected="false">Student</button>
+    <button role="tab" id="tab-staff" aria-controls="panel-staff" aria-selected="false">Academic Staff</button>
+    <button role="tab" id="tab-ta" aria-controls="panel-ta" aria-selected="true">Teacher and TA</button>
+  </nav>
+
+  <section id="panel-student" role="tabpanel" aria-labelledby="tab-student" hidden>
+    <h2>Student: Course Companion</h2>
+    <p>Journey built on this core by Rineetha Gunasekaran. Uses the same gate, engine, components, and pipeline.</p>
+    <div id="mount-student"></div>
+  </section>
+  <section id="panel-staff" role="tabpanel" aria-labelledby="tab-staff" hidden>
+    <h2>Academic Staff: Upskilling</h2>
+    <p>Journey built on this core by Xinyan Huang. Uses the same gate, engine, components, and pipeline.</p>
+    <div id="mount-staff"></div>
+  </section>
+  <section id="panel-ta" role="tabpanel" aria-labelledby="tab-ta">
+    <h2>Teacher and TA: Grading</h2>
+    <p>Core loop, one paper at a time. Journey depth built on this core by Partiban Anathurai.</p>
+    <div class="grid">
+      <div id="mount-queue"></div>
+      <div id="mount-flow"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p id="honest-limit" class="limit"></p>
+    <p class="muted">Synthetic demo data only. Logs hold types and counts, never values. Alias map stays in this browser tab.</p>
+  </footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "id": "upskill-dana",
+  "title": "Email from a colleague: announce the review session",
+  "text": "From: Dana Whitcombe <dana.whitcombe@example.org>\nSent: Thu, Oct 29\nHi,\nCan you draft the announcement for the review session? Prof. Elena Marsh asked for it to go out this week.\nOne student, Omar Farouk (omar.farouk@example.org, ID 900111233), asked to be reminded directly; their number is 603-555-0142.\nThe room booking is under ticket REQ-20417.\nThanks,\nDana Whitcombe",
+  "facts": {
+    "day": "Wed",
+    "date": "Nov 4",
+    "time": "6:00 to 7:00 PM",
+    "room": "B-101",
+    "topic": "Variance vs standard deviation"
+  },
+  "expectedGateCounts": {
+    "HEADER_LINE": 2,
+    "NAME": 3,
+    "EMAIL": 1,
+    "STUDENT_ID": 1,
+    "PHONE": 1,
+    "INTERNAL_ID": 1
+  }
+}

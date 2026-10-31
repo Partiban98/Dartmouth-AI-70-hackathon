@@ -1,0 +1,14 @@
+{
+  "name": "remain-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Remain (working title): shared core. AI proposes with evidence, a person decides.",
+  "scripts": {
+    "test": "node --test tests/",
+    "dev": "node server/server.js",
+    "smoke": "node scripts/smoke-g0.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

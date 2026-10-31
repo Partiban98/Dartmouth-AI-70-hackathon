@@ -1,0 +1,22 @@
+:root { --fg: #111; --bg: #fff; --line: #666; --focus: #000; font-size: 18px; }
+* { box-sizing: border-box; }
+body { margin: 0 auto; max-width: 1100px; padding: 1rem; font-family: system-ui, sans-serif; color: var(--fg); background: var(--bg); line-height: 1.5; }
+h1 { font-size: 1.8rem; margin: 0; } h2 { font-size: 1.3rem; } h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+.muted { color: #444; font-weight: normal; font-size: 0.9em; }
+.tagline { font-size: 1.1rem; margin: 0.25rem 0; }
+.label { font-family: ui-monospace, monospace; border: 2px solid var(--line); padding: 0.4rem 0.6rem; display: inline-block; }
+.spine ol { padding-left: 1.4rem; }
+.tabs { display: flex; gap: 0.5rem; margin: 1rem 0; }
+.tabs button[aria-selected="true"] { text-decoration: underline; font-weight: bold; }
+button, input, select, textarea { font: inherit; padding: 0.4rem 0.7rem; border: 2px solid var(--line); background: var(--bg); color: var(--fg); }
+button:disabled { opacity: 0.5; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+.panel { border: 2px solid var(--line); padding: 1rem; margin: 1rem 0; }
+.queue button { display: block; width: 100%; text-align: left; margin-bottom: 0.3rem; }
+table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid var(--line); padding: 0.3rem 0.5rem; text-align: left; vertical-align: top; }
+.row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 0.4rem 0; }
+.status { font-weight: bold; }
+.limit { border-left: 4px solid var(--line); padding-left: 0.8rem; }
+blockquote { margin: 0.2rem 0; padding-left: 0.6rem; border-left: 3px solid var(--line); font-style: italic; }

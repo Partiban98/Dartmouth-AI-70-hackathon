@@ -1,0 +1,74 @@
+{
+  "id": "upskill-email",
+  "version": "1.0",
+  "owner": "staff lead",
+  "status": "approved",
+  "max": 0,
+  "codes": [
+    {
+      "code": "P-GOAL",
+      "deduction": 0,
+      "label": "Tip: state the goal of the message first"
+    },
+    {
+      "code": "P-AUDIENCE",
+      "deduction": 0,
+      "label": "Tip: name who this is for"
+    },
+    {
+      "code": "P-FACTS",
+      "deduction": 0,
+      "label": "Tip: give the model only the facts fields"
+    },
+    {
+      "code": "P-FORMAT",
+      "deduction": 0,
+      "label": "Tip: ask for a format, short email"
+    },
+    {
+      "code": "P-SENSITIVE",
+      "deduction": 0,
+      "label": "Tip: leave out anything private"
+    },
+    {
+      "code": "P-CHECK",
+      "deduction": 0,
+      "label": "Tip: plan how you will check the draft"
+    },
+    {
+      "code": "C-DATE-TIME",
+      "deduction": 0,
+      "label": "Check: date and time match the facts"
+    },
+    {
+      "code": "C-ROOM",
+      "deduction": 0,
+      "label": "Check: room matches the facts"
+    },
+    {
+      "code": "C-NO-PRIVATE-INFO",
+      "deduction": 0,
+      "label": "Check: no private information"
+    },
+    {
+      "code": "C-TONE",
+      "deduction": 0,
+      "label": "Check: tone fits the audience"
+    },
+    {
+      "code": "C-NO-NEW-CLAIMS",
+      "deduction": 0,
+      "label": "Check: no claim that is not in the facts"
+    },
+    {
+      "code": "OK",
+      "deduction": 0,
+      "label": "No change"
+    },
+    {
+      "code": "UNSURE",
+      "deduction": 0,
+      "label": "Ask the staff lead"
+    }
+  ]
+}

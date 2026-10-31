@@ -1,0 +1,12 @@
+import { readFileSync } from "node:fs";
+import { makeIdeas } from "../lib/ideas.js";
+export const read = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url), "utf8"));
+export const course = read("course.json");
+export const gradeStandards = read("grade-q5.v1.0.json");
+export const submissions = read("grade-q5.submissions.json");
+export const evalLabels = read("grade-q5.submissions.eval.json").labels;
+export const companion = read("companion-ch3.json");
+export const upskillStandards = read("upskill-email.v1.0.json");
+export const dana = read("upskill-dana-task.json");
+export const ideas = makeIdeas({ gradeStandards, companion, upskillStandards });
+export const sub = (id) => submissions.find((s) => s.id === id);

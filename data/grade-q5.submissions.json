@@ -1,0 +1,475 @@
+[
+  {
+    "id": "S-01",
+    "header": {
+      "name": "Priya Raman",
+      "netid": "demo-priram",
+      "email": "priya.raman@example.org",
+      "timestamp": "2026-10-28T11:01:00-04:00",
+      "filename": "quiz5_demo-priram.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-02",
+    "header": {
+      "name": "Marcus Delgado",
+      "netid": "demo-mardel",
+      "email": "marcus.delgado@example.org",
+      "timestamp": "2026-10-28T12:02:00-04:00",
+      "filename": "quiz5_demo-mardel.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-03",
+    "header": {
+      "name": "Elena Okafor",
+      "netid": "demo-eleoka",
+      "email": "elena.okafor@example.org",
+      "timestamp": "2026-10-28T13:03:00-04:00",
+      "filename": "quiz5_demo-eleoka.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-04",
+    "header": {
+      "name": "Tomas Lindqvist",
+      "netid": "demo-tomlin",
+      "email": "tomas.lindqvist@example.org",
+      "timestamp": "2026-10-28T14:04:00-04:00",
+      "filename": "quiz5_demo-tomlin.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Variance = 40 / 5 = 8",
+      "SD = sqrt(8) = 2.83"
+    ],
+    "finalAnswer": 2.83
+  },
+  {
+    "id": "S-05",
+    "header": {
+      "name": "Aisha Haddad",
+      "netid": "demo-aishad",
+      "email": "aisha.haddad@example.org",
+      "timestamp": "2026-10-28T15:05:00-04:00",
+      "filename": "quiz5_demo-aishad.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-06",
+    "header": {
+      "name": "Noah Petrov",
+      "netid": "demo-noapet",
+      "email": "noah.petrov@example.org",
+      "timestamp": "2026-10-28T16:06:00-04:00",
+      "filename": "quiz5_demo-noapet.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-07",
+    "header": {
+      "name": "Lucia Moreau",
+      "netid": "demo-lucmor",
+      "email": "lucia.moreau@example.org",
+      "timestamp": "2026-10-28T17:07:00-04:00",
+      "filename": "quiz5_demo-lucmor.pdf"
+    },
+    "steps": [
+      "Sum of x = 40",
+      "Sum of x squared = 16 + 36 + 64 + 100 + 144 = 360",
+      "(Sum of x) squared over n = 1600 / 5 = 320",
+      "Sample variance = (360 - 320) / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-08",
+    "header": {
+      "name": "Devin Castillo",
+      "netid": "demo-devcas",
+      "email": "devin.castillo@example.org",
+      "timestamp": "2026-10-28T18:08:00-04:00",
+      "filename": "quiz5_demo-devcas.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-09",
+    "header": {
+      "name": "Hana Sato",
+      "netid": "demo-hansat",
+      "email": "hana.sato@example.org",
+      "timestamp": "2026-10-28T19:09:00-04:00",
+      "filename": "quiz5_demo-hansat.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: 16, 4, 0, 4, 18",
+      "Sum of squared deviations = 42",
+      "Sample variance = 42 / (5 - 1) = 10.5",
+      "Sample SD = sqrt(10.5) = 3.24"
+    ],
+    "finalAnswer": 3.24
+  },
+  {
+    "id": "S-10",
+    "header": {
+      "name": "Omar Farouk",
+      "netid": "demo-omafar",
+      "email": "omar.farouk@example.org",
+      "timestamp": "2026-10-28T10:10:00-04:00",
+      "filename": "quiz5_demo-omafar.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Variance = 40 / 5 = 8",
+      "SD = sqrt(8) = 2.83"
+    ],
+    "finalAnswer": 2.83
+  },
+  {
+    "id": "S-11",
+    "header": {
+      "name": "Sofia Brandt",
+      "netid": "demo-sofbra",
+      "email": "sofia.brandt@example.org",
+      "timestamp": "2026-10-28T11:11:00-04:00",
+      "filename": "quiz5_demo-sofbra.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-12",
+    "header": {
+      "name": "Felix Nakamura",
+      "netid": "demo-felnak",
+      "email": "felix.nakamura@example.org",
+      "timestamp": "2026-10-28T12:12:00-04:00",
+      "filename": "quiz5_demo-felnak.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Checked with Tomas Lindqvist, mean is 8",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-13",
+    "header": {
+      "name": "Ingrid Holm",
+      "netid": "demo-inghol",
+      "email": "ingrid.holm@example.org",
+      "timestamp": "2026-10-28T13:13:00-04:00",
+      "filename": "quiz5_demo-inghol.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-14",
+    "header": {
+      "name": "Rafael Quintero",
+      "netid": "demo-rafqui",
+      "email": "rafael.quintero@example.org",
+      "timestamp": "2026-10-28T14:14:00-04:00",
+      "filename": "quiz5_demo-rafqui.pdf"
+    },
+    "steps": [
+      "Sum of x = 40",
+      "Sum of x squared = 16 + 36 + 64 + 100 + 144 = 360",
+      "(Sum of x) squared over n = 1600 / 5 = 320",
+      "Sample variance = (360 - 320) / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-15",
+    "header": {
+      "name": "Maya Osei",
+      "netid": "demo-mayose",
+      "email": "maya.osei@example.org",
+      "timestamp": "2026-10-28T15:15:00-04:00",
+      "filename": "quiz5_demo-mayose.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-16",
+    "header": {
+      "name": "Jonah Feldman",
+      "netid": "demo-jonfel",
+      "email": "jonah.feldman@example.org",
+      "timestamp": "2026-10-28T16:16:00-04:00",
+      "filename": "quiz5_demo-jonfel.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Variance = 40 / 5 = 8",
+      "SD = sqrt(8) = 2.83"
+    ],
+    "finalAnswer": 2.83
+  },
+  {
+    "id": "S-17",
+    "header": {
+      "name": "Keiko Tanaka",
+      "netid": "demo-keitan",
+      "email": "keiko.tanaka@example.org",
+      "timestamp": "2026-10-28T17:17:00-04:00",
+      "filename": "quiz5_demo-keitan.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-18",
+    "header": {
+      "name": "Dmitri Volkov",
+      "netid": "demo-dmivol",
+      "email": "dmitri.volkov@example.org",
+      "timestamp": "2026-10-28T18:18:00-04:00",
+      "filename": "quiz5_demo-dmivol.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: 16, 4, 0, 4, 18",
+      "Sum of squared deviations = 42",
+      "Sample variance = 42 / (5 - 1) = 10.5",
+      "Sample SD = sqrt(10.5) = 3.24"
+    ],
+    "finalAnswer": 3.24
+  },
+  {
+    "id": "S-19",
+    "header": {
+      "name": "Zara Hussain",
+      "netid": "demo-zarhus",
+      "email": "zara.hussain@example.org",
+      "timestamp": "2026-10-28T19:19:00-04:00",
+      "filename": "quiz5_demo-zarhus.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-20",
+    "header": {
+      "name": "Caleb Mercer",
+      "netid": "demo-calmer",
+      "email": "caleb.mercer@example.org",
+      "timestamp": "2026-10-28T10:20:00-04:00",
+      "filename": "quiz5_demo-calmer.pdf"
+    },
+    "steps": [
+      "Sum of x = 40",
+      "Sum of x squared = 16 + 36 + 64 + 100 + 144 = 360",
+      "(Sum of x) squared over n = 1600 / 5 = 320",
+      "Sample variance = (360 - 320) / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-21",
+    "header": {
+      "name": "Nadia Rahimi",
+      "netid": "demo-nadrah",
+      "email": "nadia.rahimi@example.org",
+      "timestamp": "2026-10-28T11:21:00-04:00",
+      "filename": "quiz5_demo-nadrah.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-22",
+    "header": {
+      "name": "Oscar Bergstrom",
+      "netid": "demo-oscber",
+      "email": "oscar.bergstrom@example.org",
+      "timestamp": "2026-10-28T12:22:00-04:00",
+      "filename": "quiz5_demo-oscber.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  },
+  {
+    "id": "S-23",
+    "header": {
+      "name": "Leila Nasser",
+      "netid": "demo-leinas",
+      "email": "leila.nasser@example.org",
+      "timestamp": "2026-10-28T13:23:00-04:00",
+      "filename": "quiz5_demo-leinas.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Variance = 40 / 5 = 8",
+      "SD = sqrt(8) = 2.83"
+    ],
+    "finalAnswer": 2.83
+  },
+  {
+    "id": "S-24",
+    "header": {
+      "name": "Hugo Ferreira",
+      "netid": "demo-hugfer",
+      "email": "hugo.ferreira@example.org",
+      "timestamp": "2026-10-28T14:24:00-04:00",
+      "filename": "quiz5_demo-hugfer.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "SD = 10"
+    ],
+    "finalAnswer": 10
+  },
+  {
+    "id": "S-25",
+    "header": {
+      "name": "Amara Adeyemi",
+      "netid": "demo-amaade",
+      "email": "amara.adeyemi@example.org",
+      "timestamp": "2026-10-28T15:25:00-04:00",
+      "filename": "quiz5_demo-amaade.pdf"
+    },
+    "steps": [
+      "Mean = (4 + 6 + 8 + 10 + 12) / 5 = 40 / 5 = 8",
+      "Deviations: -4, -2, 0, 2, 4",
+      "Squared deviations: (4 - 8)^2 = 16, (6 - 8)^2 = 4, 0, 4, 16",
+      "Sum of squared deviations = 40",
+      "Sample variance = 40 / (5 - 1) = 10",
+      "Sample SD = sqrt(10) = 3.162"
+    ],
+    "finalAnswer": 3.162
+  }
+]

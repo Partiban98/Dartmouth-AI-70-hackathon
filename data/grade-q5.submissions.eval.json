@@ -1,0 +1,90 @@
+{
+  "note": "Planted labels for tests only. Never loaded by the UI, never served.",
+  "labels": {
+    "S-10": {
+      "planted": "E-N-DENOM"
+    },
+    "S-11": {
+      "planted": "E-VAR-SD"
+    },
+    "S-12": {
+      "planted": "E-VAR-SD",
+      "gateProbe": true
+    },
+    "S-13": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-14": {
+      "planted": "OK",
+      "method": "M2"
+    },
+    "S-15": {
+      "planted": "E-VAR-SD"
+    },
+    "S-16": {
+      "planted": "E-N-DENOM"
+    },
+    "S-17": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-18": {
+      "planted": "E-ARITH"
+    },
+    "S-19": {
+      "planted": "E-VAR-SD"
+    },
+    "S-20": {
+      "planted": "OK",
+      "method": "M2"
+    },
+    "S-21": {
+      "planted": "E-VAR-SD"
+    },
+    "S-22": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-23": {
+      "planted": "E-N-DENOM"
+    },
+    "S-24": {
+      "planted": "E-VAR-SD"
+    },
+    "S-25": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-01": {
+      "planted": "E-VAR-SD"
+    },
+    "S-02": {
+      "planted": "E-VAR-SD"
+    },
+    "S-03": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-04": {
+      "planted": "E-N-DENOM"
+    },
+    "S-05": {
+      "planted": "E-VAR-SD"
+    },
+    "S-06": {
+      "planted": "OK",
+      "method": "M1"
+    },
+    "S-07": {
+      "planted": "OK",
+      "method": "M2"
+    },
+    "S-08": {
+      "planted": "E-VAR-SD"
+    },
+    "S-09": {
+      "planted": "E-ARITH"
+    }
+  }
+}

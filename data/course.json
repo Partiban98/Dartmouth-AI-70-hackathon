@@ -1,0 +1,243 @@
+{
+  "course": {
+    "id": "DEMO-STATS-101",
+    "title": "DEMO-STATS 101, Intro Statistics",
+    "term": "Fall 2026",
+    "synthetic": true
+  },
+  "roster": [
+    {
+      "alias": "S-01",
+      "name": "Priya Raman",
+      "netid": "demo-priram",
+      "email": "priya.raman@example.org",
+      "studentId": "900110000"
+    },
+    {
+      "alias": "S-02",
+      "name": "Marcus Delgado",
+      "netid": "demo-mardel",
+      "email": "marcus.delgado@example.org",
+      "studentId": "900110137"
+    },
+    {
+      "alias": "S-03",
+      "name": "Elena Okafor",
+      "netid": "demo-eleoka",
+      "email": "elena.okafor@example.org",
+      "studentId": "900110274"
+    },
+    {
+      "alias": "S-04",
+      "name": "Tomas Lindqvist",
+      "netid": "demo-tomlin",
+      "email": "tomas.lindqvist@example.org",
+      "studentId": "900110411"
+    },
+    {
+      "alias": "S-05",
+      "name": "Aisha Haddad",
+      "netid": "demo-aishad",
+      "email": "aisha.haddad@example.org",
+      "studentId": "900110548"
+    },
+    {
+      "alias": "S-06",
+      "name": "Noah Petrov",
+      "netid": "demo-noapet",
+      "email": "noah.petrov@example.org",
+      "studentId": "900110685"
+    },
+    {
+      "alias": "S-07",
+      "name": "Lucia Moreau",
+      "netid": "demo-lucmor",
+      "email": "lucia.moreau@example.org",
+      "studentId": "900110822"
+    },
+    {
+      "alias": "S-08",
+      "name": "Devin Castillo",
+      "netid": "demo-devcas",
+      "email": "devin.castillo@example.org",
+      "studentId": "900110959"
+    },
+    {
+      "alias": "S-09",
+      "name": "Hana Sato",
+      "netid": "demo-hansat",
+      "email": "hana.sato@example.org",
+      "studentId": "900111096"
+    },
+    {
+      "alias": "S-10",
+      "name": "Omar Farouk",
+      "netid": "demo-omafar",
+      "email": "omar.farouk@example.org",
+      "studentId": "900111233"
+    },
+    {
+      "alias": "S-11",
+      "name": "Sofia Brandt",
+      "netid": "demo-sofbra",
+      "email": "sofia.brandt@example.org",
+      "studentId": "900111370"
+    },
+    {
+      "alias": "S-12",
+      "name": "Felix Nakamura",
+      "netid": "demo-felnak",
+      "email": "felix.nakamura@example.org",
+      "studentId": "900111507"
+    },
+    {
+      "alias": "S-13",
+      "name": "Ingrid Holm",
+      "netid": "demo-inghol",
+      "email": "ingrid.holm@example.org",
+      "studentId": "900111644"
+    },
+    {
+      "alias": "S-14",
+      "name": "Rafael Quintero",
+      "netid": "demo-rafqui",
+      "email": "rafael.quintero@example.org",
+      "studentId": "900111781"
+    },
+    {
+      "alias": "S-15",
+      "name": "Maya Osei",
+      "netid": "demo-mayose",
+      "email": "maya.osei@example.org",
+      "studentId": "900111918"
+    },
+    {
+      "alias": "S-16",
+      "name": "Jonah Feldman",
+      "netid": "demo-jonfel",
+      "email": "jonah.feldman@example.org",
+      "studentId": "900112055"
+    },
+    {
+      "alias": "S-17",
+      "name": "Keiko Tanaka",
+      "netid": "demo-keitan",
+      "email": "keiko.tanaka@example.org",
+      "studentId": "900112192"
+    },
+    {
+      "alias": "S-18",
+      "name": "Dmitri Volkov",
+      "netid": "demo-dmivol",
+      "email": "dmitri.volkov@example.org",
+      "studentId": "900112329"
+    },
+    {
+      "alias": "S-19",
+      "name": "Zara Hussain",
+      "netid": "demo-zarhus",
+      "email": "zara.hussain@example.org",
+      "studentId": "900112466"
+    },
+    {
+      "alias": "S-20",
+      "name": "Caleb Mercer",
+      "netid": "demo-calmer",
+      "email": "caleb.mercer@example.org",
+      "studentId": "900112603"
+    },
+    {
+      "alias": "S-21",
+      "name": "Nadia Rahimi",
+      "netid": "demo-nadrah",
+      "email": "nadia.rahimi@example.org",
+      "studentId": "900112740"
+    },
+    {
+      "alias": "S-22",
+      "name": "Oscar Bergstrom",
+      "netid": "demo-oscber",
+      "email": "oscar.bergstrom@example.org",
+      "studentId": "900112877"
+    },
+    {
+      "alias": "S-23",
+      "name": "Leila Nasser",
+      "netid": "demo-leinas",
+      "email": "leila.nasser@example.org",
+      "studentId": "900113014"
+    },
+    {
+      "alias": "S-24",
+      "name": "Hugo Ferreira",
+      "netid": "demo-hugfer",
+      "email": "hugo.ferreira@example.org",
+      "studentId": "900113151"
+    },
+    {
+      "alias": "S-25",
+      "name": "Amara Adeyemi",
+      "netid": "demo-amaade",
+      "email": "amara.adeyemi@example.org",
+      "studentId": "900113288"
+    }
+  ],
+  "dictionary": [
+    {
+      "name": "Dana Whitcombe",
+      "alias": "PERSON-1",
+      "role": "staff"
+    }
+  ],
+  "glossary": [
+    "Standard Deviation",
+    "Sample Standard Deviation",
+    "Intro Statistics",
+    "Fall 2026",
+    "DEMO-STATS 101",
+    "Quiz 5",
+    "Problem Set 3",
+    "Practice Q2",
+    "Ch. 3 Notes",
+    "Course Companion",
+    "Review Session",
+    "Study Group",
+    "Office Hours",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+  ],
+  "aiRules": [
+    {
+      "item": "Practice Q2",
+      "rule": "Check my answer allowed"
+    },
+    {
+      "item": "Problem Set 3",
+      "rule": "Locked by course AI rule"
+    }
+  ]
+}

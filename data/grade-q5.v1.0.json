@@ -1,0 +1,54 @@
+{
+  "id": "grade-q5",
+  "version": "1.0",
+  "owner": "instructor",
+  "status": "approved",
+  "max": 10,
+  "question": "Quiz scores: 4, 6, 8, 10, 12. Find the sample standard deviation. Show your work.",
+  "correctAnswer": 3.162,
+  "tolerance": 0.01,
+  "codes": [
+    {
+      "code": "E-VAR-SD",
+      "deduction": -3,
+      "label": "Reported variance as SD"
+    },
+    {
+      "code": "E-N-DENOM",
+      "deduction": -2,
+      "label": "Divided by n instead of n-1"
+    },
+    {
+      "code": "E-MEAN",
+      "deduction": -2,
+      "label": "Mean wrong"
+    },
+    {
+      "code": "E-ARITH",
+      "deduction": -1,
+      "label": "Arithmetic slip"
+    },
+    {
+      "code": "M-UNLISTED",
+      "deduction": -2,
+      "label": "Correct, method not in table"
+    },
+    {
+      "code": "OK",
+      "deduction": 0,
+      "label": "No error"
+    },
+    {
+      "code": "UNSURE",
+      "deduction": 0,
+      "label": "Needs instructor"
+    }
+  ],
+  "methods": [
+    {
+      "id": "M1",
+      "label": "Definitional formula",
+      "signature": "\\(\\s*-?\\d+\\s*-\\s*8\\s*\\)\\s*(\\^\\s*2|²)|deviation"
+    }
+  ]
+}

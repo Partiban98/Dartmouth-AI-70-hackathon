@@ -1,0 +1,58 @@
+{
+  "id": "companion-ch3",
+  "version": "1.0",
+  "owner": "instructor",
+  "status": "approved",
+  "max": 0,
+  "title": "Ch. 3 Notes: Spread",
+  "source": [
+    "Variance is the average squared distance from the mean. Because each distance is squared before averaging, variance is measured in squared units, such as cm squared.",
+    "The standard deviation is the square root of the variance. Taking the square root undoes the squaring, so the standard deviation is in the original units of the data.",
+    "The standard deviation is easier to interpret because it is in original units. A standard deviation of 4 cm means typical scores sit about 4 cm from the mean.",
+    "The range is the difference between the largest and smallest value. The interquartile range, or IQR, is the spread of the middle half of the data. Both describe spread, but neither uses every data point the way variance and standard deviation do."
+  ],
+  "q2": {
+    "item": "Practice Q2",
+    "prompt": "Explain variance vs SD and why we usually report one.",
+    "minAnswerChars": 20
+  },
+  "keyPoints": [
+    {
+      "code": "KP-1",
+      "label": "Square-root relation",
+      "sourceLine": "The standard deviation is the square root of the variance."
+    },
+    {
+      "code": "KP-2",
+      "label": "Squared vs original units",
+      "sourceLine": "variance is measured in squared units"
+    },
+    {
+      "code": "KP-3",
+      "label": "Easier to interpret",
+      "sourceLine": "The standard deviation is easier to interpret because it is in original units."
+    }
+  ],
+  "demoWrongAnswer": "Variance and SD both measure spread. We usually report SD because it is easier to use and most people are used to seeing it in reports.",
+  "retestQ3": {
+    "item": "Practice Q3",
+    "prompt": "Variance is 16 cm squared. What is the SD?",
+    "expected": 4,
+    "tolerance": 0.01,
+    "requiredUnit": "cm",
+    "forbiddenUnits": [
+      "cm squared",
+      "cm^2",
+      "cm²"
+    ],
+    "forbiddenValues": [
+      16
+    ]
+  },
+  "lockedItems": [
+    {
+      "item": "Problem Set 3",
+      "rule": "Locked by course AI rule"
+    }
+  ]
+}

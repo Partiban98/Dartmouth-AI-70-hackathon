@@ -150,6 +150,17 @@ export const COPY = {
     noAnswer: "Suggestions did not arrive. You can still mark the paper yourself.",
     pointsOff: (d: number) => (d === 0 ? "no points off" : `${d} points`),
   },
+  evalSet: {
+    make: "Make this a test case",
+    why: "Why this should be a test",
+    whyHint: "Your ruling becomes the expected result. One line, kept with the case.",
+    save: "Save as a test case",
+    added: "Added to regression set",
+    needWhy: "Say in one line why this should be a test.",
+    badge: (cases: number) => `Regression set: ${cases} ${cases === 1 ? "case" : "cases"}`,
+    lastEval: (mismatch: number) => `last eval: ${mismatch} still ${mismatch === 1 ? "disagrees" : "disagree"} with the TA`,
+    noEval: "eval not run yet",
+  },
   finish: {
     title: (n: number, name: string) => `${n} ${n === 1 ? "paper" : "papers"} marked by ${name || "you"}.`,
     tiles: { marked: "Marked", changed: "Changed from the suggestion", notInPaper: "AI lines not found in the paper", names: "Names hidden" },

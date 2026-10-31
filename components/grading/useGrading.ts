@@ -35,6 +35,7 @@ export function useGrading() {
   const [uploader, setUploader] = useState<string>("");
   const [assignments, setAssignments] = useState<any[]>([]);
   const pending = useRef<((v: any) => void) | null>(null);
+  const run = useRef(0); // the paper on screen; a replaced paper's run never writes to the screen
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { try { setNameState(localStorage.getItem("remain.decidedBy") ?? ""); } catch {} }, []);
@@ -82,15 +83,18 @@ export function useGrading() {
   const start = useCallback(async (item: any) => {
     if (!idea || !data) return;
     if (advance.current) { clearTimeout(advance.current); advance.current = null; }
+    const mine = ++run.current;
     if (pending.current) { const r = pending.current; pending.current = null; r(null); }
     setCurrent(item); setStage({ kind: "idle" });
+    const askForRun = (s: Stage) => mine === run.current ? ask(s) : Promise.resolve(null);
     const ui = {
-      resolveFlags: (flags: any[], report: any) => ask({ kind: "names", flags, report }),
-      approveGate: (report: any, flags: any[], { blocked }: any) => ask({ kind: "privacy", report, flags, blocked }),
-      review: (card: any) => { setModelLabel(card.label); return ask({ kind: "suggestions", card }); },
-      decide: (bar: any) => ask({ kind: "mark", bar }),
+      resolveFlags: (flags: any[], report: any) => askForRun({ kind: "names", flags, report }),
+      approveGate: (report: any, flags: any[], { blocked }: any) => askForRun({ kind: "privacy", report, flags, blocked }),
+      review: (card: any) => { if (mine !== run.current) return Promise.resolve(null); setModelLabel(card.label); return askForRun({ kind: "suggestions", card }); },
+      decide: (bar: any) => askForRun({ kind: "mark", bar }),
     };
     const r = await runPipeline(idea, item, ui, { course: data.course });
+    if (mine !== run.current) return;
     if (r.receipt) {
       setStage({ kind: "saved", result: r }); refreshCounts();
       const pend = (r.overrides ?? []).filter((o: any) => o.precedent).map((o: any) => ({ code: o.from, reason: o.reason, by: r.decidedBy, itemId: r.itemId, at: new Date().toISOString() }));

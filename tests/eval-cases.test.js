@@ -96,3 +96,59 @@ test("E1: the test-case button is offered for an override only, never a confirm 
   const o = firstTrueOverride([{ from: "M-UNLISTED", to: "OK", reason: "valid method" }]);
   assert.equal(o.from, "M-UNLISTED");
 });
+
+test('E1 review: a case keeps the exact server-gated payload including numeric finalAnswer', async () => {
+  const { prepareCase } = await import('../server/evalcases.js');
+  const { ideas, sub } = await import('./helpers.js');
+  const { payloadOf } = await import('../scripts/eval-overrides.js');
+  const paper = sub('S-01');
+  const decision = { idea: 'grade', itemId: paper.id, rubricVersion: '1.0', overrides: [{ from: 'E-ARITH', to: 'OK' }] };
+  const r = prepareCase({ body: { idea: 'grade', itemId: paper.id, aiCode: 'E-ARITH', taRuling: 'OK', reason: 'valid work' }, paper, ideaConfig: ideas.grade, decision, course });
+  assert.equal(r.status, 200);
+  assert.equal(r.value.input.finalAnswer, 10);
+  assert.deepEqual(payloadOf(r.value), r.value.input);
+});
+
+test('E1 review: forged and stale rulings cannot become expected results', async () => {
+  const { prepareCase } = await import('../server/evalcases.js');
+  const { ideas, sub } = await import('./helpers.js');
+  const body = { idea: 'grade', itemId: 'S-01', aiCode: 'E-ARITH', taRuling: 'OK', reason: 'valid work' };
+  const base = { body, paper: sub('S-01'), ideaConfig: ideas.grade, course };
+  assert.equal(prepareCase(base).status, 400);
+  assert.equal(prepareCase({ ...base, decision: { idea: 'grade', itemId: 'S-01', rubricVersion: '1.0', overrides: [] } }).status, 400);
+  assert.equal(prepareCase({ ...base, decision: { idea: 'grade', itemId: 'S-01', rubricVersion: '0.9', overrides: [{ from: 'E-ARITH', to: 'OK' }] } }).status, 400);
+});
+
+test('E1 review: another valid error does not count as repeating the overridden suggestion', async () => {
+  const r = await runEval({ cases: [{ idea: 'grade', itemId: 'S-01', aiCode: 'E-MEAN', taRuling: 'OK' }], propose: async () => ({ ok: true, proposals: [{ code: 'E-ARITH' }] }) });
+  assert.equal(r.match, 1);
+  assert.equal(r.mismatch, 0);
+});
+
+test('E1 review: unknown assignment is an error, never automatic agreement', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { rmSync } = await import('node:fs');
+  const dir = mkdtempSync(join(tmpdir(), 'remain-eval-cli-'));
+  try {
+    makeEvalCases({ localDir: dir, course }).add({ ...good, idea: 'ABC-DEF' });
+    const r = spawnSync(process.execPath, ['scripts/eval-overrides.js', '--replay'], { cwd: new URL('..', import.meta.url), env: { ...process.env, REMAIN_LOCAL_DIR: dir }, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /0 cases checked/);
+    assert.match(r.stdout, /1 case got no answer/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('E1 review: test-case submission reports connection and server failures so the form can retry', async () => {
+  const { submitCase } = await import('../components/grading/overrides.js');
+  const input = { idea: 'grade', itemId: 'S-01', aiCode: 'E-ARITH', taRuling: 'OK', reason: 'valid work' };
+  await assert.rejects(() => submitCase(input, async () => { throw new Error('connection lost'); }), /connection lost/);
+  await assert.rejects(() => submitCase(input, async () => ({ ok: false, json: async () => ({ error: 'not saved' }) })), /not saved/);
+  assert.deepEqual(await submitCase(input, async () => ({ ok: true, json: async () => ({ added: true }) })), { added: true });
+});
+
+test('evaluation checks the current scheme as well as the saved paper before sending', () => {
+  const s = fresh();
+  const c = { ...good, input: { steps: ['s = 3.162'], finalAnswer: 3.162 } };
+  assert.throws(() => s.checkForSend(c, { standards: { question: `Work by ${course.roster[0].name}`, codes: [] } }), /roster name/);
+  assert.doesNotThrow(() => s.checkForSend(c, { standards: { question: 'Find the sample SD.', codes: [{ code: 'E-ARITH', label: 'Arithmetic slip' }] } }));
+});

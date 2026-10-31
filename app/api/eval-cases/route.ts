@@ -1,10 +1,6 @@
 import { getContext, LOCAL_DIR, readData } from "@/server/context.js";
-import { makeEvalCases } from "@/server/evalcases.js";
+import { makeEvalCases, prepareCase } from "@/server/evalcases.js";
 import { loadImported } from "@/server/ingest.js";
-import { runGate } from "@/lib/gate.js";
-
-// Same shape the pipeline verifies quotes against, so a stored case is the text the model actually saw.
-const textOf = (payload: any, fields: string[]) => fields.map((f) => { const v = payload[f]; return Array.isArray(v) ? v.join("\n") : v && typeof v === "object" ? Object.values(v).join("\n") : String(v ?? ""); }).join("\n");
 
 const SEED_FILE: Record<string, string> = { grade: "grade-q5.submissions.json", grade93: "demo201-q3q5.submissions.json" };
 
@@ -20,19 +16,10 @@ export async function POST(request: Request) {
   if (!ideaConfig) return Response.json({ error: "unknown idea" }, { status: 400 });
   const cases = makeEvalCases({ localDir: LOCAL_DIR, course });
 
-  // The text is derived here by running the frozen gate, never taken from the browser,
-  // so a stored case can only ever hold post-gate text.
-  let text = "";
-  const paper = findPaper(body.idea, body.itemId);
-  if (paper) {
-    const gate = runGate(paper, ideaConfig, course, {});
-    if (gate.blocked) return Response.json({ error: "this paper does not pass the privacy check on its own; not stored" }, { status: 400 });
-    text = textOf(gate.payload, ideaConfig.verifyAgainst);
-  }
-  if (!text) return Response.json({ error: "could not find that paper to take its checked text from" }, { status: 400 });
-
-  const r = cases.add({ idea: body.idea, itemId: body.itemId, aiCode: body.aiCode, taRuling: body.taRuling, reason: body.reason, rubricVersion: ideaConfig.standards?.version ?? null, text });
+  const decision = log.read("decisions").filter((d: any) => d.idea === body.idea && d.itemId === body.itemId).at(-1);
+  const prepared = prepareCase({ body, paper: findPaper(body.idea, body.itemId), ideaConfig, decision, course });
+  if (prepared.status >= 400) return Response.json({ error: prepared.error }, { status: prepared.status });
+  const r = cases.add(prepared.value);
   if (r.status >= 400) return Response.json({ error: r.error }, { status: r.status });
-  void log;
   return Response.json({ added: !r.duplicate, duplicate: !!r.duplicate, ...cases.summary() }, { status: r.status });
 }

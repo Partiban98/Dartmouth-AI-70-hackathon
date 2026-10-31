@@ -6,3 +6,11 @@
 // confirm never reaches overrides at all. Only "OK" is the TA ruling out the
 // suggestion, which is the only case worth testing the AI against.
 export const firstTrueOverride = (overrides) => (overrides ?? []).find((o) => o && o.to === "OK") ?? null;
+
+/** A rejected save stays a rejected save; the form owns retry state and the typed reason. */
+export async function submitCase(input, fetchImpl = fetch) {
+  const res = await fetchImpl("/api/eval-cases", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error ?? "Could not save that case.");
+  return json;
+}

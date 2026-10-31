@@ -43,7 +43,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
   useEffect(() => { try { setShowNames(localStorage.getItem("remain.showNames") !== "0"); } catch {} }, []);
   const toggleNames = () => setShowNames((v) => { try { localStorage.setItem("remain.showNames", v ? "0" : "1"); } catch {} return !v; });
   const [view, setView] = useState<"text" | "original">("text");
-  useEffect(() => { setView("text"); }, [identity]);
+  useEffect(() => { setView(current?.unreadable ? "original" : "text"); }, [identity]); // eslint-disable-line react-hooks/exhaustive-deps
   const studentName = current?.header?.name;
 
   // Which paper line a suggestion points at.
@@ -86,6 +86,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {current?.header && <span className="text-xs text-fg-3">Header hidden</span>}</div>
           {view === "original" && current?.imported ? <iframe title={c.viewOriginal} src={`/api/paper?set=${encodeURIComponent(g.setId)}&id=${encodeURIComponent(current.id)}`} className="mt-3 h-[70vh] w-full rounded border border-line bg-white" style={{ colorScheme: "light" }} /> :
           <ol className="mt-3 space-y-1.5 font-mono text-[15px] leading-relaxed">
+            {current?.unreadable && <li className="text-fg-3 font-sans text-sm">{c.noTextRead}</li>}
             {(current?.steps ?? []).map((s: string, i: number) => <li key={i} className="flex gap-3"><span className="w-6 shrink-0 text-fg-3 select-none">{i + 1}</span><span className={cls("paper-line", lit.includes(i) && "lit")}>{s}</span></li>)}
           </ol>}
           {current && <p className="mt-3 text-xs text-fg-3">{current.imported ? (showNames ? c.namesHere : c.blind(current.uploader)) : c.sample}</p>}

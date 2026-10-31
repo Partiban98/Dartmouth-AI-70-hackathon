@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runPipeline } from "@/lib/pipeline.js";
 import { makeIdeas } from "@/lib/ideas.js";
 import { strictLogFetch } from "@/lib/saveguard.js";
-import { manualRecord } from "./manual.js";
+import { manualRecord, startsByHand } from "./manual.js";
 
 export type Stage =
   | { kind: "idle" }
@@ -89,6 +89,7 @@ export function useGrading() {
     const mine = ++run.current;
     if (pending.current) { const r = pending.current; pending.current = null; r(null); }
     setCurrent(item); setStage({ kind: "idle" });
+    if (startsByHand(item)) { setStage({ kind: "manual" }); return; } // a scan with no readable text: the TA marks it from the original
     const askForRun = (s: Stage) => mine === run.current ? ask(s) : Promise.resolve(null);
     const ui = {
       resolveFlags: (flags: any[], report: any) => askForRun({ kind: "names", flags, report }),

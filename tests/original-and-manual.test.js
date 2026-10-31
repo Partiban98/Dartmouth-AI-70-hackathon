@@ -30,3 +30,19 @@ test("a hand-marked decision is a normal, valid decision: the TA's mistakes, the
   assert.equal(recordProblem(rec, ideas), null, "the server's record check accepts it");
   assert.ok(recordProblem({ ...rec, grade: 99 }, ideas), "out-of-range marks are still refused");
 });
+
+test("a replaced file never shows as the old student's original: the file must still match that id's fingerprint", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "orig2-")), localDir = mkdtempSync(join(tmpdir(), "orig2l-"));
+  writeFileSync(join(folder, "paper.txt"), "Name: Alpha\nSD = 3.162\n");
+  const a = (await importFolder({ folder, setId: "my-stack", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade })).papers[0].id;
+  writeFileSync(join(folder, "paper.txt"), "Name: Beta\nSD = 10\n");
+  const b = (await importFolder({ folder, setId: "my-stack", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade })).papers[0].id;
+  assert.notEqual(a, b);
+  assert.equal(originalFile(localDir, "my-stack", a), null, "Alpha's original is gone, so nothing is shown for Alpha's id");
+  assert.equal(originalFile(localDir, "my-stack", b)?.path, join(folder, "paper.txt"));
+});
+
+test("the PDF reader is loaded from node_modules, not bundled: bundling drops its worker and every PDF upload fails in the built app", async () => {
+  const { readFileSync } = await import("node:fs");
+  assert.match(readFileSync(new URL("../next.config.ts", import.meta.url), "utf8"), /serverExternalPackages:\s*\[[^\]]*"pdfjs-dist"/);
+});

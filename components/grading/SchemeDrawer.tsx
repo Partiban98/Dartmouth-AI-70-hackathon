@@ -5,7 +5,7 @@ import { bumpVersion } from "@/lib/feedback.js";
 import { COPY } from "./copy";
 
 const c = COPY.scheme;
-export default function SchemeDrawer({ table, onClose, onSave }: any) {
+export default function SchemeDrawer({ table, onClose, onSave, readOnlyBy }: any) {
   const [draft, setDraft] = useState<any>(() => JSON.parse(JSON.stringify(table)));
   const [errors, setErrors] = useState<string[] | null>(null);
   const [method, setMethod] = useState({ id: "", label: "", signature: "" });
@@ -19,7 +19,8 @@ export default function SchemeDrawer({ table, onClose, onSave }: any) {
     <div className="fixed inset-0 z-20 bg-black/40" onClick={onClose}>
       <aside onClick={(e) => e.stopPropagation()} className="absolute right-0 top-0 h-full w-full max-w-2xl overflow-auto bg-card p-6" aria-label={c.title}>
         <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">{c.title} <span className="text-sm text-fg-3">{c.version(table.version)}</span></h2><button className="underline text-sm" onClick={onClose}>{c.close}</button></div>
-        <p className="mt-1 text-sm text-fg-2">{c.owner(draft.owner)} <span className={v.ok ? "text-good" : "text-bad"}>{v.ok ? c.ready : c.invalid + ": " + v.errors.join("; ")}</span></p>
+        <p className="mt-1 text-sm text-fg-2">{readOnlyBy ? c.setBy(readOnlyBy) : c.owner(draft.owner)} <span className={v.ok ? "text-good" : "text-bad"}>{v.ok ? c.ready : c.invalid + ": " + v.errors.join("; ")}</span></p>
+        <fieldset disabled={!!readOnlyBy} className="contents">
         <table className="mt-5 w-full text-sm"><thead><tr className="text-left text-fg-3"><th className="py-1">{c.mistake}</th><th className="py-1 text-right">{c.pointsOff}</th></tr></thead>
           <tbody>{draft.codes.filter((x: any) => x.code !== "OK" && x.code !== "UNSURE").map((x: any) => { const i = draft.codes.indexOf(x); return <tr key={x.code} className="border-t border-line"><td className="py-1"><input value={x.label} onChange={(e) => setCode(i, { label: e.target.value })} className="w-full rounded border border-line bg-bg px-2 py-1" /><span className="font-mono text-xs text-fg-3">{x.code}</span></td><td className="py-1 text-right"><input type="number" step="0.25" max={0} value={x.deduction} onChange={(e) => setCode(i, { deduction: Number(e.target.value) })} className="w-20 rounded border border-line bg-bg px-2 py-1 text-right tabular-nums" /></td></tr>; })}</tbody></table>
         <h3 className="mt-6 font-semibold">{c.methods}</h3>
@@ -31,13 +32,14 @@ export default function SchemeDrawer({ table, onClose, onSave }: any) {
           <input placeholder="words that identify it, e.g. 360|320" value={method.signature} onChange={(e) => setMethod({ ...method, signature: e.target.value })} className="rounded border border-line bg-bg px-2 py-1 font-mono" aria-label="Words that identify it" />
           <button className="btn text-sm" onClick={() => { if (!method.id || !method.signature) return; setDraft((d: any) => ({ ...d, methods: [...(d.methods ?? []), { ...method }] })); setMethod({ id: "", label: "", signature: "" }); }}>{c.addMethod}</button>
         </div>
+        </fieldset>
         {(draft.pendingPrecedents ?? []).length > 0 && <>
-          <h3 className="mt-6 font-semibold">{c.reviewTitle}</h3><p className="text-sm text-fg-3">{c.reviewHelp}</p>
-          <ul className="mt-2 space-y-2 text-sm">{draft.pendingPrecedents.map((p: any, i: number) => <li key={i} className="flex items-start gap-2 rounded-lg bg-wait-bg p-2"><span><span className="font-mono">{p.code}</span>: {p.reason} <span className="text-fg-3">({p.by}, paper {p.itemId})</span></span><button className="btn text-xs ml-auto" onClick={() => approve(i)}>{c.approve}</button></li>)}</ul>
+          <h3 className="mt-6 font-semibold">{readOnlyBy ? c.proposedTitle : c.reviewTitle}</h3><p className="text-sm text-fg-3">{readOnlyBy ? c.proposedHelp : c.reviewHelp}</p>
+          <ul className="mt-2 space-y-2 text-sm">{draft.pendingPrecedents.map((p: any, i: number) => <li key={i} className="flex items-start gap-2 rounded-lg bg-wait-bg p-2"><span><span className="font-mono">{p.code}</span>: {p.reason} <span className="text-fg-3">({p.by}, paper {p.itemId})</span></span>{!readOnlyBy && <button className="btn text-xs ml-auto" onClick={() => approve(i)}>{c.approve}</button>}</li>)}</ul>
         </>}
         {(draft.precedents ?? []).length > 0 && <ul className="mt-4 list-disc pl-5 text-sm text-fg-2">{draft.precedents.map((p: string, i: number) => <li key={i}>{p}</li>)}</ul>}
         {errors && <ul role="alert" className="mt-3 text-sm text-bad list-disc pl-5">{errors.map((e, i) => <li key={i}>{e}</li>)}</ul>}
-        <div className="mt-6 flex gap-2"><button className="btn btn-primary" disabled={!dirty || !v.ok} onClick={save}>{c.save(bumpVersion(table.version))}</button><button className="btn" onClick={onClose}>{c.cancel}</button></div>
+        {!readOnlyBy && <div className="mt-6 flex gap-2"><button className="btn btn-primary" disabled={!dirty || !v.ok} onClick={save}>{c.save(bumpVersion(table.version))}</button><button className="btn" onClick={onClose}>{c.cancel}</button></div>}
       </aside>
     </div>
   );

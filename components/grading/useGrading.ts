@@ -33,6 +33,7 @@ export function useGrading() {
   const [pasted, setPasted] = useState<any[]>([]);
   const [name, setNameState] = useState("");
   const [uploader, setUploader] = useState<string>("");
+  const [assignments, setAssignments] = useState<any[]>([]);
   const pending = useRef<((v: any) => void) | null>(null);
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -40,13 +41,14 @@ export function useGrading() {
   const setName = (n: string) => { setNameState(n); try { localStorage.setItem("remain.decidedBy", n); } catch {} };
 
   const load = useCallback(async () => {
-    const [course, companion, upskill, subs, subs93, std, std93, imp] = await Promise.all([
+    const [course, companion, upskill, subs, subs93, std, std93, imp, asg] = await Promise.all([
       get("/data/course.json"), get("/data/companion-ch3.json"), get("/data/upskill-email.v1.0.json"),
       get("/data/grade-q5.submissions.json"), get("/data/demo201-q3q5.submissions.json"),
-      get("/api/rubric?id=grade-q5"), get("/api/rubric?id=demo201-q3q5"), get("/api/imported"),
+      get("/api/rubric?id=grade-q5"), get("/api/rubric?id=demo201-q3q5"), get("/api/imported"), get("/api/assignment"),
     ]);
     setData({ course, companion, upskill, submissions: { grade: subs ?? [], grade93: subs93 ?? [] } });
-    setStandards({ grade: std, grade93: std93 });
+    const list = asg?.assignments ?? []; setAssignments(list);
+    setStandards({ grade: std, grade93: std93, ...Object.fromEntries(list.map((a: any) => [a.code, a.standards])) });
     const sets = imp?.sets ?? []; setImported(sets);
     const papers: Record<string, any[]> = {};
     await Promise.all(sets.map(async (m: any) => { const d = await get(`/api/imported?set=${encodeURIComponent(m.id)}`); papers[m.id] = d?.papers ?? []; }));
@@ -55,19 +57,21 @@ export function useGrading() {
   const refreshCounts = useCallback(async () => { setCounts(await get("/counts")); }, []);
   useEffect(() => { load(); refreshCounts(); get("/api/ingest").then((j) => j?.uploader && setUploader(j.uploader)); }, [load, refreshCounts]);
 
-  const rubricKey = SETS[setId] ? setId : imported.find((x) => x.id === setId)?.rubric === "demo201-q3q5" ? "grade93" : "grade";
+  const assignment = assignments.find((a) => a.code === setId) ?? null;
+  const rubricKey = SETS[setId] || assignment ? setId : imported.find((x) => x.id === setId)?.rubric === "demo201-q3q5" ? "grade93" : "grade";
   const table = standards[rubricKey];
   const ideas = useMemo(() => {
     if (!data || !standards.grade) return null;
     const gradingSets: Record<string, any> = standards.grade93 ? { grade93: standards.grade93 } : {};
     for (const m of imported) { const st = m.rubric === "demo201-q3q5" ? standards.grade93 : standards.grade; if (st) gradingSets[m.id] = { ...st, course: m.title }; }
+    for (const a of assignments) if (standards[a.code]) gradingSets[a.code] = { ...standards[a.code], course: `${a.course} · ${a.title}` };
     return makeIdeas({ gradeStandards: standards.grade, companion: data.companion, upskillStandards: data.upskill, gradingSets });
-  }, [data, standards, imported]);
+  }, [data, standards, imported, assignments]);
   const idea = ideas?.[setId];
   const papers: any[] = useMemo(() => [...(data?.submissions?.[setId] ?? importedPapers[setId] ?? []), ...pasted.filter((p) => p.set === setId)], [data, setId, pasted, importedPapers]);
   const decided = useMemo(() => new Set((counts?.decisions ?? []).filter((d: any) => d.idea === setId).map((d: any) => d.itemId)), [counts, setId]);
-  const setInfo = SETS[setId] ?? (() => { const m = imported.find((x) => x.id === setId); return m ? { title: m.title, sub: `${m.count} papers from your folder` } : { title: setId, sub: "" }; })();
-  const allSets = [...Object.entries(SETS).filter(([k]) => standards[k]).map(([id, s]) => ({ id, ...s })), ...imported.map((m) => ({ id: m.id, title: m.title, sub: `${m.count} papers from your folder` }))];
+  const setInfo = SETS[setId] ?? (assignment ? { title: `${assignment.course} · ${assignment.title}`, sub: `code ${assignment.code}` } : null) ?? (() => { const m = imported.find((x) => x.id === setId); return m ? { title: m.title, sub: `${m.count} papers from your folder` } : { title: setId, sub: "" }; })();
+  const allSets = [...Object.entries(SETS).filter(([k]) => standards[k]).map(([id, s]) => ({ id, ...s })), ...imported.filter((m) => !assignments.some((a) => a.code === m.id)).map((m) => ({ id: m.id, title: m.title, sub: `${m.count} papers from your folder` }))];
 
   const ask = (s: Stage) => new Promise<any>((resolve) => { pending.current = resolve; setStage(s); });
   const answer = (v: any, next?: Stage) => { const r = pending.current; pending.current = null; if (next) setStage(next); r?.(v); };
@@ -108,5 +112,5 @@ export function useGrading() {
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };
 
-  return { data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load, uploader, othersOnCurrent };
+  return { data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load, uploader, othersOnCurrent, assignments, assignment, importedPapers, sampleScheme: standards.grade };
 }

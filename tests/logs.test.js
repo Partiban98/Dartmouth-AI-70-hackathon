@@ -34,3 +34,21 @@ test("S7: a truncated or malformed line is skipped and counted, never hiding the
   assert.equal(all.damaged.decisions, 2, "one truncated line and one malformed record");
   assert.doesNotThrow(() => counters(all), "counts still work");
 });
+
+// Codex review of PR #13.
+test("S5 review: a grading decision needs the human's mark, and every override needs a reason", () => {
+  assert.ok(recordProblem({ ...good, grade: null }, ideas), "grade idea without a mark");
+  assert.ok(recordProblem({ ...good, idea: "my-uploaded-set", grade: null }, ideas), "unknown sets are grading sets too");
+  assert.ok(recordProblem({ ...good, overrides: [{ from: "E-MEAN", to: "OK", reason: null }] }, ideas));
+  assert.ok(recordProblem({ ...good, overrides: [{ from: "E-MEAN", to: "OK", reason: "  " }] }, ideas));
+  assert.equal(recordProblem({ ...good, overrides: [{ from: "E-MEAN", to: "OK", reason: "valid method" }] }, ideas), null);
+  assert.equal(recordProblem({ ...good, idea: "upskill", proposed: [], confirmed: [], grade: null }, ideas), null, "ideas without a mark need none");
+});
+
+test("S7 review: a proposal row with a broken proposal list is skipped and counted, and counts still work", () => {
+  const dir = mkdtempSync(join(tmpdir(), "logp-"));
+  writeFileSync(join(dir, "proposals.jsonl"), [JSON.stringify({ type: "proposal", idea: "grade", itemId: "S-01", proposals: [{ code: "E-MEAN", quoteVerified: true }] }), JSON.stringify({ type: "proposal", idea: "grade", itemId: "S-02", proposals: [null] }), ""].join("\n"));
+  const all = makeLog(dir, course).readAll();
+  assert.equal(all.proposals.length, 1); assert.equal(all.damaged.proposals, 1);
+  assert.doesNotThrow(() => counters(all));
+});

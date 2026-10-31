@@ -5,6 +5,12 @@ const num = (v) => typeof v === "number" && Number.isFinite(v);
 const strs = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
 const nullOr = (f) => (v) => v === null || v === undefined || f(v);
 
+/** A proposal row read back from the log: a list of proposals, each with a code. */
+export function proposalProblem(rec) {
+  if (!rec || typeof rec !== "object" || !Array.isArray(rec.proposals) || !rec.proposals.every((p) => p && typeof p === "object" && typeof p.code === "string")) return "proposals must be a list of codes";
+  return null;
+}
+
 /** Returns a plain reason the record cannot be written, or null. `ideas` is the server's idea table; an idea it does not list is shape-checked only. */
 export function recordProblem(rec, ideas = {}) {
   if (!rec || typeof rec !== "object") return "not a record";
@@ -18,9 +24,12 @@ export function recordProblem(rec, ideas = {}) {
   }
   if (!str(rec.decidedBy)) return "a decision must name the person who decided";
   if (!strs(rec.proposed) || !strs(rec.confirmed)) return "proposed and confirmed must be lists of codes";
-  if (!Array.isArray(rec.overrides) || !rec.overrides.every((o) => o && typeof o === "object" && typeof o.from === "string" && typeof o.to === "string" && nullOr((r) => typeof r === "string")(o.reason))) return "overrides must be from/to pairs";
+  if (!Array.isArray(rec.overrides) || !rec.overrides.every((o) => o && typeof o === "object" && typeof o.from === "string" && typeof o.to === "string")) return "overrides must be from/to pairs";
+  if (!rec.overrides.every((o) => str(o.reason))) return "every change from a suggestion needs a one-line reason";
   if (!nullOr(num)(rec.computedScore)) return "computedScore must be a number";
   if (!nullOr((v) => typeof v === "string")(rec.feedback) || !nullOr((v) => typeof v === "string")(rec.rubricVersion)) return "feedback and rubricVersion must be text";
+  // A grading set needs the human's own mark. An idea this server does not list yet is an uploaded grading set.
+  if ((rec.idea in ideas ? !!ideas[rec.idea].requiresGradeInput : true) && !num(rec.grade)) return "a grading decision needs the mark the person typed";
   const st = ideas[rec.idea]?.standards;
   const max = num(st?.max) ? st.max : Infinity;
   if (rec.grade !== null && rec.grade !== undefined && !(num(rec.grade) && rec.grade >= 0 && rec.grade <= max)) return `the mark must be a number from 0 to ${max === Infinity ? "full marks" : max}`;

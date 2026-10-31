@@ -1,7 +1,7 @@
 import { appendFileSync, readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { assertLogSafe } from "../lib/logshape.js";
-import { recordProblem } from "./records.js";
+import { recordProblem, proposalProblem } from "./records.js";
 
 export function makeLog(localDir, course) {
   mkdirSync(localDir, { recursive: true });
@@ -16,6 +16,7 @@ export function makeLog(localDir, course) {
         if (!line.trim()) continue;
         let r; try { r = JSON.parse(line); } catch { damaged++; continue; }
         if ((name === "decisions" || name === "gate") && recordProblem(r)) { damaged++; continue; }
+        if (name === "proposals" && proposalProblem(r)) { damaged++; continue; }
         rows.push(r);
       }
       return { rows, damaged };

@@ -2,6 +2,7 @@
 // The browser gate runs first; this re-checks everything the model would see: the paper fields, and the question and labels sent with them.
 import { assertClean, PATTERN_RULES } from "../lib/gate.js";
 import { listImported, loadMap } from "./ingest.js";
+import { encodePack } from "./assignment.js";
 
 const fail = (status, extra) => { throw { status, ...extra }; };
 const plain = (v) => v === null || typeof v === "string" || (typeof v === "number" && Number.isFinite(v));
@@ -31,7 +32,8 @@ function idsOf(people) {
   const ids = new Set();
   for (const m of people) {
     const name = String(m.name ?? "").trim();
-    for (const v of [name, ...name.split(/\s+/), m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t.length >= 2) ids.add(t); }
+    // Latin tokens need two letters to be a name; one character can be a whole name in other scripts.
+    for (const v of [name, ...name.split(/\s+/), m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t.length >= (/^[\x00-\x7f]*$/.test(t) ? 2 : 1)) ids.add(t); }
   }
   return ids;
 }
@@ -46,7 +48,8 @@ export function withLocalIdentities(course, localDir) {
 
 /** Whole-word, any-case matcher for known identities. Numbers count as text, so a student ID sent as a number is found. */
 function knownIn(course) {
-  const ids = [...(course.identities ?? idsOf(coursePeople(course)))].filter((t) => !/^\d+$/.test(t) || t.length >= 5).sort((a, b) => b.length - a.length);
+  // Numeric ids from four digits up: shorter numbers are ordinary maths (scores like 4, 6, 8, 10, 12).
+  const ids = [...(course.identities ?? idsOf(coursePeople(course)))].filter((t) => !/^\d+$/.test(t) || t.length >= 4).sort((a, b) => b.length - a.length);
   if (!ids.length) return () => 0;
   const re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${ids.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu");
   return (text) => (String(text).match(re) ?? []).length;
@@ -86,7 +89,10 @@ export function schemeProblem(standards, course) {
 
 /** E4: everything a pack shares: course, title and question as well as the scheme. null when clean. */
 export function packProblem(a, course) {
-  try { checkTexts([a?.course, a?.title, a?.question, a?.standards?.course, a?.standards?.title].filter((t) => typeof t === "string"), course, "pack"); }
+  // Exactly what a pack would carry (encodePack's allowlist), every string, key and number in it.
+  let shared;
+  try { shared = JSON.parse(Buffer.from(encodePack({ ...a, standards: a?.standards ?? {} }).slice(8), "base64url").toString("utf8")); } catch { return "This Quiz/Assignment could not be prepared for sharing."; }
+  try { checkTexts(texts(shared), course, "pack"); }
   catch (e) { return e.rule === "R-09" ? "The course, title or question names a student. Remove it before sharing." : `The course, title or question contains an identifier (${e.rule}). Remove it before sharing.`; }
   return schemeProblem(a?.standards, course);
 }

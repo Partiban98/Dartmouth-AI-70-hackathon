@@ -139,3 +139,24 @@ test("E4 review: every shared field of a pack is checked, including the outer qu
   assert.equal(packProblem(a, local), null);
   for (const patch of [{ question: "Lucia Moreau" }, { course: "Moreau section" }, { title: "Quiz for lucia" }]) assert.ok(packProblem({ ...a, ...patch }, local), JSON.stringify(patch));
 });
+
+// Codex re-review of PR #8.
+test("E1 re-review: a one-character name and a four-digit student ID are known too; small numbers in maths are not", async () => {
+  const { localDir } = await importOne("Name: 王\nStudent ID: 1234\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const send = (steps, finalAnswer = 3.162) => checkOutbound({ idea: "grade", payload: { steps, finalAnswer } }, ideas.grade, local);
+  assert.throws(() => send(["王 did it"]), (e) => e.status === 422);
+  assert.throws(() => send(["id 1234"]), (e) => e.status === 422);
+  assert.throws(() => send(["SD = 3.162"], 1234), (e) => e.status === 422);
+  assert.doesNotThrow(() => send(["Quiz scores: 4, 6, 8, 10, 12", "12345 is not this id"]));
+});
+
+test("E4 re-review: every field a pack shares is checked, including method labels and answer-rule notes; local-only notes are not shared so not checked", async () => {
+  const { packProblem } = await import("../server/privacy.js");
+  const { createAssignment } = await import("../server/assignment.js");
+  const a = createAssignment({ course: "DEMO-STATS 101", title: "Quiz 5", question: gradeStandards.question, max: 10, codes: gradeStandards.codes, methods: gradeStandards.methods, answerRules: gradeStandards.answerRules }, { localDir: mkdtempSync(join(tmpdir(), "pk2-")), createdBy: "UAAAA" });
+  const st = a.standards;
+  assert.ok(packProblem({ ...a, standards: { ...st, methods: [{ ...st.methods[0], label: "ask learner@example.edu" }] } }, course));
+  assert.ok(packProblem({ ...a, standards: { ...st, answerRules: [{ ...st.answerRules[0], note: "learner@example.edu" }] } }, course));
+  assert.equal(packProblem({ ...a, standards: { ...st, pendingPrecedents: [{ code: "E-MEAN", reason: "learner@example.edu" }] } }, course), null, "pending reasons never travel in a pack");
+});

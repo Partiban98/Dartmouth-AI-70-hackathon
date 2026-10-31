@@ -16,6 +16,11 @@ export function safeSetId(raw) {
 
 export const INGEST_DIR = (localDir) => join(localDir, "ingest");
 
+/** QA-05: the import script's set id when none is given. A folder name can look like an identifier (demo-papers looks like a NetID), so fall back to a dated id. */
+export function defaultSetId(folderName) {
+  try { return safeSetId(`imp-${folderName}`); } catch { return safeSetId(`imp-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`); }
+}
+
 /** One id per laptop, made once, kept in local/uploader.json. Paper ids carry it, so two laptops never collide and names stay where the papers were uploaded. */
 export function uploaderId(localDir) {
   const p = join(localDir, "uploader.json");

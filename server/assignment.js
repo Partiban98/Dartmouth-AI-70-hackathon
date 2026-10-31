@@ -41,6 +41,17 @@ const shareable = (st) => pick(st, SCHEME);
 const local = (st) => ({ ...shareable(st), ...(Array.isArray(st?.precedents) ? { precedents: st.precedents.filter((x) => typeof x === "string") } : {}),
   ...(Array.isArray(st?.pendingPrecedents) ? { pendingPrecedents: st.pendingPrecedents.map((x) => pick(x, { code: str, reason: str, by: str, itemId: str, at: str })) } : {}) });
 
+/** E6: a method pattern runs on every paper in the browser, so one that can backtrack for ever (a quantified group
+ *  inside another quantifier, or a back-reference) or is very long is refused. Returns a plain reason or null. */
+export function unsafePattern(sig) {
+  const s = String(sig ?? "");
+  if (s.length > 200) return "A method pattern must be under 200 characters.";
+  if (/\\[1-9]/.test(s)) return "A method pattern cannot refer back to an earlier group.";
+  if (/\((?:[^()\\]|\\.)*(?:[+*]|\{\d+,?\d*\})(?:[^()\\]|\\.)*\)\s*(?:[+*]|\{\d+,?\d*\})/.test(s)) return "A method pattern cannot repeat a group that already repeats; list the alternatives instead.";
+  return null;
+}
+const methodsProblem = (st) => (st?.methods ?? []).map((m) => unsafePattern(m.signature)).find(Boolean) ?? null;
+
 /** Validates the scheme with the same rules as the rubric drawer, assigns a code, saves. Throws naming the first problem. */
 export function createAssignment(draft, { localDir, createdBy }) {
   const code = newCode(localDir);
@@ -50,6 +61,7 @@ export function createAssignment(draft, { localDir, createdBy }) {
   if (tolerance != null) standards.tolerance = tolerance;
   const v = validateStandards(standards);
   if (!v.ok) throw new Error(v.errors.join("; "));
+  const mp = methodsProblem(standards); if (mp) throw new Error(mp);
   return save(localDir, { code, course, title, question, standards, createdBy, createdAt: new Date().toISOString(), version: "1.0" });
 }
 
@@ -64,7 +76,7 @@ export function decodePack(text) {
   let raw;
   try { raw = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
   const a = { ...pick(raw, PACK), standards: shareable(raw?.standards) };
-  if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok) throw new Error("This pack is incomplete or damaged; ask for a fresh one");
+  if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok || methodsProblem(a.standards)) throw new Error("This pack is incomplete or damaged (or has an unsafe method pattern); ask for a fresh one");
   return a;
 }
 
@@ -99,6 +111,7 @@ export function saveScheme(localDir, table, me) {
   if ((a.joined || a.createdBy !== me) && same(next) !== same(local(a.standards))) return { errors: ["Only the head TA's laptop can change this scheme. Propose a change instead."] };
   const v = validateStandards(next);
   if (!v.ok) return { errors: v.errors };
+  const mp = methodsProblem(next); if (mp) return { errors: [mp] };
   save(localDir, { ...a, version: next.version, standards: next });
   return { errors: null };
 }

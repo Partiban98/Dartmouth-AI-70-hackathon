@@ -70,10 +70,10 @@ test("extractText reads a PDF text layer and parsePaper separates the name from 
 });
 
 test("saved rubric overrides the seed and is validated before it is read back", async () => {
-  const { loadStandards, saveStandards } = await import("../server/context.js");
+  const { loadStandards, saveStandards, LOCAL_DIR } = await import("../server/context.js");
   const seed = loadStandards("grade-q5.v1.0.json");
   assert.equal(seed.id, "grade-q5");
-  const local = join(process.cwd(), "local", "rubrics", "grade-q5.json");
+  const local = join(LOCAL_DIR, "rubrics", "grade-q5.json"); // QA-04: restore the same store saveStandards wrote, including under REMAIN_LOCAL_DIR
   const had = existsSync(local) ? readFileSync(local, "utf8") : null;
   try {
     saveStandards({ ...seed, version: "9.9" });

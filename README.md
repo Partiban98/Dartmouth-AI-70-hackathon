@@ -7,17 +7,22 @@ Thesis: AI proposes with evidence, a person decides. One pipeline, one Privacy G
 
 This folder is the core built first by Kishore. Teammates build their journey on it, on their own branch, and merge through review. See `HANDOFF-CORE.md` for the full design, `final-spec-remain-2026-10-30.md` for the agreed spec, `work-split-remain-2026-10-30.md` for who builds what.
 
-### Run (no install, no build)
+### Run
 
-Requires Node 22 or newer. Nothing to install: `dependencies` is empty on purpose.
+Requires Node 22 or newer.
 
 ```
-npm test                 # all tests, node --test
-npm run dev              # local server on http://localhost:8787
+npm install              # Next.js, React, Tailwind
+npm run dev              # product UI on http://localhost:3000 (Next.js)
+npm test                 # all tests, node --test, zero-dependency core
 npm run smoke            # gate G0: one schema-valid call on the exact model, writes local/smoke.json
+npm run smoke:gemini     # optional rung 3 check
+npm run legacy           # the original no-build page on http://localhost:8787, same core, fallback
 ```
 
-Environment variables, set by the key holder on the demo machine, never in this repo:
+The core (`lib/`, `server/adapter.js`, `server/log.js`) stays zero-dependency and is what the tests cover. The Next.js app is the product surface on top: `app/` routes and `components/grading/`.
+
+Environment variables go in a `.env` file in this folder (gitignored, loaded by `npm run dev` and the smoke scripts; a `.env` value fills any variable that is missing or empty in your shell) or in your shell. Copy `.env.example` and fill it in. Never commit it:
 
 | Variable | Meaning |
 |---|---|
@@ -25,7 +30,7 @@ Environment variables, set by the key holder on the demo machine, never in this 
 | `MODEL_DEMO` | Exact model id for the recorded demo and rehearsals, verified at G0. |
 | `MODEL_DEV` | Exact model id for dev loops. Fallback rung 2. |
 | `NODE_ENV=development` | Use `MODEL_DEV` on rung 1. |
-| `GEMINI_API_KEY`, `GEMINI_TIER=paid` | Optional rung 3. Free tier never. |
+| `GEMINI_API_KEY`, `GEMINI_TIER=paid`, `GEMINI_MODEL` | Optional rung 3, the first real backup. Paid tier only, free tier never. Spec expects `gemini-2.5-flash`; the label shows the id the API returns. Run `npm run smoke:gemini` once. |
 | `REPLAY_MODE=1` | Rung 4 only: cached rehearsal, labelled "CACHED REHEARSAL: NOT LIVE MODEL OUTPUT". |
 | `PORT` | Server port, default 8787. |
 
@@ -35,7 +40,9 @@ Live calls are refused until `npm run smoke` has written a passing `local/smoke.
 
 - `lib/` shared pure modules, run in the browser and in tests: `gate.js`, `engine.js`, `schema.js`, `pipeline.js`, `ideas.js`, `prompts.js`, `logshape.js`, `text.js`
 - `server/` tiny `node:http` server, provider adapter, JSONL log writer. Routes: static, `POST /propose`, `POST /log`, `GET /counts`
-- `public/` the page shell and the six shared components: GatePanel, ReviewCard, QueueList, DecisionBar, ReceiptPanel, DecisionLog
+- `app/` Next.js App Router: `/grade` (Teacher and TA journey GR-01 to GR-04), `/student` and `/staff` placeholders, route handlers `/api/propose`, `/api/log`, `/api/counts`, `/api/rubric`, and `/data/[file]` (never serves `*.eval.json`). `/propose`, `/log`, `/counts` are rewritten to the API routes so the shared pipeline is unchanged.
+- `components/grading/GradingWorkspace.tsx` the product surface: question-set selector, instructor rubric drawer (versioned, validated, precedents), queue with no bulk approval, paper view with quoted lines highlighted, gate panel, review card with keyboard grading (1, 2, 3, Enter), decision bar with the feedback line, receipt, class insights from confirmed decisions, decision log.
+- `legacy/` the original no-build page and server, kept as the fallback. Same core.
 - `data/` DEMO-STATS 101 seeds, synthetic only. `*.eval.json` is for tests and is never served
 - `tests/` node --test suites, plus `a11y.md` manual checks
 - `local/` gitignored: JSONL logs, payload cache, call counter, smoke result

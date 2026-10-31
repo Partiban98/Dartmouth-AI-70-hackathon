@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, readdirSync, statSync, existsSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { createApp, ROUTES } from "../server/server.js";
+import { createApp, ROUTES } from "../legacy/server.js";
 import { course } from "./helpers.js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -22,7 +22,7 @@ test("T21 eval labels are never served; page and data are", async () => {
     assert.equal((await fetch(`${base}/`)).status, 200);
     assert.equal((await fetch(`${base}/../package.json`)).status, 404);
   } finally { server.close(); }
-  const pub = readdirSync(join(ROOT, "public")).map((f) => readFileSync(join(ROOT, "public", f), "utf8")).join("\n");
+  const pub = readdirSync(join(ROOT, "legacy", "public")).map((f) => readFileSync(join(ROOT, "legacy", "public", f), "utf8")).join("\n");
   assert.ok(!pub.includes("eval.json"), "public/ must not reference eval.json");
 });
 
@@ -62,8 +62,8 @@ test("/log accepts gate and decision records only and rejects unsafe ones; /coun
 test("T22 no-submission path: fetch targets, forbidden words, route list", () => {
   const files = [];
   const walk = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : files.push(p); } };
-  walk(join(ROOT, "public")); walk(join(ROOT, "lib")); walk(join(ROOT, "server"));
-  const allowed = new Set(["/propose", "/log", "/counts", "API_URL"]);
+  walk(join(ROOT, "legacy", "public")); walk(join(ROOT, "lib")); walk(join(ROOT, "server")); if (existsSync(join(ROOT, "app"))) walk(join(ROOT, "app")); if (existsSync(join(ROOT, "components"))) walk(join(ROOT, "components"));
+  const allowed = new Set(["/propose", "/log", "/counts", "/api/rubric", "API_URL"]);
   for (const f of files) {
     const src = readFileSync(f, "utf8");
     assert.ok(!/canvas|gradebook/i.test(src), `${f} mentions canvas or gradebook`);
@@ -83,7 +83,7 @@ test("T22b public-repo hygiene: nothing under local/, no .env, no key-like strin
   catch { tracked = []; }
   for (const f of tracked) {
     assert.ok(!f.startsWith("local/"), `${f} would be committed`);
-    assert.ok(!/^\.env/.test(f), `${f} would be committed`);
+    assert.ok(!/^\.env/.test(f) || f === ".env.example", `${f} would be committed`);
     if (statSync(join(ROOT, f)).isFile()) assert.ok(!/sk-ant-[A-Za-z0-9_-]{8,}/.test(readFileSync(join(ROOT, f), "utf8")), `${f} contains a key-like string`);
   }
 });

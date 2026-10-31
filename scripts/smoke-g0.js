@@ -5,8 +5,10 @@ import { join } from "node:path";
 import { runGate, assertClean } from "../lib/gate.js";
 import { makeIdeas } from "../lib/ideas.js";
 import { makeAdapter } from "../server/adapter.js";
+import { loadDotenv } from "../server/env.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+loadDotenv(join(ROOT, ".env"));
 const read = (f) => JSON.parse(readFileSync(join(ROOT, "data", f), "utf8"));
 const course = read("course.json");
 const ideas = makeIdeas({ gradeStandards: read("grade-q5.v1.0.json"), companion: read("companion-ch3.json"), upskillStandards: read("upskill-email.v1.0.json") });

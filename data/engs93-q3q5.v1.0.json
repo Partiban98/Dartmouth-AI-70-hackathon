@@ -1,0 +1,212 @@
+{
+  "id": "engs93-q3q5",
+  "version": "1.0",
+  "owner": "instructor",
+  "status": "approved",
+  "max": 2,
+  "course": "ENGS 93, Quiz 3, Question 5 (real rubric and precedents; student text reconstructed)",
+  "question": "A streaming service historically converts 30% of free-trial users into paid subscribers. After a redesign, 87 of 240 randomly selected free-trial users became paid subscribers. At the 2.5% significance level, test whether the redesign increased the population conversion rate above 30%. Show the hypotheses, verify that the large-sample proportion test is appropriate, calculate the test statistic and p-value, and state the conclusion in context.",
+  "answerField": "p-value",
+  "correctAnswer": [
+    0.0174,
+    0.0173,
+    0.0219,
+    0.0206,
+    0.022
+  ],
+  "tolerance": 0.0006,
+  "answerRules": [
+    {
+      "near": 0.0346,
+      "tolerance": 0.0006,
+      "code": "C-WRONG-TAIL",
+      "note": "two-sided p-value; TA decides whether the decision survived"
+    },
+    {
+      "near": 0.9826,
+      "tolerance": 0.001,
+      "code": "D-WRONG-TAIL",
+      "note": "lower-tail p-value"
+    }
+  ],
+  "columns": [
+    {
+      "id": "hyp",
+      "label": "Hypotheses + p-hat",
+      "max": 0.5
+    },
+    {
+      "id": "val",
+      "label": "Validity",
+      "max": 0.5
+    },
+    {
+      "id": "stat",
+      "label": "Test statistic",
+      "max": 0.5
+    },
+    {
+      "id": "concl",
+      "label": "p-value + decision + context",
+      "max": 0.5
+    }
+  ],
+  "codes": [
+    {
+      "code": "H-PARAM",
+      "deduction": -0.25,
+      "label": "Hypotheses on the wrong parameter",
+      "column": "hyp"
+    },
+    {
+      "code": "H-DIRECTION",
+      "deduction": -0.25,
+      "label": "Wrong alternative direction",
+      "column": "hyp"
+    },
+    {
+      "code": "V-MISSING",
+      "deduction": -0.5,
+      "label": "Large-sample validity check not shown",
+      "column": "val"
+    },
+    {
+      "code": "V-SLIP",
+      "deduction": -0.25,
+      "label": "Validity numbers wrong or incomplete",
+      "column": "val"
+    },
+    {
+      "code": "V-RULED-OUT",
+      "deduction": -0.5,
+      "label": "Ruled the test invalid despite n p0 = 72 and n (1 - p0) = 168",
+      "column": "val"
+    },
+    {
+      "code": "S-ARITH",
+      "deduction": -0.25,
+      "label": "Calculation slip in p-hat, SE, z, or p (one per chain)",
+      "column": "stat"
+    },
+    {
+      "code": "S-UNFINISHED",
+      "deduction": -0.25,
+      "label": "Test statistic written but not evaluated",
+      "column": "stat"
+    },
+    {
+      "code": "S-MISSING",
+      "deduction": -0.5,
+      "label": "No test statistic",
+      "column": "stat"
+    },
+    {
+      "code": "D-TWO-SIDED-FTR",
+      "deduction": -0.5,
+      "label": "Two-sided p-value with fail to reject",
+      "column": "concl"
+    },
+    {
+      "code": "D-WRONG-TAIL",
+      "deduction": -0.5,
+      "label": "Wrong tail gave the wrong decision",
+      "column": "concl"
+    },
+    {
+      "code": "C-WRONG-TAIL",
+      "deduction": -0.25,
+      "label": "Wrong tail or contradictory wording, decision still right",
+      "column": "concl"
+    },
+    {
+      "code": "C-NO-CONTEXT",
+      "deduction": -0.25,
+      "label": "Conclusion never says what rejecting means for the redesign",
+      "column": "concl"
+    },
+    {
+      "code": "C-BACKWARDS",
+      "deduction": -0.25,
+      "label": "Comparison reversed or conclusion worded backwards, decision right",
+      "column": "concl"
+    },
+    {
+      "code": "C-PARTIAL",
+      "deduction": -0.25,
+      "label": "p-value or explicit decision missing, rest right",
+      "column": "concl"
+    },
+    {
+      "code": "C-MISSING",
+      "deduction": -0.5,
+      "label": "No p-value and no decision",
+      "column": "concl"
+    },
+    {
+      "code": "G-ATTEMPT-ONLY",
+      "deduction": -1.75,
+      "label": "Attempt only: hypotheses and test work missing (0.25 total)",
+      "column": "all"
+    },
+    {
+      "code": "M-UNLISTED",
+      "deduction": 0,
+      "label": "Correct by a method not in the table: instructor decides",
+      "column": "stat"
+    },
+    {
+      "code": "OK",
+      "deduction": 0,
+      "label": "No error",
+      "column": "none"
+    },
+    {
+      "code": "UNSURE",
+      "deduction": 0,
+      "label": "Needs instructor",
+      "column": "none"
+    }
+  ],
+  "methods": [
+    {
+      "id": "OFFICIAL",
+      "label": "z with SE under H0, z = 2.11, p = 0.0174",
+      "signature": "2\\.11|0\\.0295|0\\.0173|0\\.0174"
+    },
+    {
+      "id": "BINOMIAL",
+      "label": "Exact binomial, p = 0.0219",
+      "signature": "binomial|0\\.0219"
+    },
+    {
+      "id": "CONTINUITY",
+      "label": "Continuity-corrected z = 2.04, p = 0.0206",
+      "signature": "86\\.5|2\\.04|0\\.0206"
+    },
+    {
+      "id": "WALD",
+      "label": "Wald z with p-hat in the SE, z = 2.01, p = 0.0220",
+      "signature": "0\\.0310|2\\.01|0\\.0220?\\b"
+    },
+    {
+      "id": "CHISQ",
+      "label": "Chi-square, 4.46 on 1 df, one-sided half 0.0173",
+      "signature": "chi|4\\.46"
+    },
+    {
+      "id": "CI",
+      "label": "One-sided 97.5% lower bound above 0.30",
+      "signature": "lower bound|confidence interval|0\\.30(17|45)"
+    }
+  ],
+  "precedents": [
+    "Maximum leniency: on judgment calls take the higher plausible mark.",
+    "No double penalty for propagated errors; one botched chain is one calculation mistake.",
+    "A decision that follows correctly from the student's own wrong statistic is not an extra error.",
+    "A p-value range containing the method's exact p earns full credit; a range within 0.001 with the decision unchanged reconciles up to full.",
+    "Validity computed with observed counts (87, 153) earns full credit.",
+    "Wald z (p-hat in the SE) is a calculation variant, no deduction.",
+    "Two-sided p quoted but decision still reject: no deduction. Two-sided p with fail to reject: conceptual error.",
+    "Conclusion without context loses 0.25 of the conclusion column only when the decision itself is right."
+  ]
+}

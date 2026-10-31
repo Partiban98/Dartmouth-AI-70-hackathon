@@ -4,11 +4,12 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname, normalize as pnorm } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertClean } from "../lib/gate.js";
-import { verifyQuote, counters } from "../lib/engine.js";
+import { verifyQuote, counters, analytics } from "../lib/engine.js";
 import { makeIdeas } from "../lib/ideas.js";
 import { blockedRecord, proposalRecord } from "../lib/logshape.js";
-import { makeAdapter } from "./adapter.js";
-import { makeLog } from "./log.js";
+import { makeAdapter } from "../server/adapter.js";
+import { makeLog } from "../server/log.js";
+import { loadDotenv } from "../server/env.js";
 
 export const ROUTES = ["GET /*", "POST /propose", "POST /log", "GET /counts"];
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -21,7 +22,7 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
   const adapter = makeAdapter({ env, fetchImpl, localDir });
   const log = makeLog(localDir, course);
 
-  const send = (res, status, body, type = "application/json; charset=utf-8") => { res.writeHead(status, { "content-type": type }); res.end(typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body)); };
+  const send = (res, status, body, type = "application/json; charset=utf-8") => { res.writeHead(status, { "content-type": type, "cache-control": "no-store" }); res.end(typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body)); };
   const readBody = (req) => new Promise((ok, err) => { let s = ""; req.on("data", (c) => { s += c; if (s.length > 1e6) err(new Error("body too large")); }); req.on("end", () => { try { ok(s ? JSON.parse(s) : {}); } catch (e) { err(e); } }); });
 
   const textOf = (payload, fields) => fields.map((f) => { const v = payload[f]; return Array.isArray(v) ? v.join("\n") : v && typeof v === "object" ? Object.values(v).join("\n") : String(v ?? ""); }).join("\n");
@@ -51,14 +52,19 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
         log.append(rec.type === "decision" ? "decisions" : "gate", rec);
         return send(res, 200, { ok: true });
       }
-      if (req.method === "GET" && url.pathname === "/counts") return send(res, 200, counters(log.readAll()));
+      if (req.method === "GET" && url.pathname === "/counts") {
+        const all = log.readAll();
+        // Decision rows carry ids, names, codes, and numbers only; reasons stay in the JSONL.
+        const decisions = all.decisions.map((d) => ({ ts: d.ts, idea: d.idea, itemId: d.itemId, decidedBy: d.decidedBy, confirmed: d.confirmed, overrides: (d.overrides ?? []).length, computedScore: d.computedScore, grade: d.grade }));
+        return send(res, 200, { ...counters(all), analytics: analytics(all.decisions), decisions });
+      }
       if (req.method === "GET") {
         let p = url.pathname === "/" ? "/index.html" : url.pathname;
         if (p.endsWith(".eval.json")) return send(res, 404, { error: "not found" });
         const shared = p.startsWith("/data/") || p.startsWith("/lib/");
-        const base = shared ? ROOT : join(ROOT, "public");
+        const base = shared ? ROOT : join(ROOT, "legacy", "public");
         const file = pnorm(join(base, p));
-        const allowedRoot = join(ROOT, shared ? p.split("/")[1] : "public");
+        const allowedRoot = shared ? join(ROOT, p.split("/")[1]) : join(ROOT, "legacy", "public");
         if (!file.startsWith(allowedRoot) || !existsSync(file) || !statSync(file).isFile()) return send(res, 404, { error: "not found" });
         return send(res, 200, readFileSync(file), MIME[extname(file)] ?? "application/octet-stream");
       }
@@ -70,6 +76,7 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  loadDotenv(join(ROOT, ".env"));
   const port = Number(process.env.PORT ?? 8787);
   createApp().listen(port, () => console.log(`Remain core on http://localhost:${port}  (logs in local/, key never leaves this machine)`));
 }

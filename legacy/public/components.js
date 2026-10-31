@@ -1,5 +1,6 @@
 // Shared components, frozen first: GatePanel, ReviewCard, QueueList, DecisionBar, ReceiptPanel, DecisionLog. Plain DOM, status by text, never colour alone.
 import { HONEST_LIMIT } from "/lib/gate.js";
+import { validateStandards, recurring } from "/lib/engine.js";
 
 const el = (tag, attrs = {}, ...children) => {
   const n = document.createElement(tag);
@@ -92,15 +93,43 @@ export function ReceiptPanel({ receipt, decidedBy, label, computedScore }) {
     el("p", { class: "label" }, label ?? ""));
 }
 
-/** C-02. Counts from logs only. */
+/** C-02. Counts from logs only, plus one row per human decision. */
 export function DecisionLog(counts) {
   if (!counts) return el("section", { class: "panel" }, el("h3", {}, "Decision log"), el("p", {}, "No counts yet."));
   const pii = Object.entries(counts.piiStripped ?? {}).map(([t, n]) => `${t} ${n}`).join(", ") || "none";
+  const rows = (counts.decisions ?? []).slice().reverse().map((d) => el("tr", {},
+    el("td", {}, d.itemId), el("td", {}, d.decidedBy), el("td", {}, d.confirmed?.length ? d.confirmed.join(", ") : "none"), el("td", {}, String(d.overrides)), el("td", {}, d.grade ?? "")));
   return el("section", { class: "panel", "aria-labelledby": "log-h" },
     el("h3", { id: "log-h" }, "Decision log, real counts from logs"),
     el("ul", {},
-      el("li", {}, `Proposed ${counts.proposed}, confirmed ${counts.confirmed}, overridden ${counts.overridden}`),
+      el("li", {}, `Model proposals ${counts.proposed}, codes confirmed by a person ${counts.confirmed}, overridden ${counts.overridden}`),
       el("li", {}, `Source lines verified by code ${counts.quotesVerified}, not found ${counts.quotesNotFound}`),
       el("li", {}, `Identifiers stripped, by type: ${pii}; header lines dropped ${counts.headerLinesDropped}; fields dropped ${counts.fieldsDropped}`),
-      el("li", {}, `Decisions attributed to a human: ${counts.decisionsByHuman}`)));
+      el("li", {}, `Decisions attributed to a human: ${counts.decisionsByHuman}`)),
+    rows.length ? el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Item"), el("th", {}, "Decided by"), el("th", {}, "Confirmed codes"), el("th", {}, "Overrides"), el("th", {}, "Grade"))), el("tbody", {}, rows)) : null);
+}
+
+/** GR-01. Instructor-owned, versioned, visible standards table, validated by code before use. */
+export function RubricPanel(table) {
+  const v = validateStandards(table);
+  const rows = table.codes.map((c) => el("tr", {}, el("td", {}, c.code), el("td", {}, c.label), el("td", {}, String(c.deduction))));
+  const methods = (table.methods ?? []).map((m) => el("li", {}, `${m.id}: ${m.label} (signature checked by code)`));
+  return el("details", { class: "panel", open: false },
+    el("summary", {}, `Rubric ${table.id} v${table.version}, owner: ${table.owner}, status: ${table.status}, max ${table.max}. ${v.ok ? "Validated by code: OK" : "Validation FAILED"}`),
+    el("p", {}, table.question ?? ""),
+    el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Code"), el("th", {}, "Error type"), el("th", {}, "Deduction"))), el("tbody", {}, rows)),
+    el("p", {}, "Listed methods:"), el("ul", {}, methods),
+    el("p", { class: "muted" }, "Only the instructor owner changes deductions or adds a method. A correct answer by an unlisted method is flagged M-UNLISTED by rule; the TA decides, the instructor decides whether to list it in the next version."),
+    v.ok ? null : el("ul", { role: "alert" }, v.errors.map((e) => el("li", {}, e))));
+}
+
+/** GR-04. Recurring mistakes from TA-confirmed decisions only. */
+export function ClassInsights(counts, table, total) {
+  const list = counts ? recurring(counts.analytics ?? {}, table) : [];
+  const decided = counts?.decisionsByHuman ?? 0;
+  const rows = list.map((r) => el("tr", {}, el("td", {}, r.code), el("td", {}, r.label), el("td", {}, String(r.confirmed)), el("td", {}, String(r.proposed)), el("td", {}, String(r.overridden))));
+  return el("section", { class: "panel", "aria-labelledby": "insights-h" },
+    el("h3", { id: "insights-h" }, "Class insights, from TA-confirmed decisions only"),
+    el("p", {}, `Papers decided by a person: ${decided} of ${total}. Nothing here comes from model text.`),
+    rows.length ? el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Code"), el("th", {}, "What to reteach"), el("th", {}, "TA confirmed"), el("th", {}, "AI or rule proposed"), el("th", {}, "Overridden"))), el("tbody", {}, rows)) : el("p", {}, "No confirmed mistakes yet."));
 }

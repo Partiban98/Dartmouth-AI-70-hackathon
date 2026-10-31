@@ -1,0 +1,342 @@
+{
+  "note": "Real TA outcomes from grading-data/finals-quiz3-q5-anonymized.md. Tests only. Never served, never loaded by the UI.",
+  "labels": {
+    "Q3-01": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-02": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-03": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-04": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-05": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-06": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-07": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-08": {
+      "total": 1,
+      "comment": "Validity slip, wrong standard error, and wrong tail for the p-value",
+      "codes": [
+        "V-SLIP",
+        "S-ARITH",
+        "D-WRONG-TAIL"
+      ]
+    },
+    "Q3-09": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-10": {
+      "total": 1.5,
+      "comment": "Validity numbers missing, conclusion worded backwards",
+      "codes": [
+        "V-SLIP",
+        "C-BACKWARDS"
+      ],
+      "split": [
+        0.5,
+        0.25,
+        0.5,
+        0.25
+      ]
+    },
+    "Q3-11": {
+      "total": 1.25,
+      "comment": "Validity check incomplete, z unfinished, and no p-value or decision",
+      "codes": [
+        "V-SLIP",
+        "S-UNFINISHED",
+        "C-PARTIAL"
+      ]
+    },
+    "Q3-12": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-13": {
+      "total": 1.75,
+      "comment": "Hypotheses framed with the wrong parameter",
+      "codes": [
+        "H-PARAM"
+      ],
+      "split": [
+        0.25,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-14": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-15": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-16": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-17": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-18": {
+      "total": 1.75,
+      "comment": "Conclusion never says what rejecting means for the redesign",
+      "codes": [
+        "C-NO-CONTEXT"
+      ],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.25
+      ]
+    },
+    "Q3-19": {
+      "total": 1.5,
+      "comment": "Large-sample validity check was not shown",
+      "codes": [
+        "V-MISSING"
+      ]
+    },
+    "Q3-20": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-21": {
+      "total": 1.75,
+      "comment": "Wrong tail for the p-value, contradictory conclusion wording",
+      "codes": [
+        "C-WRONG-TAIL"
+      ]
+    },
+    "Q3-22": {
+      "total": 1.75,
+      "comment": "No p-value shown and no explicit reject decision",
+      "codes": [
+        "C-PARTIAL"
+      ]
+    },
+    "Q3-23": {
+      "total": 1.5,
+      "comment": "Wrong tail for p-value, wrong decision",
+      "codes": [
+        "D-WRONG-TAIL"
+      ]
+    },
+    "Q3-24": {
+      "total": 1.75,
+      "comment": "Conclusion never says what rejecting means for the redesign",
+      "codes": [
+        "C-NO-CONTEXT"
+      ],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.25
+      ]
+    },
+    "Q3-25": {
+      "total": 0.25,
+      "comment": "Hypotheses and all test work are missing",
+      "codes": [
+        "G-ATTEMPT-ONLY"
+      ],
+      "split": [
+        0.25,
+        0,
+        0,
+        0
+      ]
+    },
+    "Q3-26": {
+      "total": 1.75,
+      "comment": "P-value came from the wrong table row",
+      "codes": [
+        "S-ARITH"
+      ]
+    },
+    "Q3-27": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-28": {
+      "total": 1.5,
+      "comment": "Validity count wrong, contradictory decision wording",
+      "codes": [
+        "V-SLIP",
+        "C-BACKWARDS"
+      ]
+    },
+    "Q3-29": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    },
+    "Q3-30": {
+      "total": 0.5,
+      "comment": "Wrongly ruled the test out, nothing else computed",
+      "codes": [
+        "V-RULED-OUT",
+        "S-MISSING",
+        "C-MISSING"
+      ],
+      "split": [
+        0.5,
+        0,
+        0,
+        0
+      ]
+    },
+    "Q3-31": {
+      "total": 1.25,
+      "comment": "Validity used 87 instead of 240, and two-sided p-value gave the wrong decision",
+      "codes": [
+        "V-SLIP",
+        "D-TWO-SIDED-FTR"
+      ]
+    },
+    "Q3-32": {
+      "total": 2,
+      "comment": "",
+      "codes": [],
+      "split": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "Q3-33": {
+      "total": 1.5,
+      "comment": "Validity check missing",
+      "codes": [
+        "V-MISSING"
+      ]
+    },
+    "Q3-34": {
+      "total": 0.75,
+      "comment": "Wrong alternative direction, incomplete validity, and unfinished test",
+      "codes": [
+        "H-DIRECTION",
+        "V-SLIP",
+        "S-UNFINISHED",
+        "C-MISSING"
+      ],
+      "split": [
+        0.25,
+        0.25,
+        0.25,
+        0
+      ]
+    },
+    "Q3-35": {
+      "total": 1.75,
+      "comment": "p-value comparison reversed and conclusion lacks context",
+      "codes": [
+        "C-BACKWARDS"
+      ]
+    },
+    "Q3-36": {
+      "total": 1.25,
+      "comment": "Hypotheses framed wrong, validity numbers missing, and early rounding changed z",
+      "codes": [
+        "H-PARAM",
+        "V-SLIP",
+        "S-ARITH"
+      ]
+    },
+    "Q3-37": {
+      "total": 0.75,
+      "comment": "Hypotheses on the wrong parameter, no validity or statistic shown, conclusion lacks p-value and context",
+      "codes": [
+        "H-PARAM",
+        "V-SLIP",
+        "S-MISSING",
+        "C-PARTIAL"
+      ],
+      "split": [
+        0.25,
+        0.25,
+        0,
+        0.25
+      ]
+    },
+    "Q3-38": {
+      "total": 2,
+      "comment": "",
+      "codes": []
+    }
+  }
+}

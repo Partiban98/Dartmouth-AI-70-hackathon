@@ -6,9 +6,24 @@
   "description": "Remain (working title): shared core. AI proposes with evidence, a person decides.",
   "scripts": {
     "test": "node --test tests/",
-    "dev": "node server/server.js",
-    "smoke": "node scripts/smoke-g0.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "legacy": "node legacy/server.js",
+    "smoke": "node scripts/smoke-g0.js",
+    "smoke:gemini": "node scripts/smoke-gemini.js"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
+  }
 }

@@ -86,3 +86,56 @@ test("smokeTest falls back from structured to tool mode and records the mode", a
   assert.equal(r.ok, true); assert.equal(r.mode, "tool"); assert.equal(r.modelId, "returned-id");
   assert.equal(JSON.parse(readFileSync(join(dir, "smoke.json"), "utf8")).mode, "tool");
 });
+
+const geminiOk = (model) => ({ ok: true, status: 200, json: async () => ({ modelVersion: model, usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 6 }, candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify({ proposals: [{ code: "E-VAR-SD", quote: "SD = 10", confidence: 0.7 }] }) }] } }] }) });
+
+test("rung 3: Gemini answers when Claude rungs are not configured; key in header, never in URL; label from modelVersion", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "remain-"));
+  writeFileSync(join(dir, "smoke.json"), JSON.stringify({ ok: true, mode: "structured" }));
+  writeFileSync(join(dir, "smoke-gemini.json"), JSON.stringify({ ok: true, mode: "jsonSchema" }));
+  const seen = [];
+  const fetchImpl = async (url, init) => { seen.push({ url, init }); return geminiOk("gemini-returned-id"); };
+  const adapter = makeAdapter({ env: { GEMINI_API_KEY: "gk-test-not-real", GEMINI_TIER: "paid", GEMINI_MODEL: "gemini-env-model" }, fetchImpl, localDir: dir });
+  const r = await adapter.propose({ ideaConfig: ideas.grade, payload, promptName: "grade-propose" });
+  assert.equal(r.ok, true); assert.equal(r.rung, 3); assert.equal(r.label, "LIVE API: gemini-returned-id");
+  assert.ok(seen[0].url.endsWith("/models/gemini-env-model:generateContent")); assert.ok(!seen[0].url.includes("key="));
+  assert.equal(seen[0].init.headers["x-goog-api-key"], "gk-test-not-real");
+  assert.ok(seen[0].init.signal instanceof AbortSignal, "request carries a timeout signal");
+  const body = JSON.parse(seen[0].init.body);
+  assert.equal(body.generationConfig.responseMimeType, "application/json"); assert.ok(body.generationConfig.responseJsonSchema);
+  assert.ok(r.attempts.some((a) => a.includes("rung 1")) && r.attempts.some((a) => a.includes("rung 2")));
+});
+
+test("rung 3 is skipped on the free tier, without a model, or before its smoke", async () => {
+  for (const [env, msg] of [[{ GEMINI_API_KEY: "k", GEMINI_TIER: "free", GEMINI_MODEL: "m" }, "rung 3 not configured"], [{ GEMINI_API_KEY: "k", GEMINI_TIER: "paid" }, "GEMINI_MODEL not set"], [{ GEMINI_API_KEY: "k", GEMINI_TIER: "paid", GEMINI_MODEL: "m" }, "smoke-gemini"]]) {
+    const dir = mkdtempSync(join(tmpdir(), "remain-"));
+    writeFileSync(join(dir, "smoke.json"), JSON.stringify({ ok: true, mode: "structured" }));
+    let calls = 0;
+    const adapter = makeAdapter({ env, fetchImpl: async () => { calls++; return geminiOk("x"); }, localDir: dir });
+    const r = await adapter.propose({ ideaConfig: ideas.grade, payload, promptName: "grade-propose" });
+    assert.equal(r.ok, false); assert.equal(calls, 0); assert.ok(r.attempts.some((a) => a.includes(msg)), JSON.stringify(r.attempts));
+  }
+});
+
+test("smokeGemini falls back from responseJsonSchema to responseSchema without additionalProperties, records the mode", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "remain-"));
+  const bodies = [];
+  const fetchImpl = async (url, init) => {
+    const body = JSON.parse(init.body); bodies.push(body);
+    if (body.generationConfig.responseJsonSchema) return { ok: false, status: 400, json: async () => ({ error: { status: "INVALID_ARGUMENT", message: "unknown field" } }) };
+    return geminiOk("gemini-2.5-flash-001");
+  };
+  const adapter = makeAdapter({ env: { GEMINI_API_KEY: "k", GEMINI_TIER: "paid", GEMINI_MODEL: "gemini-2.5-flash" }, fetchImpl, localDir: dir });
+  const r = await adapter.smokeGemini({ ideaConfig: ideas.grade, payload });
+  assert.equal(r.ok, true); assert.equal(r.mode, "openApi"); assert.equal(r.modelId, "gemini-2.5-flash-001");
+  assert.ok(!JSON.stringify(bodies[1].generationConfig.responseSchema).includes("additionalProperties"));
+  assert.equal(JSON.parse(readFileSync(join(dir, "smoke-gemini.json"), "utf8")).mode, "openApi");
+  assert.equal(JSON.parse(readFileSync(join(dir, "calls.json"), "utf8")).count, 2, "both attempts count against the cap");
+});
+
+test("Gemini finishReason other than STOP is a failed attempt", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "remain-"));
+  const fetchImpl = async () => ({ ok: true, status: 200, json: async () => ({ modelVersion: "m", candidates: [{ finishReason: "SAFETY", content: { parts: [] } }] }) });
+  const adapter = makeAdapter({ env: { GEMINI_API_KEY: "k", GEMINI_TIER: "paid", GEMINI_MODEL: "m" }, fetchImpl, localDir: dir });
+  await assert.rejects(() => adapter.callGeminiOnce({ modelId: "m", mode: "jsonSchema", ideaConfig: ideas.grade, payload }), /finishReason SAFETY/);
+});

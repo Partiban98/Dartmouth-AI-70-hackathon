@@ -1,0 +1,668 @@
+[
+  {
+    "id": "Q3-01",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-01",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-02",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-02",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE = sqrt(0.3625 (0.6375) / 240) = 0.03103 (Wald, p-hat in the SE)",
+      "z = (0.3625 - 0.30) / 0.03103 = 2.01",
+      "p-value = P(Z >= 2.01) = 0.0220",
+      "0.0220 < 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.022
+  },
+  {
+    "id": "Q3-03",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-03",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p-hat = 87 and n (1 - p-hat) = 153, both > 10, so the normal approximation holds",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-04",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-04",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value: from the table 0.017 < p < 0.018",
+      "p < 0.025, so reject H0. There is sufficient evidence that the redesign increased conversion above 30%."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-05",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-05",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "Let mu be the conversion rate. H0: mu = 0.30 versus Ha: mu > 0.30",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-06",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-06",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "Continuity corrected: z = (86.5 - 72) / sqrt(50.4) = 2.04",
+      "p-value = P(Z >= 2.04) = 0.0206",
+      "0.0206 < 0.025, reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0206
+  },
+  {
+    "id": "Q3-07",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-07",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0173 (interpolated from the table)",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0173
+  },
+  {
+    "id": "Q3-08",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-08",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 > 10",
+      "SE0 = sqrt(0.30 (0.70)) / 240 = 0.00191",
+      "z = (0.3625 - 0.30) / 0.00191 = 32.7",
+      "p-value = P(Z <= 2.11) = 0.9826",
+      "0.9826 > 0.025, so fail to reject H0."
+    ],
+    "finalAnswer": 0.9826
+  },
+  {
+    "id": "Q3-09",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-09",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "chi-square = z^2 = 4.46 on 1 df",
+      "two-sided p = 0.0346, one-sided half = 0.0173",
+      "0.0173 < 0.025, reject H0. The redesign increased conversion above 30%."
+    ],
+    "finalAnswer": 0.0173
+  },
+  {
+    "id": "Q3-10",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-10",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 > 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-11",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-11",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / sqrt(0.30 (0.70) / 240)",
+      "Reject H0, the redesign increased conversion."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-12",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-12",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "Exact binomial: P(X >= 87 | n = 240, p = 0.30) = 0.0219",
+      "No z needed, the binomial tail is the test",
+      "p-value = 0.0219",
+      "0.0219 < 0.025, reject H0. The redesign increased conversion above 30%."
+    ],
+    "finalAnswer": 0.0219
+  },
+  {
+    "id": "Q3-13",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-13",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: mu = 0.30 versus Ha: mu > 0.30",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-14",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-14",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.05 (sic), so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-15",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-15",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-16",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-16",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE = sqrt(0.3625 (0.6375) / 240) = 0.03103 (Wald, p-hat in the SE)",
+      "z = (0.3625 - 0.30) / 0.03103 = 2.01",
+      "p-value = P(Z >= 2.01) = 0.0220",
+      "0.0220 < 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.022
+  },
+  {
+    "id": "Q3-17",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-17",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p-hat = 87 and n (1 - p-hat) = 153, both > 10, so the normal approximation holds",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-18",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-18",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-19",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-19",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-20",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-20",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value: from the table 0.017 < p < 0.018",
+      "p < 0.025, so reject H0. There is sufficient evidence that the redesign increased conversion above 30%."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-21",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-21",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = 2 P(Z >= 2.11) = 0.0346",
+      "0.0346 > 0.025 ... but we still reject H0; the redesign increased conversion above 30% (see next page)"
+    ],
+    "finalAnswer": 0.0346
+  },
+  {
+    "id": "Q3-22",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-22",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "The evidence supports the redesign increasing conversion above 30%."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-23",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-23",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z <= 2.11) = 0.9826",
+      "0.9826 > 0.025, so fail to reject H0."
+    ],
+    "finalAnswer": 0.9826
+  },
+  {
+    "id": "Q3-24",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-24",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-25",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-25",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "p-hat = 87 / 240 = 0.3625",
+      "Not sure how to set up the test."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-26",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-26",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0192 (table)",
+      "0.0192 < 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0192
+  },
+  {
+    "id": "Q3-27",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-27",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "Let mu be the conversion rate. H0: mu = 0.30 versus Ha: mu > 0.30",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-28",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-28",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 and n (1 - p0) = 160, both > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 > 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-29",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-29",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "Continuity corrected: z = (86.5 - 72) / sqrt(50.4) = 2.04",
+      "p-value = P(Z >= 2.04) = 0.0206",
+      "0.0206 < 0.025, reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0206
+  },
+  {
+    "id": "Q3-30",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-30",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "n is too small for the normal approximation, so the large-sample test cannot be used"
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-31",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-31",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: 87 (0.30) = 26.1 > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "two-sided p-value = 2 P(Z >= 2.11) = 0.0346",
+      "0.0346 > 0.025, so fail to reject H0. No evidence the redesign changed conversion."
+    ],
+    "finalAnswer": 0.0346
+  },
+  {
+    "id": "Q3-32",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-32",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0173 (interpolated from the table)",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0173
+  },
+  {
+    "id": "Q3-33",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-33",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 < 0.025, so reject H0. At the 2.5% level there is sufficient evidence that the redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-34",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-34",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p < 0.30",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / sqrt(0.30 (0.70) / 240)"
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-35",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-35",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.3625 - 0.30) / 0.02958 = 2.11",
+      "p-value = P(Z >= 2.11) = 0.0174",
+      "0.0174 > 0.025, so reject H0. The redesign increased the conversion rate above 30%."
+    ],
+    "finalAnswer": 0.0174
+  },
+  {
+    "id": "Q3-36",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-36",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: mu = 0.30 versus Ha: mu > 0.30",
+      "p-hat = 87 / 240 = 0.36",
+      "Validity: n p0 = 72 > 10",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "z = (0.36 - 0.30) / 0.0296 = 2.03",
+      "p-value = P(Z >= 2.03) = 0.0212",
+      "0.0212 < 0.025, reject H0. The redesign increased conversion above 30%."
+    ],
+    "finalAnswer": 0.0212
+  },
+  {
+    "id": "Q3-37",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-37",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: mu = 0.30 versus Ha: mu > 0.30",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 72 > 10",
+      "Reject H0, the redesign increased conversion."
+    ],
+    "finalAnswer": null
+  },
+  {
+    "id": "Q3-38",
+    "reconstructed": true,
+    "header": {
+      "code": "Q3-38",
+      "note": "Real paper graded by the TA; names removed at source; steps reconstructed from the TA comment and column split, not the student's words"
+    },
+    "steps": [
+      "H0: p = 0.30 versus Ha: p > 0.30 (one-sided, does the redesign increase conversion)",
+      "p-hat = 87 / 240 = 0.3625",
+      "Validity: n p0 = 240 (0.30) = 72 and n (1 - p0) = 240 (0.70) = 168, both > 10, so the large-sample z test is appropriate",
+      "SE0 = sqrt(0.30 (0.70) / 240) = 0.02958",
+      "chi-square = z^2 = 4.46 on 1 df",
+      "two-sided p = 0.0346, one-sided half = 0.0173",
+      "0.0173 < 0.025, reject H0. The redesign increased conversion above 30%."
+    ],
+    "finalAnswer": 0.0173
+  }
+]

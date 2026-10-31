@@ -1,5 +1,9 @@
 local/
 .env
 .env.*
+!.env.example
 node_modules/
+.next/
+next-env.d.ts
 .DS_Store
+grading-data/

@@ -6,8 +6,10 @@ import { validateProposal, proposalJsonSchema } from "../lib/schema.js";
 import { SYSTEM, buildUserPrompt } from "../lib/prompts.js";
 
 export const CALL_CAP = 150;
+export const REQUEST_TIMEOUT_MS = 60_000; // a hang must become a failed attempt, never a frozen demo
 export const API_URL = "https://api.anthropic.com/v1/messages";
 export const API_VERSION = "2026-10-21";
+export const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 export const LABEL_REPLAY = "CACHED REHEARSAL: NOT LIVE MODEL OUTPUT";
 export const liveLabel = (modelId) => `LIVE API: ${modelId}`;
 
@@ -16,7 +18,7 @@ const readJson = (p, fallback) => { try { return JSON.parse(readFileSync(p, "utf
 const writeJson = (p, o) => { mkdirSync(join(p, ".."), { recursive: true }); writeFileSync(p, JSON.stringify(o, null, 2) + "\n"); };
 
 export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, localDir = "local" } = {}) {
-  const paths = { smoke: join(localDir, "smoke.json"), calls: join(localDir, "calls.json"), cache: join(localDir, "cache") };
+  const paths = { smoke: join(localDir, "smoke.json"), smokeGemini: join(localDir, "smoke-gemini.json"), calls: join(localDir, "calls.json"), cache: join(localDir, "cache") };
   mkdirSync(paths.cache, { recursive: true });
 
   const payloadHash = (promptName, payload) => sha256(JSON.stringify({ system: SYSTEM, promptName, payload }));
@@ -29,7 +31,8 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
     const apiKey = env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set on this machine (team item: key holder)");
     const schema = proposalJsonSchema(ideaConfig);
-    const body = { model: modelId, max_tokens: 1024, system: SYSTEM, messages: [{ role: "user", content: buildUserPrompt(ideaConfig, payload) }] };
+    // Thinking is on by default on these models and counts against max_tokens; leave room for it.
+    const body = { model: modelId, max_tokens: 4096, system: SYSTEM, messages: [{ role: "user", content: buildUserPrompt(ideaConfig, payload) }] };
     if (mode === "structured") body.output_config = { format: { type: "json_schema", schema } };
     else {
       body.tools = [{ name: "propose", description: "Submit proposals: allowlist code, exact quote, confidence.", strict: true, input_schema: schema }];
@@ -38,7 +41,7 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
     }
     if (callCount() >= CALL_CAP) throw new Error(`Call cap ${CALL_CAP} reached; verify spend before raising`);
     bumpCalls();
-    const res = await fetchImpl(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": API_VERSION }, body: JSON.stringify(body) });
+    const res = await fetchImpl(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": API_VERSION }, body: JSON.stringify(body), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${json?.error?.type ?? ""} ${json?.error?.message ?? ""}`.trim());
     if (json.stop_reason === "refusal") throw new Error("provider refusal");
@@ -68,6 +71,44 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
     return writeSmoke({ ok: false, requestedModel: modelId, errors, at: new Date().toISOString() });
   }
   function writeSmoke(o) { writeJson(paths.smoke, o); return o; }
+
+  /** Rung 3: Gemini generateContent, raw HTTP. Key in a header, never in the URL. Paid tier only. */
+  async function callGeminiOnce({ modelId, mode, ideaConfig, payload }) {
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+    if (env.GEMINI_TIER !== "paid") throw new Error("GEMINI_TIER must be paid; free tier never");
+    const schema = proposalJsonSchema(ideaConfig);
+    const stripAdditional = (o) => Array.isArray(o) ? o.map(stripAdditional) : o && typeof o === "object" ? Object.fromEntries(Object.entries(o).filter(([k]) => k !== "additionalProperties").map(([k, v]) => [k, stripAdditional(v)])) : o;
+    const generationConfig = { responseMimeType: "application/json", maxOutputTokens: 1024, ...(mode === "jsonSchema" ? { responseJsonSchema: schema } : { responseSchema: stripAdditional(schema) }) };
+    const body = { systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ role: "user", parts: [{ text: buildUserPrompt(ideaConfig, payload) }] }], generationConfig };
+    if (callCount() >= CALL_CAP) throw new Error(`Call cap ${CALL_CAP} reached; verify spend before raising`);
+    bumpCalls();
+    const res = await fetchImpl(`${GEMINI_URL}/${modelId}:generateContent`, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": apiKey }, body: JSON.stringify(body), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${json?.error?.status ?? ""} ${json?.error?.message ?? ""}`.trim());
+    const cand = json.candidates?.[0];
+    if (!cand || (cand.finishReason && cand.finishReason !== "STOP")) throw new Error(`gemini finishReason ${cand?.finishReason ?? "none"}${json.promptFeedback?.blockReason ? `, blocked ${json.promptFeedback.blockReason}` : ""}`);
+    const text = (cand.content?.parts ?? []).map((p) => p.text ?? "").join("");
+    const v = validateProposal(JSON.parse(text || "null"), ideaConfig);
+    if (!v.ok) throw new Error(`SCHEMA_INVALID: ${v.errors.join("; ")}`);
+    const u = json.usageMetadata;
+    return { proposals: v.value.proposals, modelId: json.modelVersion ?? modelId, usage: u ? { input_tokens: u.promptTokenCount, output_tokens: u.candidatesTokenCount } : null, raw: json };
+  }
+
+  /** Gemini smoke: proves which schema field the endpoint accepts. Writes local/smoke-gemini.json. */
+  async function smokeGemini({ ideaConfig, payload }) {
+    const modelId = env.GEMINI_MODEL;
+    const write = (o) => { writeJson(paths.smokeGemini, o); return o; };
+    if (!modelId) return write({ ok: false, error: "GEMINI_MODEL not set (spec expects gemini-2.5-flash; team confirms)" });
+    const errors = [];
+    for (const mode of ["jsonSchema", "openApi"]) {
+      try {
+        const r = await callGeminiOnce({ modelId, mode, ideaConfig, payload });
+        return write({ ok: true, mode, modelId: r.modelId, requestedModel: modelId, usage: r.usage, at: new Date().toISOString() });
+      } catch (e) { errors.push(`${mode}: ${e.message}`); }
+    }
+    return write({ ok: false, requestedModel: modelId, errors, at: new Date().toISOString() });
+  }
 
   /** Fallback ladder. Never silently substitutes: rung and label are always returned. */
   async function propose({ ideaConfig, payload, promptName }) {
@@ -101,10 +142,28 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
         }
       }
     }
-    // Rung 3: Gemini 2.5 Flash paid tier, only with a confirmed separate key. shortcut: wire format not built in core, upgrade when the team confirms a key.
+    // Rung 3: Gemini on the paid tier, only with a separate key. The first real backup.
     if (!replay) {
       if (!(env.GEMINI_API_KEY && env.GEMINI_TIER === "paid")) attempts.push("rung 3 not configured");
-      else attempts.push("rung 3: Gemini key present but adapter not built in core; team item");
+      else if (!env.GEMINI_MODEL) attempts.push("rung 3: GEMINI_MODEL not set");
+      else {
+        const gsmoke = readJson(paths.smokeGemini, null);
+        if (!gsmoke?.ok) attempts.push("rung 3: run scripts/smoke-gemini.js first");
+        else {
+          const cached = readJson(cachePath(ph, env.GEMINI_MODEL), null);
+          if (cached) return { ok: true, proposals: cached.proposals, label: liveLabel(cached.modelId), modelId: cached.modelId, rung: 3, cacheHit: true, usage: cached.usage, attempts };
+          for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+              const r = await callGeminiOnce({ modelId: env.GEMINI_MODEL, mode: gsmoke.mode, ideaConfig, payload });
+              writeJson(cachePath(ph, env.GEMINI_MODEL), { modelId: r.modelId, proposals: r.proposals, usage: r.usage, at: new Date().toISOString() });
+              return { ok: true, proposals: r.proposals, label: liveLabel(r.modelId), modelId: r.modelId, rung: 3, cacheHit: false, usage: r.usage, attempts };
+            } catch (e) {
+              attempts.push(`rung 3 attempt ${attempt}: ${e.message}`);
+              if (/Call cap/.test(e.message)) attempt = 2;
+            }
+          }
+        }
+      }
     }
     // Rung 4: labelled cached rehearsal.
     const hit = readdirSync(paths.cache).find((f) => f.startsWith(`${ph}.`));
@@ -116,5 +175,5 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
     return { ok: false, error: attempts[attempts.length - 1], attempts };
   }
 
-  return { propose, smokeTest, callOnce, callCount, paths };
+  return { propose, smokeTest, smokeGemini, callOnce, callGeminiOnce, callCount, paths };
 }

@@ -1,0 +1,28 @@
+// Rung 3 smoke: one schema-valid Gemini call on GEMINI_MODEL, paid tier only. Writes local/smoke-gemini.json. Counts as one call.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { runGate, assertClean } from "../lib/gate.js";
+import { makeIdeas } from "../lib/ideas.js";
+import { makeAdapter } from "../server/adapter.js";
+import { loadDotenv } from "../server/env.js";
+
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+loadDotenv(join(ROOT, ".env"));
+const read = (f) => JSON.parse(readFileSync(join(ROOT, "data", f), "utf8"));
+const course = read("course.json");
+const ideas = makeIdeas({ gradeStandards: read("grade-q5.v1.0.json"), companion: read("companion-ch3.json"), upskillStandards: read("upskill-email.v1.0.json") });
+const s01 = read("grade-q5.submissions.json").find((s) => s.id === "S-01");
+const gate = runGate(s01, ideas.grade, course);
+assertClean(gate.payload, course);
+
+const adapter = makeAdapter({ localDir: join(ROOT, "local") });
+const r = await adapter.smokeGemini({ ideaConfig: ideas.grade, payload: gate.payload });
+if (r.ok) {
+  console.log(`GEMINI SMOKE PASS  model=${r.modelId}  schemaField=${r.mode === "jsonSchema" ? "responseJsonSchema" : "responseSchema"}  in=${r.usage?.input_tokens ?? "?"} out=${r.usage?.output_tokens ?? "?"}`);
+  if (r.modelId !== r.requestedModel) console.log(`NOTE: requested ${r.requestedModel}, API returned ${r.modelId}. The on-screen label uses the returned id.`);
+  console.log("Billing check: confirm this project is on the paid tier in the Google console (team item)");
+} else {
+  console.error("GEMINI SMOKE FAIL", JSON.stringify(r, null, 2));
+  process.exit(1);
+}

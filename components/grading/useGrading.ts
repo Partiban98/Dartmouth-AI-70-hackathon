@@ -108,6 +108,8 @@ export function useGrading() {
     const j = await res.json();
     if (!res.ok) return j.errors ?? [j.error];
     setStandards((s) => ({ ...s, [rubricKey]: next }));
+    // A Quiz/Assignment's card and copied pack come from the server; reload them so the new version is what gets shared.
+    if (assignments.some((a) => a.code === rubricKey)) await load();
     return null;
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };

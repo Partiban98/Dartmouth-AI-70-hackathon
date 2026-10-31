@@ -3,11 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { normalize } from "@/lib/text.js";
 import { feedbackLine } from "@/lib/feedback.js";
 import { COPY } from "./copy";
+import { ownsKey, markProblem } from "./rules.js";
 import type { Stage } from "./useGrading";
 
 const c = COPY.grader;
-/** Keys drive the panel. Links and buttons keep their own behaviour; Enter never leaks to a focused link. */
-const own = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (t && /^(A|BUTTON|SELECT|TEXTAREA)$/.test(t.tagName)) return false; if (e.key === "Enter") e.preventDefault(); return true; };
+/** Keys drive the panel, never through an open dialog such as the marking scheme. */
+const own = (e: KeyboardEvent) => ownsKey(e, !!document.querySelector('[aria-modal="true"]'));
 const cls = (...xs: (string | false | null | undefined)[]) => xs.filter(Boolean).join(" ");
 
 export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: () => void; onScheme: () => void }) {
@@ -213,15 +214,18 @@ function Suggestions({ card: raw, table, lineOf, onLight, onDone }: any) {
 function Mark({ bar, table, name, onDone }: any) {
   const [grade, setGrade] = useState(String(bar.computedScore));
   const [note, setNote] = useState(() => feedbackLine(bar.confirmed ?? [], table));
-  const go = () => { if (grade === "" || !name.trim()) return; onDone({ decidedBy: name.trim(), grade: Number(grade), feedback: note }); };
+  const problem = markProblem(grade, table.max);
+  const [shown, setShown] = useState("");
+  const go = () => { if (problem) { setShown(problem); return; } if (!name.trim()) return; onDone({ decidedBy: name.trim(), grade: Number(grade), feedback: note }); };
   useEffect(() => { const h = (e: KeyboardEvent) => { if (!own(e)) return; if (e.key === "Enter") go(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); });
   return (
     <Panel title={c.markTitle} tone="good">
       <p className="text-fg-2">{c.markFromChoices}</p>
       <p className="text-4xl font-bold">{bar.computedScore} <span className="text-xl font-normal text-fg-3">/ {table.max}</span></p>
-      <label className="mt-4 block text-sm font-semibold">{c.finalMark}<input autoFocus type="number" step="0.25" min={0} max={table.max} value={grade} onChange={(e) => setGrade(e.target.value)} className="mt-1 block w-32 rounded-lg border border-line bg-card px-3 py-2 text-2xl font-bold" /></label>
+      <label className="mt-4 block text-sm font-semibold">{c.finalMark}<input autoFocus type="number" step="0.25" min={0} max={table.max} value={grade} onChange={(e) => { setGrade(e.target.value); setShown(""); }} aria-invalid={!!shown} aria-describedby="mark-problem" className="mt-1 block w-32 rounded-lg border border-line bg-card px-3 py-2 text-2xl font-bold" /></label>
+      {shown && <p id="mark-problem" role="alert" className="mt-1 text-sm text-bad">{shown}</p>}
       <label className="mt-3 block text-sm font-semibold">{c.note}<textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-normal" /></label>
-      <button className="btn btn-primary mt-4" disabled={grade === "" || !name.trim()} onClick={go}>{c.saveButton} <span className="kbd">⏎</span></button>
+      <button className="btn btn-primary mt-4" disabled={!!problem || !name.trim()} onClick={go}>{c.saveButton} <span className="kbd">⏎</span></button>
     </Panel>
   );
 }

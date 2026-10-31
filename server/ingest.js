@@ -50,6 +50,8 @@ export async function extractText(file) {
   return readFileSync(file, "utf8");
 }
 
+const FOOTER = /^(page|question|q|problem|part)\b/i; // page and question labels are not work and not the answer
+
 /** Split a paper's text into header fields (dropped by the gate) and steps. "Name:"-style lines become header fields. */
 export function parsePaper(text, file) {
   const header = {};
@@ -63,7 +65,7 @@ export function parsePaper(text, file) {
   }
   if (!header.name) header.name = basename(file, extname(file)).replace(/[_-]+/g, " ").trim();
   // Whole numbers including exponents and leading-dot decimals; page and question footers are not the answer.
-  const nums = steps.filter((l) => !/^(page|question|q|problem|part)\b/i.test(l)).join(" ").match(/-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?/g);
+  const nums = steps.filter((l) => !FOOTER.test(l)).join(" ").match(/-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?/g);
   return { header, steps, finalAnswer: nums ? Number(nums[nums.length - 1]) : null };
 }
 
@@ -84,13 +86,16 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
   // the same name gets a new id; ids are never reused, because a deleted file's entry stays in the map.
   const previous = existsSync(join(dir, "map.json")) ? JSON.parse(readFileSync(join(dir, "map.json"), "utf8")).map : {};
   const byFile = Object.fromEntries(Object.entries(previous).filter(([, m]) => !m.removed).map(([id, m]) => [m.file, id]));
+  const prevPapers = Object.fromEntries((existsSync(join(dir, "papers.json")) ? JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) : []).map((p) => [p.id, p]));
+  // Same paper: same fingerprint; for a map written before fingerprints, the same name and steps.
+  const samePaper = (id, hash, parsed) => previous[id].hash ? previous[id].hash === hash : !!prevPapers[id] && (prevPapers[id].header?.name ?? "") === (parsed.header.name ?? "") && JSON.stringify(prevPapers[id].steps) === JSON.stringify(parsed.steps);
   let next = Math.max(0, ...Object.keys(previous).map((id) => Number((id.match(/-P-(\d+)$/) ?? [])[1] ?? 0)));
   for (const f of files) {
     const hash = createHash("sha256").update(readFileSync(join(folder, f))).digest("hex");
     const parsed = parsePaper(await extractText(join(folder, f)), f);
-    if (!parsed.steps.length) { report.push({ file: f, held: "no readable work", steps: 0 }); continue; }
+    if (!parsed.steps.some((l) => !FOOTER.test(l))) { report.push({ file: f, held: "no readable work", steps: 0 }); continue; }
     const known = byFile[f];
-    const id = known && (!previous[known].hash || previous[known].hash === hash) ? known : `${me}-P-${String(++next).padStart(2, "0")}`;
+    const id = known && samePaper(known, hash, parsed) ? known : `${me}-P-${String(++next).padStart(2, "0")}`;
     papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
     map[id] = { file: f, hash, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);

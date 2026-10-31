@@ -81,3 +81,35 @@ test("QA-03: text that starts like a spreadsheet formula is exported as text; ma
   for (const bad of ["=1+1", "=cmd.txt", "+TA", "@SUM(A1)"]) assert.ok(row.includes(`'${bad}`) && !new RegExp(`(^|,)\\${bad[0]}`).test(row.replace(`'${bad}`, "")), `${bad} in ${row}`);
   assert.ok(/,7,7,/.test(row), "grades stay numbers");
 });
+
+// Codex review of PR #12.
+test("S3 review: a map written before content fingerprints existed is compared by content, so a replaced file still gets a new id", async () => {
+  const { readFileSync: rf, writeFileSync: wf } = await import("node:fs");
+  const folder = mkdtempSync(join(tmpdir(), "s3old-")), localDir = mkdtempSync(join(tmpdir(), "s3oldl-"));
+  writeFileSync(join(folder, "submission.txt"), "Name: Alpha Student\nSD = 3.162\n");
+  const a = (await importFolder(opts(folder, localDir))).report[0].id;
+  const mapFile = join(localDir, "ingest", "t-set", "map.json");
+  const m = JSON.parse(rf(mapFile, "utf8")); for (const e of Object.values(m.map)) delete e.hash; wf(mapFile, JSON.stringify(m));
+  assert.equal((await importFolder(opts(folder, localDir))).report[0].id, a, "unchanged content keeps its id");
+  for (const e of Object.values(JSON.parse(rf(mapFile, "utf8")).map)) delete e.hash;
+  const m2 = JSON.parse(rf(mapFile, "utf8")); for (const e of Object.values(m2.map)) delete e.hash; wf(mapFile, JSON.stringify(m2));
+  writeFileSync(join(folder, "submission.txt"), "Name: Beta Student\nSD = 10\n");
+  const b = (await importFolder(opts(folder, localDir))).report[0].id;
+  assert.notEqual(b, a, "a replaced file never inherits the old id");
+  assert.equal(loadMap(localDir, "t-set")[a].name, "Alpha Student");
+});
+
+test("PUX-4 review: a paper holding only a page or question footer is held too", async () => {
+  const r = await up(mkdtempSync(join(tmpdir(), "p4f-")), [["scan.txt", "Name: Scan Student\nPage 1 of 1\n"], ["good.txt", "Name: Good One\nSD = 3.162\n"]]);
+  assert.equal(r.papers.length, 1);
+  assert.equal(r.report.find((x) => x.file === "scan.txt").held, "no readable work");
+});
+
+test("CLI review: the import script reports held files and exits cleanly, writing only to the data folder it is given", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const folder = mkdtempSync(join(tmpdir(), "cli-")), localDir = mkdtempSync(join(tmpdir(), "clil-"));
+  writeFileSync(join(folder, "empty.txt"), "Name: Test Pupil\n \n"); writeFileSync(join(folder, "good.txt"), "Name: Good One\nSD = 3.162\n");
+  const out = execFileSync(process.execPath, [new URL("../scripts/ingest.js", import.meta.url).pathname, folder, "--set", "cli-set"], { env: { ...process.env, REMAIN_LOCAL_DIR: localDir }, encoding: "utf8" });
+  assert.match(out, /empty\.txt \| held: no readable work/);
+  assert.equal(loadImported(localDir, "cli-set").papers.length, 1);
+});

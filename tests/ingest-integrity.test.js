@@ -113,3 +113,17 @@ test("CLI review: the import script reports held files and exits cleanly, writin
   assert.match(out, /empty\.txt \| held: no readable work/);
   assert.equal(loadImported(localDir, "cli-set").papers.length, 1);
 });
+
+test("S3 migration review: without a fingerprint, the same name and work under a different student ID or NetID is a different paper", async () => {
+  const { readFileSync: rf, writeFileSync: wf } = await import("node:fs");
+  const folder = mkdtempSync(join(tmpdir(), "s3id-")), localDir = mkdtempSync(join(tmpdir(), "s3idl-"));
+  writeFileSync(join(folder, "submission.txt"), "Name: Alex Smith\nStudent ID: 111111111\nNetID: as11\nSD = 3.162\n");
+  const a = (await importFolder(opts(folder, localDir))).report[0].id;
+  const mapFile = join(localDir, "ingest", "t-set", "map.json");
+  const m = JSON.parse(rf(mapFile, "utf8")); for (const e of Object.values(m.map)) delete e.hash; wf(mapFile, JSON.stringify(m));
+  writeFileSync(join(folder, "submission.txt"), "Name: Alex Smith\nStudent ID: 222222222\nNetID: as22\nSD = 3.162\n");
+  const b = (await importFolder(opts(folder, localDir))).report[0].id;
+  assert.notEqual(b, a);
+  const map = loadMap(localDir, "t-set");
+  assert.equal(map[a].studentId, "111111111"); assert.equal(map[b].studentId, "222222222");
+});

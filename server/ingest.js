@@ -87,8 +87,9 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
   const previous = existsSync(join(dir, "map.json")) ? JSON.parse(readFileSync(join(dir, "map.json"), "utf8")).map : {};
   const byFile = Object.fromEntries(Object.entries(previous).filter(([, m]) => !m.removed).map(([id, m]) => [m.file, id]));
   const prevPapers = Object.fromEntries((existsSync(join(dir, "papers.json")) ? JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) : []).map((p) => [p.id, p]));
-  // Same paper: same fingerprint; for a map written before fingerprints, the same name and steps.
-  const samePaper = (id, hash, parsed) => previous[id].hash ? previous[id].hash === hash : !!prevPapers[id] && (prevPapers[id].header?.name ?? "") === (parsed.header.name ?? "") && JSON.stringify(prevPapers[id].steps) === JSON.stringify(parsed.steps);
+  // Same paper: same fingerprint; for a map written before fingerprints, every header field (name, IDs, email) and every step the same.
+  const sortedJson = (o) => JSON.stringify(Object.keys(o ?? {}).sort().map((k) => [k, o[k]]));
+  const samePaper = (id, hash, parsed) => previous[id].hash ? previous[id].hash === hash : !!prevPapers[id] && sortedJson(prevPapers[id].header) === sortedJson(parsed.header) && JSON.stringify(prevPapers[id].steps) === JSON.stringify(parsed.steps);
   let next = Math.max(0, ...Object.keys(previous).map((id) => Number((id.match(/-P-(\d+)$/) ?? [])[1] ?? 0)));
   for (const f of files) {
     const hash = createHash("sha256").update(readFileSync(join(folder, f))).digest("hex");

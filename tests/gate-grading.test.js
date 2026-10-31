@@ -11,7 +11,7 @@ import { runPipeline } from "../lib/pipeline.js";
 import { verifyQuote, counters } from "../lib/engine.js";
 import { blockedRecord, proposalRecord } from "../lib/logshape.js";
 import { SYSTEM } from "../lib/prompts.js";
-import { makeAdapter, LABEL_REPLAY } from "../server/adapter.js";
+import { makeAdapter, LABEL_REPLAY, cacheKey } from "../server/adapter.js";
 import { makeLog } from "../server/log.js";
 import { course, ideas, submissions, sub } from "./helpers.js";
 
@@ -56,7 +56,7 @@ function localStack() {
 
   /** Clearly fake replay fixture for one exact payload, written to this test's temp dir only. */
   const seedReplay = (payload, proposals = []) => {
-    const ph = createHash("sha256").update(JSON.stringify({ system: SYSTEM, promptName: "grade-propose", payload })).digest("hex");
+    const ph = cacheKey(ideas.grade, "grade-propose", payload);
     writeFileSync(join(adapter.paths.cache, `${ph}.${FAKE_MODEL}.json`), JSON.stringify({ modelId: FAKE_MODEL, proposals }));
   };
   const logText = () => {

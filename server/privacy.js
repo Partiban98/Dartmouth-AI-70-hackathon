@@ -1,6 +1,6 @@
 // The server's outbound privacy boundary, shared by both propose routes. Zero dependencies.
 // The browser gate runs first; this re-checks everything the model would see: the paper fields, and the question and labels sent with them.
-import { assertClean, PATTERN_RULES } from "../lib/gate.js";
+import { assertClean, runGate, PATTERN_RULES } from "../lib/gate.js";
 import { listImported, loadMap } from "./ingest.js";
 import { encodePack } from "./assignment.js";
 
@@ -109,10 +109,21 @@ export function logProblem(rec, course) {
   catch (e) { return e.rule === "R-09" ? "The note or a reason names a student." : `The note or a reason contains an identifier (${e.rule}).`; }
 }
 
+/** Validate human clearances from untrusted request metadata. No text is persisted or sent as model metadata. */
+export function clearedPhrases(cleared, payload, course) {
+  if (!Array.isArray(cleared) || cleared.length > 32) return [];
+  const candidates = new Set(runGate(payload, { allowlistFields: Object.keys(payload) }, course).flags.map((f) => f.token));
+  const known = knownIn(course);
+  return [...new Set(cleared)].filter((t) => typeof t === "string" && t.length <= 80 && candidates.has(t) && !known(t)
+    && !PATTERN_RULES.some(([, , , re]) => new RegExp(re.source, re.flags).test(t)));
+}
+
 /** Everything a propose request would send, checked. Returns the projected payload; throws { status } on any problem. */
 export function checkOutbound(body, ideaConfig, course) {
   const payload = projectPayload(body?.payload, ideaConfig);
-  assertClean(payload, course);
+  const cleared = clearedPhrases(body?.cleared, payload, course);
+  const scoped = cleared.length ? { ...course, glossary: [...(course.glossary ?? []), ...cleared] } : course;
+  assertClean(payload, scoped);
   checkTexts(texts(payload), course, "paper");
   checkScheme(ideaConfig.standards, course);
   return payload;

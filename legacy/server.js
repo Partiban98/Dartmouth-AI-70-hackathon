@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname, normalize as pnorm } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkOutbound, withLocalIdentities, logProblem } from "../server/privacy.js";
+import { checkOutbound, clearedPhrases, withLocalIdentities, logProblem } from "../server/privacy.js";
 import { verifyQuote, counters, analytics } from "../lib/engine.js";
 import { makeIdeas } from "../lib/ideas.js";
 import { recordProblem } from "../server/records.js";
@@ -36,7 +36,8 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
         const ideaConfig = ideas[body.idea];
         if (!ideaConfig) return send(res, 400, { error: "unknown idea" });
         let payload;
-        try { payload = checkOutbound(body, ideaConfig, withLocalIdentities(course, localDir)); }
+        const known = withLocalIdentities(course, localDir);
+        try { payload = checkOutbound(body, ideaConfig, known); }
         catch (e) {
           if (e?.status === 422) { log.append("blocked", blockedRecord(body.idea, body.itemId, e.rule, e.count)); return send(res, 422, { code: "BLOCKED", rule: e.rule, count: e.count, where: e.where }); }
           if (e?.status === 400) return send(res, 400, { error: e.error });
@@ -46,7 +47,7 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch, loc
         if (!r.ok) return send(res, 502, { error: r.error, attempts: r.attempts });
         const verifyText = textOf(payload, ideaConfig.verifyAgainst);
         const proposals = r.proposals.map((p) => ({ ...p, verified: verifyQuote(p.quote, verifyText).found }));
-        log.append("proposals", proposalRecord(body.idea, body.itemId, { ...r, proposals }));
+        log.append("proposals", { ...proposalRecord(body.idea, body.itemId, { ...r, proposals }), clearedCount: clearedPhrases(body.cleared, payload, known).length });
         return send(res, 200, { proposals: r.proposals, label: r.label, modelId: r.modelId, rung: r.rung, cacheHit: r.cacheHit, caveat: r.caveat, attempts: r.attempts });
       }
       if (req.method === "POST" && url.pathname === "/log") {

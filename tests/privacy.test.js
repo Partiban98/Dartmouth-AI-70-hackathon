@@ -182,3 +182,28 @@ test("E1 final review: every full imported name and ID counts at any length; onl
   const two = await importOne("Name: Li Wu\nSD = 3.162\n");
   assert.doesNotThrow(() => checkOutbound({ idea: "grade", payload: { steps: ["a b c"], finalAnswer: 1 } }, ideas.grade, withLocalIdentities(course, two.localDir)), "single letters inside text are not name words");
 });
+
+test("E1 filename fallback: course and quiz words from a filename-derived name are not identities, and a record's own ids are not free text", async () => {
+  const { logProblem } = await import("../server/privacy.js");
+  const folder = mkdtempSync(join(tmpdir(), "fn-")), localDir = mkdtempSync(join(tmpdir(), "fnl-"));
+  writeFileSync(join(folder, "(1027ABC) Ada Byron- DEMO-STATS 101 - Quiz 3 - Prof Smith.txt"), "SD = 3.162\n");
+  await importFolder({ folder, setId: "demo-stats-101-quiz-3", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade, title: "DEMO-STATS 101 Quiz 3" });
+  const local = withLocalIdentities(course, localDir);
+  const rec = { type: "decision", idea: "demo-stats-101-quiz-3", itemId: "U1-P-01", decidedBy: "TA", proposed: [], confirmed: ["E-MEAN"], overrides: [], grade: 7, feedback: "Marks lost: wrong tail.", rubricVersion: "1.0" };
+  assert.equal(logProblem(rec, local), null, "the set id and a plain note are fine");
+  assert.equal(logProblem({ ...rec, feedback: "Quiz 3 was hard; see the stats notes" }, local), null, "course words are not names");
+  assert.ok(logProblem({ ...rec, feedback: "Ada did well" }, local), "the real name word is still caught");
+  assert.ok(logProblem({ ...rec, feedback: "ask 1027ABC" }, local), "the id token is still caught");
+  assert.doesNotThrow(() => checkOutbound({ idea: "grade", payload: { steps: ["Quiz 3: SD = 3.162"], finalAnswer: 3.162 } }, ideas.grade, local));
+});
+
+test("E1 scope: a set title can never suppress a real roster or header name; only filename-derived names lose course words", async () => {
+  const { logProblem } = await import("../server/privacy.js");
+  const folder = mkdtempSync(join(tmpdir(), "sc-")), localDir = mkdtempSync(join(tmpdir(), "scl-"));
+  writeFileSync(join(folder, "p1.txt"), "Name: Lucia Moreau\nSD = 3.162\n");
+  await importFolder({ folder, setId: "lucia-section", rubricId: "grade-q5", course, localDir, ideaConfig: ideas.grade, title: "Lucia section" });
+  const local = withLocalIdentities(course, localDir);
+  assert.throws(() => checkOutbound({ idea: "grade", payload: { steps: ["lucia checked it"], finalAnswer: 3.162 } }, ideas.grade, local), (e) => e.status === 422, "header name word stays an identity despite the title");
+  const r = course.roster[0];
+  assert.ok(logProblem({ type: "decision", idea: "grade", itemId: r.name, decidedBy: "TA", proposed: [], confirmed: [], overrides: [], grade: 7, feedback: "ok" }, local), "an itemId carrying a name is still caught");
+});

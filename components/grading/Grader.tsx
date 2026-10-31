@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalize } from "@/lib/text.js";
 import { feedbackLine } from "@/lib/feedback.js";
+import { score } from "@/lib/engine.js";
 import { COPY } from "./copy";
 import { buildReview, addableCodes } from "./review.js";
 import { ownsKey, markProblem } from "./rules.js";
@@ -37,6 +38,13 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
   const [caseOpen, setCaseOpen] = useState(false);
   useEffect(() => { setCaseOpen(false); }, [identity]);
   const total = papers.length;
+  // The student's name is on this laptop already (the paper header); it is shown here only and never sent. Off = blind marking.
+  const [showNames, setShowNames] = useState(true);
+  useEffect(() => { try { setShowNames(localStorage.getItem("remain.showNames") !== "0"); } catch {} }, []);
+  const toggleNames = () => setShowNames((v) => { try { localStorage.setItem("remain.showNames", v ? "0" : "1"); } catch {} return !v; });
+  const [view, setView] = useState<"text" | "original">("text");
+  useEffect(() => { setView(current?.unreadable ? "original" : "text"); }, [identity]); // eslint-disable-line react-hooks/exhaustive-deps
+  const studentName = current?.header?.name;
 
   // Which paper line a suggestion points at.
   const lineOf = useCallback((quote: string) => {
@@ -59,8 +67,10 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
     <main className="mx-auto max-w-[1280px] px-5 py-5 space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn" disabled={index <= 0} onClick={() => g.start(papers[index - 1])}>← {c.prev}</button>
-        <div className="font-semibold text-lg">{c.paperOf(index + 1, total)} <span className="font-normal text-fg-3">· {({ idle: "Privacy check", privacy: "Privacy check", names: "Privacy check", reading: "Suggestions", suggestions: "Suggestions", mark: "Your mark", saved: "Saved", stopped: "Stopped" } as any)[stage.kind]}</span></div>
+        <div className="font-semibold text-lg">{c.paperOf(index + 1, total)} <span className="font-normal text-fg-3">· {({ idle: "Privacy check", privacy: "Privacy check", names: "Privacy check", reading: "Suggestions", suggestions: "Suggestions", mark: "Your mark", manual: "Your mark", saved: "Saved", stopped: "Stopped" } as any)[stage.kind]}</span></div>
         <button className="btn" disabled={index >= total - 1} onClick={() => g.start(papers[index + 1])}>{c.next} →</button>
+        {studentName && showNames && <span className="rounded-lg bg-wait-bg px-3 py-1 text-sm font-semibold" title={c.nameLocal}>{c.student(studentName)}</span>}
+        {studentName && <button className="text-sm underline" onClick={toggleNames}>{showNames ? c.hideNames : c.showNames}</button>}
         <div className="flex-1 min-w-[120px] h-2 rounded bg-line"><div className="h-2 rounded bg-good" style={{ width: `${total ? (100 * g.decided.size) / total : 0}%` }} /></div>
         <span className="text-sm text-fg-3">{g.decided.size} of {total} marked</span>
         <RegressionBadge bump={evalBump} />
@@ -71,11 +81,15 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
 
       <div className="grid gap-5 lg:grid-cols-[3fr_2fr]">
         <section className="rounded-xl border border-line bg-card p-5 min-w-0" aria-label="Paper">
-          <div className="flex items-baseline justify-between"><h2 className="font-semibold">{current ? `Paper ${current.id}` : ""}</h2>{current?.header && <span className="text-xs text-fg-3">Header hidden</span>}</div>
+          <div className="flex items-baseline justify-between gap-3"><h2 className="font-semibold">{current ? `Paper ${current.id}` : ""}</h2>
+            {current?.imported && <span role="tablist" className="flex gap-1 text-sm">{(["text", "original"] as const).map((v) => <button key={v} role="tab" aria-selected={view === v} className={cls("rounded px-2 py-0.5", view === v ? "bg-accent text-accent-fg" : "underline")} onClick={() => setView(v)}>{v === "text" ? c.viewText : c.viewOriginal}</button>)}</span>}
+            {current?.header && <span className="text-xs text-fg-3">Header hidden</span>}</div>
+          {view === "original" && current?.imported ? <iframe title={c.viewOriginal} src={`/api/paper?set=${encodeURIComponent(g.setId)}&id=${encodeURIComponent(current.id)}`} className="mt-3 h-[70vh] w-full rounded border border-line bg-white" style={{ colorScheme: "light" }} /> :
           <ol className="mt-3 space-y-1.5 font-mono text-[15px] leading-relaxed">
+            {current?.unreadable && <li className="text-fg-3 font-sans text-sm">{c.noTextRead}</li>}
             {(current?.steps ?? []).map((s: string, i: number) => <li key={i} className="flex gap-3"><span className="w-6 shrink-0 text-fg-3 select-none">{i + 1}</span><span className={cls("paper-line", lit.includes(i) && "lit")}>{s}</span></li>)}
-          </ol>
-          {current && <p className="mt-3 text-xs text-fg-3">{current.imported ? c.blind(current.uploader) : c.sample}</p>}
+          </ol>}
+          {current && <p className="mt-3 text-xs text-fg-3">{current.imported ? (showNames ? c.namesHere : c.blind(current.uploader)) : c.sample}</p>}
           {g.othersOnCurrent?.map((d: any, i: number) => <p key={i} className="mt-1 text-sm text-wait">{c.alsoMarked(d.decidedBy, d.grade, table.max)}</p>)}
         </section>
 
@@ -104,7 +118,8 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
             {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} callFirst={callFirst} onDone={(d: any) => answer(d)} />}
             {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onOpen={() => setCaseOpen(true)} onAdded={() => setEvalBump((b) => b + 1)} />}
-            {stage.kind === "stopped" && <Panel title={stage.text.startsWith("notSaved") ? c.notSavedTitle : stage.text === "noAnswer" ? c.suggestionsTitle : c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? (index < total - 1 ? c.noAnswer : c.noAnswerLast) : stage.text === "notSaved" ? c.notSaved : stage.text === "notSavedName" ? `${c.notSaved} ${c.notSavedName}` : c.stopped}</p>{stage.text.startsWith("notSaved") ? stage.detail && <p className="mt-2 text-sm">{c.notSavedTyped(stage.detail[0], stage.detail[1])}</p> : stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
+            {stage.kind === "manual" && <ManualMark table={table} name={g.name} onSave={g.saveByHand} />}
+            {stage.kind === "stopped" && <Panel title={stage.text.startsWith("notSaved") ? c.notSavedTitle : stage.text === "noAnswer" ? c.suggestionsTitle : c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? (index < total - 1 ? c.noAnswer : c.noAnswerLast) : stage.text === "notSaved" ? c.notSaved : stage.text === "notSavedName" ? `${c.notSaved} ${c.notSavedName}` : c.stopped}</p>{stage.text.startsWith("notSaved") ? stage.detail && <p className="mt-2 text-sm">{c.notSavedTyped(stage.detail[0], stage.detail[1])}</p> : stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2">{stage.text === "noAnswer" && <button className="btn btn-primary" onClick={g.markByHand}>{c.markMyself}</button>}<button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
           </div>
         </section>
       </div>
@@ -281,6 +296,33 @@ function Mark({ bar, table, name, callFirst, onDone }: any) {
   );
 }
 
+function ManualMark({ table, name, onSave }: any) {
+  const mistakes = table.codes.filter((x: any) => x.code !== "OK" && x.code !== "UNSURE");
+  const [codes, setCodes] = useState<string[]>([]);
+  const computed = score(codes, table);
+  const [grade, setGrade] = useState(String(table.max));
+  const [touched, setTouched] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const shownGrade = touched ? grade : String(computed);
+  const problem = markProblem(shownGrade, table.max);
+  const toggle = (code: string) => setCodes((cs) => (cs.includes(code) ? cs.filter((x) => x !== code) : [...cs, code]));
+  const save = async () => { if (problem || !name.trim() || busy) return; setBusy(true); try { await onSave({ codes, grade: Number(shownGrade), decidedBy: name.trim(), feedback: note || feedbackLine(codes, table) }); } finally { setBusy(false); } };
+  return (
+    <Panel title={c.manualTitle} tone="good">
+      <p className="text-fg-2">{c.manualHelp}</p>
+      <fieldset className="mt-3 space-y-1"><legend className="text-sm font-semibold">{c.manualMistakes}</legend>
+        {mistakes.map((x: any) => <label key={x.code} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={codes.includes(x.code)} onChange={() => toggle(x.code)} />{x.label} <span className="text-fg-3">({c.pointsOff(x.deduction)})</span></label>)}
+      </fieldset>
+      <p className="mt-3 text-sm text-fg-2">{c.markFromChoices}: <span className="font-bold">{computed} / {table.max}</span></p>
+      <label className="mt-2 block text-sm font-semibold">{c.finalMark}<input type="number" step="0.25" min={0} max={table.max} value={shownGrade} onChange={(e) => { setTouched(true); setGrade(e.target.value); }} aria-invalid={!!problem} className="mt-1 block w-32 rounded-lg border border-line bg-card px-3 py-2 text-2xl font-bold" /></label>
+      {problem && <p role="alert" className="mt-1 text-sm text-bad">{problem}</p>}
+      <label className="mt-3 block text-sm font-semibold">{c.note}<textarea value={note} placeholder={feedbackLine(codes, table)} onChange={(e) => setNote(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border border-line bg-card px-3 py-2 text-sm font-normal" /></label>
+      <button className="btn btn-primary mt-4" disabled={!!problem || !name.trim() || busy} onClick={save}>{c.saveButton}</button>
+    </Panel>
+  );
+}
+
 function Saved({ result, table, idea, onAdded, onOpen }: any) {
   // An override is a suggestion the TA ruled out: to === "OK". A confirm never
   // reaches overrides, and a change carries the code it was changed to.
@@ -290,6 +332,7 @@ function Saved({ result, table, idea, onAdded, onOpen }: any) {
       <p className="text-2xl font-bold">{c.savedBy(result.decidedBy, result.grade, table.max)}</p>
       <p className="text-sm text-fg-3">{c.receiptSub}{result.overrides?.length ? ` · ${result.overrides.length} suggestion${result.overrides.length === 1 ? "" : "s"} changed by you` : ""}</p>
       {result.feedback && <p className="mt-2 text-fg-2">“{result.feedback}”</p>}
+      {result.manual && <p className="mt-1 text-sm text-fg-3">{c.markedByHand}</p>}
       {override && <MakeTestCase idea={idea} itemId={result.itemId} aiCode={override.from} taRuling="OK" onOpen={onOpen} onAdded={onAdded} />}
       <GateReceipt idea={idea} itemId={result.itemId} />
     </Panel>

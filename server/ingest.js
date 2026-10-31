@@ -1,7 +1,7 @@
 // Local ingest: a folder of student papers on this machine becomes a question set.
 // The name-to-paper map lives in local/ingest/<set>/map.json and never leaves this machine. The model sees paper ids and alias tokens only.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
-import { join, extname, basename } from "node:path";
+import { join, extname, basename, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { runGate, assertClean, PATTERN_RULES } from "../lib/gate.js";
 import { CODE_RE } from "./assignment.js";
@@ -70,7 +70,7 @@ export function parsePaper(text, file) {
     if (m) { header[m[1].toLowerCase().replace(/\s+/g, "")] = m[2].trim(); continue; }
     steps.push(line);
   }
-  if (!header.name) header.name = basename(file, extname(file)).replace(/[_-]+/g, " ").trim();
+  if (!header.name) { header.name = basename(file, extname(file)).replace(/[_-]+/g, " ").trim(); header.nameFromFile = true; } // the filename stands in for a missing Name line
   // Whole numbers including exponents and leading-dot decimals; page and question footers are not the answer.
   const nums = steps.filter((l) => !FOOTER.test(l)).join(" ").match(/-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?/g);
   return { header, steps, finalAnswer: nums ? Number(nums[nums.length - 1]) : null };
@@ -101,16 +101,17 @@ export async function importFolder({ folder, setId, rubricId, course, localDir, 
   for (const f of files) {
     const hash = createHash("sha256").update(readFileSync(join(folder, f))).digest("hex");
     const parsed = parsePaper(await extractText(join(folder, f)), f);
-    if (!parsed.steps.some((l) => !FOOTER.test(l))) { report.push({ file: f, held: "no readable work", steps: 0 }); continue; }
+    // A scan with no text layer (or only footers) is kept for marking by hand from the original file, and flagged so it is never sent.
+    const unreadable = !parsed.steps.some((l) => !FOOTER.test(l));
     const known = byFile[f];
     const id = known && samePaper(known, hash, parsed) ? known : `${me}-P-${String(++next).padStart(2, "0")}`;
+    map[id] = { file: f, hash, name: parsed.header.name ?? "", nameFromFile: !!parsed.header.nameFromFile, netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
+    if (unreadable) { papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: [], finalAnswer: null, unreadable: true }); report.push({ id, file: f, held: "no readable work: mark by hand from the original", steps: 0 }); continue; }
     papers.push({ id, imported: true, uploader: me, header: parsed.header, steps: parsed.steps, finalAnswer: parsed.finalAnswer });
-    map[id] = { file: f, hash, name: parsed.header.name ?? "", netid: parsed.header.netid ?? "", email: parsed.header.email ?? "", studentId: parsed.header.studentid ?? parsed.header.id ?? "" };
     const g = runGate(papers[papers.length - 1], ideaConfig, course);
     let clean = true; try { if (!g.blocked) assertClean(g.payload, course); } catch { clean = false; }
     report.push({ id, file: f, steps: parsed.steps.length, droppedFields: g.report.droppedFields, counts: Object.fromEntries(Object.entries(g.report.counts).filter(([, n]) => n > 0)), blocked: g.blocked, blockedRules: g.report.blockedRules, clean });
   }
-  if (!papers.length) throw new Error("none of these files has readable work (scans without a text layer cannot be read)");
   // Ids no longer in the folder keep their student, so an old mark still exports against the right name.
   for (const [id, m] of Object.entries(previous)) if (!map[id]) map[id] = { ...m, removed: true };
   mkdirSync(dir, { recursive: true });
@@ -131,6 +132,20 @@ export function loadImported(localDir, setId) {
   if (!dir || !existsSync(join(dir, "papers.json"))) return null;
   return { meta: JSON.parse(readFileSync(join(dir, "meta.json"), "utf8")), papers: JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) };
 }
+/** The original file a paper was read from, for showing on this laptop beside the extracted text. Never sent anywhere.
+ *  Only a file inside the set's own folder; null for sample papers, unknown ids, or a map entry pointing elsewhere. */
+const TYPES = { ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8" };
+export function originalFile(localDir, setId, id) {
+  const imp = loadImported(localDir, setId);
+  const entry = loadMap(localDir, setId)[id];
+  if (!imp?.meta?.folder || !entry?.file) return null;
+  const folder = resolve(imp.meta.folder), path = resolve(folder, entry.file);
+  if (!path.startsWith(folder + sep) || !TYPES[extname(path).toLowerCase()] || !existsSync(path)) return null;
+  // The file on disk must still be this student's: a file replaced under the same name belongs to a newer id.
+  if (entry.hash && createHash("sha256").update(readFileSync(path)).digest("hex") !== entry.hash) return null;
+  return { path, type: TYPES[extname(path).toLowerCase()] };
+}
+
 export function loadMap(localDir, setId) {
   const dir = setDir(localDir, setId);
   const p = dir && join(dir, "map.json");

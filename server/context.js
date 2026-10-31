@@ -5,7 +5,8 @@ import { makeIdeas } from "../lib/ideas.js";
 import { makeAdapter } from "./adapter.js";
 import { makeLog } from "./log.js";
 import { loadDotenv } from "./env.js";
-import { assignmentSets } from "./assignment.js";
+import { assignmentSets, CODE_RE } from "./assignment.js";
+import { listImported } from "./ingest.js";
 
 const ROOT = process.cwd();
 export const DATA_DIR = join(ROOT, "data");
@@ -24,6 +25,12 @@ export function saveStandards(table) {
   writeFileSync(join(LOCAL_DIR, "rubrics", `${table.id}.json`), JSON.stringify(table, null, 2) + "\n");
 }
 
+/** S2: sets uploaded on this laptop are grading ideas here too, under the rubric they were uploaded with, as the browser already builds them.
+ *  A Quiz/Assignment code is left to assignmentSets, which reads its own scheme. */
+export function uploadedSets(localDir, { grade, grade93 }) {
+  return Object.fromEntries(listImported(localDir).filter((m) => !CODE_RE.test(m.id)).map((m) => [m.id, { ...(m.rubric === "demo201-q3q5" && grade93 ? grade93 : grade), course: m.title }]));
+}
+
 let ctx = null;
 export function getContext() {
   if (ctx) return ctx;
@@ -31,7 +38,10 @@ export function getContext() {
   const course = readData("course.json");
   const gradingSets = {};
   if (existsSync(join(DATA_DIR, "demo201-q3q5.v1.0.json"))) gradingSets.grade93 = loadStandards("demo201-q3q5.v1.0.json");
-  const ideas = () => makeIdeas({ gradeStandards: loadStandards("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: { ...assignmentSets(LOCAL_DIR), ...Object.fromEntries(Object.keys(gradingSets).map((k) => [k, loadStandards("demo201-q3q5.v1.0.json")])) } });
+  const ideas = () => {
+    const grade = loadStandards("grade-q5.v1.0.json"), grade93 = gradingSets.grade93 ? loadStandards("demo201-q3q5.v1.0.json") : null;
+    return makeIdeas({ gradeStandards: grade, companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: { ...uploadedSets(LOCAL_DIR, { grade, grade93 }), ...assignmentSets(LOCAL_DIR), ...(grade93 ? { grade93 } : {}) } });
+  };
   ctx = { course, ideas, adapter: makeAdapter({ localDir: LOCAL_DIR }), log: makeLog(LOCAL_DIR, course) };
   return ctx;
 }

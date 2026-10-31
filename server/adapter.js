@@ -130,12 +130,12 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
       if (!rung.modelId) { attempts.push(`rung ${rung.n}: model env not set`); continue; }
       if (rung.n === 2 && rung.modelId === rungs[0].modelId) { attempts.push("rung 2: same model as rung 1, skipped"); continue; }
       const cached = readJson(cachePath(ph, rung.modelId), null);
-      if (cached) return { ok: true, proposals: cached.proposals, label: liveLabel(cached.modelId), modelId: cached.modelId, rung: rung.n, cacheHit: true, usage: cached.usage, attempts };
+      if (cached) return { ok: true, proposals: cached.proposals, label: liveLabel(cached.modelId), modelId: cached.modelId, rung: rung.n, cacheHit: true, usage: cached.usage, attempts , payloadHash: ph };
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const r = await callOnce({ modelId: rung.modelId, mode, ideaConfig, payload });
           writeJson(cachePath(ph, rung.modelId), { modelId: r.modelId, proposals: r.proposals, usage: r.usage, at: new Date().toISOString() });
-          return { ok: true, proposals: r.proposals, label: liveLabel(r.modelId), modelId: r.modelId, rung: rung.n, cacheHit: false, usage: r.usage, attempts, caveat: rung.n === 2 ? "same key, account, and billing as rung 1; covers model failure only" : undefined };
+          return { ok: true, proposals: r.proposals, label: liveLabel(r.modelId), modelId: r.modelId, rung: rung.n, cacheHit: false, usage: r.usage, attempts, caveat: rung.n === 2 ? "same key, account, and billing as rung 1; covers model failure only" : undefined , payloadHash: ph };
         } catch (e) {
           attempts.push(`rung ${rung.n} attempt ${attempt}: ${e.message}`);
           if (/Call cap/.test(e.message)) { attempt = 2; }
@@ -151,12 +151,12 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
         if (!gsmoke?.ok) attempts.push("rung 3: run scripts/smoke-gemini.js first");
         else {
           const cached = readJson(cachePath(ph, env.GEMINI_MODEL), null);
-          if (cached) return { ok: true, proposals: cached.proposals, label: liveLabel(cached.modelId), modelId: cached.modelId, rung: 3, cacheHit: true, usage: cached.usage, attempts };
+          if (cached) return { ok: true, proposals: cached.proposals, label: liveLabel(cached.modelId), modelId: cached.modelId, rung: 3, cacheHit: true, usage: cached.usage, attempts , payloadHash: ph };
           for (let attempt = 1; attempt <= 2; attempt++) {
             try {
               const r = await callGeminiOnce({ modelId: env.GEMINI_MODEL, mode: gsmoke.mode, ideaConfig, payload });
               writeJson(cachePath(ph, env.GEMINI_MODEL), { modelId: r.modelId, proposals: r.proposals, usage: r.usage, at: new Date().toISOString() });
-              return { ok: true, proposals: r.proposals, label: liveLabel(r.modelId), modelId: r.modelId, rung: 3, cacheHit: false, usage: r.usage, attempts };
+              return { ok: true, proposals: r.proposals, label: liveLabel(r.modelId), modelId: r.modelId, rung: 3, cacheHit: false, usage: r.usage, attempts , payloadHash: ph };
             } catch (e) {
               attempts.push(`rung 3 attempt ${attempt}: ${e.message}`);
               if (/Call cap/.test(e.message)) attempt = 2;
@@ -169,7 +169,7 @@ export function makeAdapter({ env = process.env, fetchImpl = globalThis.fetch, l
     const hit = readdirSync(paths.cache).find((f) => f.startsWith(`${ph}.`));
     if (hit) {
       const cached = readJson(join(paths.cache, hit), null);
-      return { ok: true, proposals: cached.proposals, label: LABEL_REPLAY, modelId: cached.modelId, rung: 4, cacheHit: true, usage: null, attempts };
+      return { ok: true, proposals: cached.proposals, label: LABEL_REPLAY, modelId: cached.modelId, rung: 4, cacheHit: true, usage: null, attempts , payloadHash: ph };
     }
     attempts.push("rung 4: no cached rehearsal for this payload");
     return { ok: false, error: attempts[attempts.length - 1], attempts };

@@ -148,6 +148,10 @@ export const COPY = {
     alsoMarked: (by: string, mark: number | string, max: number) => `Also marked by ${by}: ${mark} / ${max}`,
     blocked: "This paper was held back: a private detail was still inside it. Nothing was sent.",
     noAnswer: "Suggestions did not arrive. You can still mark the paper yourself.",
+    notSavedTitle: "Not saved",
+    notSaved: "This mark was not recorded. Nothing was saved for this paper.",
+    notSavedName: "The note or a reason names a student. Remove the name, then try again.",
+    notSavedTyped: (mark: string, note: string) => `What you typed: ${mark}${note ? ` · "${note}"` : ""}`,
     pointsOff: (d: number) => (d === 0 ? "no points off" : `${d} points`),
   },
   finish: {

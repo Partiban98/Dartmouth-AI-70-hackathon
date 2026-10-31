@@ -158,3 +158,17 @@ test("re-reading a folder keeps existing paper ids and appends new files with ne
   assert.match(byFile["a.txt"], /-P-03$/, "the new file gets the next id, not the first");
   assert.equal(second.papers.length, 3);
 });
+
+test("S6: a set id from a request cannot read or refresh anything outside this laptop's ingest folder", async () => {
+  const { loadImported, loadMap, refreshSet } = await import("../server/ingest.js");
+  const root = mkdtempSync(join(tmpdir(), "trav-")), localDir = join(root, "local");
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(join(root, "victim"), { recursive: true }); mkdirSync(join(localDir, "ingest"), { recursive: true });
+  writeFileSync(join(root, "victim", "papers.json"), "[]"); writeFileSync(join(root, "victim", "meta.json"), '{"id":"x"}'); writeFileSync(join(root, "victim", "map.json"), '{"map":{"a":{"name":"Secret"}}}');
+  for (const bad of ["../../victim", "../victim", "/etc", "..\\victim", "%2e%2e/victim", "ok/../../victim", ""]) {
+    assert.equal(loadImported(localDir, bad), null, bad);
+    assert.deepEqual(loadMap(localDir, bad), {}, bad);
+    await assert.rejects(refreshSet({ setId: bad, course, localDir, ideaConfig: ideas.grade }), /unknown set/, bad);
+  }
+  assert.equal(loadImported(localDir, "quiz-5-section-b"), null, "a valid id that does not exist is just missing");
+});

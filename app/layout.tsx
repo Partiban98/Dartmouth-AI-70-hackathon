@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Remain", description: "Grade a quiz 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${ui.variable} ${paper.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col" suppressHydrationWarning>
         <header className="border-b border-line bg-card">
           <div className="mx-auto max-w-[1280px] px-5 py-3 flex items-center gap-4">
             {/* A plain link, not a Next Link: on /grade it reloads, which returns the grader to the Start screen. */}

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { normalize } from "@/lib/text.js";
 import { feedbackLine } from "@/lib/feedback.js";
 import { COPY } from "./copy";
+import { buildReview, addableCodes } from "./review.js";
 import type { Stage } from "./useGrading";
 
 const c = COPY.grader;
@@ -133,24 +134,36 @@ function Suggestions({ card: raw, table, lineOf, onLight, onDone }: any) {
   const [state, setState] = useState<any[]>(() => card.items.map((it: any) => ({ action: "", to: it.code, reason: "", precedent: false })));
   const [focus, setFocus] = useState(0);
   const [error, setError] = useState("");
+  const [added, setAdded] = useState<string[]>([]);
+  const [pick, setPick] = useState("");
   const labels = Object.fromEntries(table.codes.map((x: any) => [x.code, x]));
   const setRow = (i: number, patch: any) => setState((s) => s.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const complete = state.every((s) => s.action);
   const submit = useCallback(() => {
-    const confirmed: string[] = [], overrides: any[] = [];
-    for (const [i, s] of state.entries()) {
-      const from = card.items[i].code;
-      if (!s.action) { setError(`Suggestion ${i + 1}: choose an answer.`); return; }
-      if (s.action === "confirm") confirmed.push(from);
-      else {
-        if (!s.reason.trim()) { setError(c.needWhy(i + 1)); return; }
-        // One decision per mistake, however many sources suggested it.
-        overrides.push({ from, to: s.to, reason: s.reason, precedent: s.precedent });
-        if (s.action === "change") confirmed.push(s.to);
-      }
-    }
-    onDone({ confirmed, overrides });
-  }, [state, card, onDone]);
+    const r: any = buildReview(card.items, state, added);
+    if (r.error) { setError(r.error === "choose" ? `Suggestion ${r.n}: choose an answer.` : c.needWhy(r.n)); return; }
+    onDone(r);
+  }, [state, card, added, onDone]);
+  // A mistake no suggestion raised: the grader adds it from the marking scheme, and it counts like a yes.
+  const missed = (
+    <div className="mt-4 rounded-lg border border-line p-3">
+      <p className="font-semibold">{c.missedTitle}</p>
+      <p className="text-sm text-fg-3">{c.missedHelp}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label={c.missedTitle} className="rounded-lg border border-line bg-card px-2 py-1.5 text-sm">
+          <option value="">{c.missedPick}</option>
+          {addableCodes(table).filter((x: any) => !added.includes(x.code)).map((x: any) => <option key={x.code} value={x.code}>{x.label} ({c.pointsOff(x.deduction)})</option>)}
+        </select>
+        <button className="btn text-sm" disabled={!pick} onClick={() => { setAdded((a) => [...a, pick]); setPick(""); }}>{c.missedAdd}</button>
+      </div>
+      {added.length > 0 && <ul className="mt-2 space-y-1">{added.map((code) => (
+        <li key={code} className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="rounded-full bg-bg px-2 py-0.5 text-fg-2">{c.addedByYou}</span>
+          <span>{labels[code]?.label ?? code} · {c.pointsOff(labels[code]?.deduction ?? 0)}</span>
+          <button className="btn text-xs" onClick={() => setAdded((a) => a.filter((x) => x !== code))}>{c.missedRemove}</button>
+        </li>))}</ul>}
+    </div>
+  );
   useEffect(() => { onLight(card.items.map((it: any) => lineOf(it.quote)).filter((n: number) => n >= 0)); }, [card, lineOf, onLight]);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -167,7 +180,7 @@ function Suggestions({ card: raw, table, lineOf, onLight, onDone }: any) {
     };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, [focus, submit, card, state, table]);
-  if (!card.items.length) return <Panel title={c.suggestionsTitle} tone="good"><p className="text-fg-2">{c.noSuggestions}</p><button className="btn btn-primary mt-4" onClick={submit}>{c.continueButton} <span className="kbd">⏎</span></button></Panel>;
+  if (!card.items.length) return <Panel title={c.suggestionsTitle} tone="good"><p className="text-fg-2">{c.noSuggestions}</p>{missed}<button className="btn btn-primary mt-4" onClick={submit}>{c.continueButton} <span className="kbd">⏎</span></button></Panel>;
   return (
     <Panel title={c.suggestionsTitle}>
       <p className="text-sm text-fg-3">{c.suggestionsHelp}</p>
@@ -204,6 +217,7 @@ function Suggestions({ card: raw, table, lineOf, onLight, onDone }: any) {
           );
         })}
       </ol>
+      {missed}
       {error && <p role="alert" className="mt-3 text-sm text-bad">{error}</p>}
       <button className="btn btn-primary mt-4" disabled={!complete} onClick={submit}>{c.continueButton} <span className="kbd">⏎</span></button>
     </Panel>

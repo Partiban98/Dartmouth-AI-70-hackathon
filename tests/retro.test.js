@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { assertLogSafe, proposalRecord, gateRecord } from "../lib/logshape.js";
 import { loadDotenv } from "../server/env.js";
 import { buildUserPrompt, SYSTEM } from "../lib/prompts.js";
@@ -60,7 +61,7 @@ test("feedbackLine is deterministic from confirmed codes; bumpVersion increments
 });
 
 test("extractText reads a PDF text layer and parsePaper separates the name from the steps", async () => {
-  const text = await extractText(new URL("./fixtures/paper.pdf", import.meta.url).pathname);
+  const text = await extractText(fileURLToPath(new URL("./fixtures/paper.pdf", import.meta.url)));
   assert.ok(text.includes("Name: Test Student"), text);
   const p = parsePaper(text, "paper.pdf");
   assert.equal(p.header.name, "Test Student");

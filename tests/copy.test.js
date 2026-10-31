@@ -3,8 +3,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCREENS = ["GradeApp.tsx", "Start.tsx", "Grader.tsx", "Finish.tsx", "SchemeDrawer.tsx", "copy.ts", "useGrading.ts"].map((f) => join(ROOT, "components", "grading", f));
 const BANNED = [/payload/i, /alias/i, /assertClean/, /\bpipeline\b/i, /\brung\b/i, /R-1[0-3]\b/, /LIVE API/, /CACHED REHEARSAL/, /\bmodel proposes/i, /rules engine/i, /allowlist/i, /deterministic/i, /\bregex\b/i, /confidence \d/];
 

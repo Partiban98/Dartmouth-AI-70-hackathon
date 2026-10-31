@@ -86,3 +86,29 @@ test("changes a joiner proposed stay on their laptop: not in the pack, and kept 
   const v11 = joinAssignment(encodePack({ ...q, version: "1.1", standards: { ...q.standards, version: "1.1" } }), { localDir: b, force: true });
   assert.equal(v11.version, "1.1"); assert.deepEqual(v11.standards.pendingPrecedents, pend);
 });
+
+test("only the laptop that created a Quiz/Assignment can change its scheme; a joiner can only add proposed changes", async () => {
+  const { saveScheme } = await import("../server/assignment.js");
+  const a = mkdtempSync(join(tmpdir(), "assignment-a-")), b = mkdtempSync(join(tmpdir(), "assignment-b-"));
+  const q = createAssignment({ ...draft }, { localDir: a, createdBy: "U0BA7" });
+  joinAssignment(encodePack(q), { localDir: b });
+  const edited = { ...q.standards, version: "1.1", max: 12 };
+  assert.match(saveScheme(b, edited, "UB1C2").errors.join(), /head TA/);
+  assert.equal(loadAssignment(b, q.code).standards.max, 10);
+  const pend = [{ code: "E-MEAN", reason: "median on purpose", by: "TA 2", itemId: "UB1C2-P-01" }];
+  assert.equal(saveScheme(b, { ...q.standards, pendingPrecedents: pend }, "UB1C2").errors, null);
+  assert.deepEqual(loadAssignment(b, q.code).standards.pendingPrecedents, pend);
+  assert.equal(saveScheme(a, edited, "U0BA7").errors, null);
+  const after = loadAssignment(a, q.code);
+  assert.equal(after.version, "1.1"); assert.equal(after.standards.max, 12, "the head TA's edit bumps the version the pack carries");
+  assert.match(saveScheme(a, { ...edited, codes: [] }, "U0BA7").errors.join(), /codes/);
+});
+
+test("every Quiz/Assignment on this laptop becomes a grading set under its code, titled course · title", async () => {
+  const { assignmentSets } = await import("../server/assignment.js");
+  const a = mkdtempSync(join(tmpdir(), "assignment-"));
+  const q = createAssignment({ ...draft }, { localDir: a, createdBy: "U0BA7" });
+  const sets = assignmentSets(a);
+  assert.deepEqual(Object.keys(sets), [q.code]);
+  assert.equal(sets[q.code].course, "DEMO-STATS 101 · Quiz 5"); assert.equal(sets[q.code].version, "1.0");
+});

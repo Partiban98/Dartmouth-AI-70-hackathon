@@ -5,10 +5,12 @@ import { makeIdeas } from "../lib/ideas.js";
 import { makeAdapter } from "./adapter.js";
 import { makeLog } from "./log.js";
 import { loadDotenv } from "./env.js";
+import { assignmentSets } from "./assignment.js";
 
 const ROOT = process.cwd();
 export const DATA_DIR = join(ROOT, "data");
-export const LOCAL_DIR = join(ROOT, "local");
+// REMAIN_LOCAL_DIR lets a second server on one machine act as a second laptop (own id, own papers, own names).
+export const LOCAL_DIR = process.env.REMAIN_LOCAL_DIR || join(ROOT, "local");
 export const readData = (f) => JSON.parse(readFileSync(join(DATA_DIR, f), "utf8"));
 
 /** Latest rubric: instructor edits saved under local/rubrics override the seed. */
@@ -29,7 +31,7 @@ export function getContext() {
   const course = readData("course.json");
   const gradingSets = {};
   if (existsSync(join(DATA_DIR, "demo201-q3q5.v1.0.json"))) gradingSets.grade93 = loadStandards("demo201-q3q5.v1.0.json");
-  const ideas = () => makeIdeas({ gradeStandards: loadStandards("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: Object.fromEntries(Object.keys(gradingSets).map((k) => [k, loadStandards("demo201-q3q5.v1.0.json")])) });
+  const ideas = () => makeIdeas({ gradeStandards: loadStandards("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets: { ...assignmentSets(LOCAL_DIR), ...Object.fromEntries(Object.keys(gradingSets).map((k) => [k, loadStandards("demo201-q3q5.v1.0.json")])) } });
   ctx = { course, ideas, adapter: makeAdapter({ localDir: LOCAL_DIR }), log: makeLog(LOCAL_DIR, course) };
   return ctx;
 }

@@ -117,21 +117,23 @@ export function loadMap(localDir, setId) {
 const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 /** CSV for the TA's sheet. Names come from the local map on this machine; proposals and decisions come from the logs. */
-export function exportCsv({ setId, papers, map, logs, table }) {
+export function exportCsv({ setId, papers, map, logs, table, assignment = "", names = !assignment, laptop = "" }) {
   const latest = {};
   for (const d of logs.decisions ?? []) if (d.idea === setId) latest[d.itemId] = d;
   const proposed = {};
   for (const p of logs.proposals ?? []) if (p.idea === setId) proposed[p.itemId] = p;
-  const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at"];
+  const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at", "assignment", "laptop", "proposed_change"];
+  // A Quiz/Assignment CSV is shared with the head TA, so names and file names stay out unless this laptop asks for them.
+  const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${p.reason}`).join(" | ");
   const rows = papers.map((pp) => {
-    const m = map[pp.id] ?? {}; const d = latest[pp.id]; const pr = proposed[pp.id];
-    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", d?.feedback ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? ""];
+    const m = names ? map[pp.id] ?? {} : {}; const d = latest[pp.id]; const pr = proposed[pp.id];
+    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", d?.feedback ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? "", assignment, pp.uploader ?? laptop, proposedFor(pp.id)];
   });
   return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
 }
 
 /** Files chosen in the browser are written to local/uploads/<set>/ on this machine, then imported like a folder. */
-export async function importUploads({ files, setName, rubricId, course, localDir, ideaConfig }) {
+export async function importUploads({ files, setName, title, rubricId, course, localDir, ideaConfig }) {
   const setId = safeSetId(setName || `upload-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`);
   const dir = join(localDir, "uploads", setId);
   mkdirSync(dir, { recursive: true });
@@ -143,7 +145,7 @@ export async function importUploads({ files, setName, rubricId, course, localDir
     kept++;
   }
   if (!kept) throw new Error("no .pdf, .txt, or .md files were chosen");
-  const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: setName ? `${setName}` : `Uploaded papers` });
+  const r = await importFolder({ folder: dir, setId, rubricId, course, localDir, ideaConfig, title: title ?? (setName ? `${setName}` : `Uploaded papers`) });
   return { ...r, meta: JSON.parse(readFileSync(join(INGEST_DIR(localDir), setId, "meta.json"), "utf8")) };
 }
 

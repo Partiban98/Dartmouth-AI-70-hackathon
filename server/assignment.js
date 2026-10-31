@@ -75,3 +75,21 @@ export function listAssignments(localDir) {
   if (!existsSync(DIR(localDir))) return [];
   return readdirSync(DIR(localDir)).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(readFileSync(join(DIR(localDir), f), "utf8")));
 }
+
+/** Scheme edits on this laptop. The head TA's laptop saves a new version; any other laptop may only add proposed changes. Returns { errors }. */
+export function saveScheme(localDir, table, me) {
+  const a = loadAssignment(localDir, table?.id);
+  if (!a) return { errors: ["unknown Quiz/Assignment"] };
+  const { pendingPrecedents = [], ...next } = table;
+  const { pendingPrecedents: _old, ...current } = a.standards;
+  if (a.createdBy !== me && JSON.stringify(next) !== JSON.stringify(current)) return { errors: ["Only the head TA's laptop can change this scheme. Propose a change instead."] };
+  const v = validateStandards(table);
+  if (!v.ok) return { errors: v.errors };
+  save(localDir, { ...a, version: table.version, standards: table });
+  return { errors: null };
+}
+
+/** Grading sets for makeIdeas, keyed by code. The title shown is "course · title". */
+export function assignmentSets(localDir) {
+  return Object.fromEntries(listAssignments(localDir).map((a) => [a.code, { ...a.standards, course: `${a.course} · ${a.title}` }]));
+}

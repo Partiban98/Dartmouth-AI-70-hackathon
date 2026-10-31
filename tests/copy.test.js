@@ -37,6 +37,6 @@ test("E5 and PUX-5: the screens only offer what the system can do", () => {
   const grader = readFileSync(join(ROOT, "components", "grading", "Grader.tsx"), "utf8");
   assert.ok(!/No, keep it/.test(copy) && !/"not-name"/.test(grader), "no not-a-name clearance the server cannot honour");
   assert.ok(/nameNotTerm:/.test(copy), "the panel explains what to do when the phrase is not a name");
-  assert.ok(!/still mark the paper yourself/.test(copy), "no promise of manual marking that does not exist yet");
-  assert.match(copy, /noAnswer: "[^"]*Try again[^"]*"/, "no-answer message names the real choices");
+  assert.match(copy, /noAnswer: "[^"]*Mark it yourself[^"]*try again[^"]*"/, "no-answer message names the real choices, including marking by hand");
+  assert.ok(/markByHand/.test(readFileSync(join(ROOT, "components", "grading", "Grader.tsx"), "utf8")), "and the button for it exists");
 });

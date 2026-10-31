@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runPipeline } from "@/lib/pipeline.js";
 import { makeIdeas } from "@/lib/ideas.js";
 import { strictLogFetch } from "@/lib/saveguard.js";
+import { manualRecord } from "./manual.js";
 
 export type Stage =
   | { kind: "idle" }
@@ -12,6 +13,7 @@ export type Stage =
   | { kind: "reading" }
   | { kind: "suggestions"; card: any }
   | { kind: "mark"; bar: any }
+  | { kind: "manual" }
   | { kind: "saved"; result: any }
   | { kind: "stopped"; text: string; detail?: any };
 
@@ -134,5 +136,21 @@ export function useGrading() {
   }
   const addPasted = (item: any) => { const it = { ...item, set: setId, id: `P-${String(pasted.length + 1).padStart(2, "0")}` }; setPasted((p) => [...p, it]); return it; };
 
-  return { data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load, uploader, othersOnCurrent, assignments, assignment, importedPapers, sampleScheme: standards.grade };
+  // When suggestions did not arrive, the TA can still mark the paper: their mistakes, the scheme's score, their final mark.
+  const markByHand = () => setStage({ kind: "manual" });
+  async function saveByHand(d: { codes: string[]; grade: number; decidedBy: string; feedback: string }) {
+    if (!idea || !current) return;
+    const mine = run.current, item = current;
+    const rec = manualRecord({ idea: idea.id, itemId: item.id, codes: d.codes, grade: d.grade, decidedBy: d.decidedBy, feedback: d.feedback, table: idea.standards });
+    try { await strictLogFetch(fetch)("/log", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rec) }); }
+    catch (e: any) {
+      if (!e?.notSaved) throw e;
+      if (mine === run.current) setStage({ kind: "stopped", text: /name/i.test(e.message) ? "notSavedName" : "notSaved", detail: [`${d.grade} / ${idea.standards.max}`, d.feedback] });
+      return;
+    }
+    await refreshCounts();
+    if (mine === run.current) setStage({ kind: "saved", result: { receipt: rec.receipt, decidedBy: rec.decidedBy, grade: rec.grade, feedback: rec.feedback, itemId: item.id, overrides: [], confirmed: rec.confirmed, rubricVersion: rec.rubricVersion, manual: true } });
+  }
+
+  return { markByHand, saveByHand, data, table, rubricKey, idea, papers, decided, setId, setSetId, setInfo, allSets, counts, refreshCounts, current, index, stage, answer, start, nextPending, modelLabel, name, setName, saveRubric, addPasted, advance, reload: load, uploader, othersOnCurrent, assignments, assignment, importedPapers, sampleScheme: standards.grade };
 }

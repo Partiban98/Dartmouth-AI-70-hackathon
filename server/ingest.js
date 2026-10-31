@@ -1,7 +1,7 @@
 // Local ingest: a folder of student papers on this machine becomes a question set.
 // The name-to-paper map lives in local/ingest/<set>/map.json and never leaves this machine. The model sees paper ids and alias tokens only.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
-import { join, extname, basename } from "node:path";
+import { join, extname, basename, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { runGate, assertClean, PATTERN_RULES } from "../lib/gate.js";
 import { CODE_RE } from "./assignment.js";
@@ -131,6 +131,18 @@ export function loadImported(localDir, setId) {
   if (!dir || !existsSync(join(dir, "papers.json"))) return null;
   return { meta: JSON.parse(readFileSync(join(dir, "meta.json"), "utf8")), papers: JSON.parse(readFileSync(join(dir, "papers.json"), "utf8")) };
 }
+/** The original file a paper was read from, for showing on this laptop beside the extracted text. Never sent anywhere.
+ *  Only a file inside the set's own folder; null for sample papers, unknown ids, or a map entry pointing elsewhere. */
+const TYPES = { ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8" };
+export function originalFile(localDir, setId, id) {
+  const imp = loadImported(localDir, setId);
+  const file = loadMap(localDir, setId)[id]?.file;
+  if (!imp?.meta?.folder || !file) return null;
+  const folder = resolve(imp.meta.folder), path = resolve(folder, file);
+  if (!path.startsWith(folder + sep) || !TYPES[extname(path).toLowerCase()] || !existsSync(path)) return null;
+  return { path, type: TYPES[extname(path).toLowerCase()] };
+}
+
 export function loadMap(localDir, setId) {
   const dir = setDir(localDir, setId);
   const p = dir && join(dir, "map.json");

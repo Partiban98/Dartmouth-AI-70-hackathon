@@ -79,10 +79,9 @@ test("changes a joiner proposed stay on their laptop: not in the pack, and kept 
   const pend = [{ code: "E-MEAN", reason: "used the median on purpose", by: "TA 2", itemId: "UB1C2-P-01" }];
   const withPend = { ...joined, standards: { ...joined.standards, pendingPrecedents: pend } };
   assert.ok(!decodePack(encodePack(withPend)).standards.pendingPrecedents, "typed reasons never travel in a pack");
-  assert.doesNotThrow(() => joinAssignment(encodePack(q), { localDir: b, force: false }) , "own proposals alone are not a conflict");
-  // simulate the joiner's laptop holding proposals, then the head TA shares version 1.1
-  joinAssignment(encodePack(q), { localDir: b, force: true });
-  writeFileSync(join(b, "assignments", `${q.code}.json`), JSON.stringify(withPend));
+  writeFileSync(join(b, "assignments", `${q.code}.json`), JSON.stringify(withPend)); // the joiner's laptop now holds a proposal
+  assert.doesNotThrow(() => joinAssignment(encodePack(q), { localDir: b }), "own proposals alone are not a conflict");
+  assert.deepEqual(loadAssignment(b, q.code).standards.pendingPrecedents, pend, "re-joining the same version keeps them");
   const v11 = joinAssignment(encodePack({ ...q, version: "1.1", standards: { ...q.standards, version: "1.1" } }), { localDir: b, force: true });
   assert.equal(v11.version, "1.1"); assert.deepEqual(v11.standards.pendingPrecedents, pend);
 });

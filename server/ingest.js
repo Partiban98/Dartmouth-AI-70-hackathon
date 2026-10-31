@@ -124,10 +124,14 @@ export function exportCsv({ setId, papers, map, logs, table, assignment = "", na
   for (const p of logs.proposals ?? []) if (p.idea === setId) proposed[p.itemId] = p;
   const header = ["paper", "file", "student", "proposed_codes", "model", "confirmed_codes", "overrides", "score_from_confirmed", "grade", "decided_by", "feedback", "rubric_version", "decided_at", "assignment", "laptop", "proposed_change"];
   // A Quiz/Assignment CSV is shared with the head TA, so names and file names stay out unless this laptop asks for them.
-  const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${p.reason}`).join(" | ");
+  // Notes are typed by people, so a shared file scrubs every name word from this laptop's map and every identifier pattern from them.
+  const words = names ? [] : [...new Set(Object.values(map).flatMap((m) => [m.name, ...String(m.name ?? "").split(/\s+/)]).filter((w) => w && w.length >= 3))].sort((a, b) => b.length - a.length);
+  const nameRe = words.length ? new RegExp(`\\b(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi") : null;
+  const scrub = (t) => { if (names || t == null) return t; let x = String(t); for (const [, , , re] of PATTERN_RULES) x = x.replace(new RegExp(re.source, "g"), "[removed]"); return nameRe ? x.replace(nameRe, "[student]") : x; };
+  const proposedFor = (id) => (table?.pendingPrecedents ?? []).filter((p) => p.itemId === id).map((p) => `${p.code}: ${scrub(p.reason)}`).join(" | ");
   const rows = papers.map((pp) => {
     const m = names ? map[pp.id] ?? {} : {}; const d = latest[pp.id]; const pr = proposed[pp.id];
-    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", d?.feedback ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? "", assignment, pp.uploader ?? laptop, proposedFor(pp.id)];
+    return [pp.id, m.file ?? "", m.name ?? "", (pr?.proposals ?? []).map((x) => x.code).join(" "), pr?.modelId ?? "", d ? d.confirmed.join(" ") : "", d ? (d.overrides ?? []).map((o) => `${o.from}>${o.to}`).join(" ") : "", d?.computedScore ?? "", d?.grade ?? "", d?.decidedBy ?? "", scrub(d?.feedback) ?? "", d?.rubricVersion ?? table?.version ?? "", d?.ts ?? "", assignment, pp.uploader ?? laptop, proposedFor(pp.id)];
   });
   return [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
 }

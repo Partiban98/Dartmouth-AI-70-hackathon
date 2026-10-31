@@ -74,6 +74,18 @@ test("a Quiz/Assignment CSV adds assignment, laptop and proposed change, and lea
   assert.ok(owner.includes("Ada Byron") && owner.includes("Ada_Byron.txt"), "the laptop that owns the map can ask for names");
 });
 
+test("the shared Quiz/Assignment CSV scrubs student names and identifiers a TA typed into the note or the proposed change", () => {
+  const papers = [{ id: "UB1C2-P-01", uploader: "UB1C2" }];
+  const map = { "UB1C2-P-01": { file: "Lucia_Moreau.txt", name: "Lucia Moreau" } };
+  const logs = { decisions: [{ idea: "7K3-Q2M", itemId: "UB1C2-P-01", confirmed: [], overrides: [], grade: 10, decidedBy: "TA 2", feedback: "Nice work, lucia. Email lucia@example.edu if stuck.", rubricVersion: "1.0", ts: "t1" }] };
+  const table = { version: "1.0", pendingPrecedents: [{ code: "E-MEAN", reason: "Moreau used the median on purpose", itemId: "UB1C2-P-01" }] };
+  const shared = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M" });
+  assert.ok(!/lucia|moreau|example\.edu/i.test(shared), shared);
+  assert.ok(shared.includes("Nice work, [student]") && shared.includes("[student] used the median"), "the rest of the note still reads");
+  const owner = exportCsv({ setId: "7K3-Q2M", papers, map, logs, table, assignment: "7K3-Q2M", names: true });
+  assert.ok(owner.includes("Nice work, lucia"), "the owner's file keeps the note as typed");
+});
+
 test("safeSetId rejects a set id that looks like an identifier, since it would be refused by the log and could leak", async () => {
   const { safeSetId } = await import("../server/ingest.js");
   assert.throws(() => safeSetId("demo-folder"), /R-04/);

@@ -70,7 +70,8 @@ export function unsafePattern(sig) {
       if (e === undefined || /[A-Za-z0-9]/.test(e)) fail("A method pattern can only use \\d, \\s, \\w and escaped punctuation.");
       return lit(e);
     }
-    if (c === "^" || c === "$") return { zero: true };
+    if (c === "^") return { zero: true, anchor: true };
+    if (c === "$") return { zero: true };
     if (c === ".") return cls(ALL, false);
     if (c === "[") {
       // Scan to the closing bracket, stepping over escapes; [] and [^] are valid classes. Treated as "any character".
@@ -82,6 +83,8 @@ export function unsafePattern(sig) {
     if (c === "(") {
       if (s[i] === "?") { if (s[i + 1] !== ":") fail("A method pattern cannot look ahead or behind."); i += 2; }
       const branches = alternation(); if (s[i++] !== ")") fail("A method pattern has an unclosed group.");
+      // A group that ends in an open-ended repeat could run into whatever follows the group.
+      for (const b of branches) { const last = [...b].reverse().find((x) => !x.zero); if (last && last.max === Infinity) fail("A group in a method pattern cannot end with an open-ended repeat."); }
       // What a group can start with: each branch's first piece; anything unclear counts as "anything".
       const firsts = branches.map((b) => b.find((x) => !x.zero));
       const has = (ch) => firsts.some((f) => !f || f.min === 0 || f.has(ch));
@@ -113,6 +116,13 @@ export function unsafePattern(sig) {
         if (n.min > 0) break;
       }
     });
+    // An open-ended repeat must come after ^ or after a required piece it cannot match; otherwise every start position retries it.
+    let anchored = false; const seen = [];
+    for (const q of out) {
+      if (q.zero) { if (q.anchor) anchored = true; continue; }
+      if (q.max === Infinity && !anchored && !seen.some((m) => !overlap(m, q))) fail("An open-ended repeat in a method pattern must come after ^ or after a fixed character it cannot match.");
+      if (q.min >= 1) seen.push(q);
+    }
     return out;
   }
   function alternation() { const bs = [branch()]; while (s[i] === "|") { i++; bs.push(branch()); } return bs; }

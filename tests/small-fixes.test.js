@@ -51,7 +51,7 @@ test("PUX-7: the footer shows the model label from the response and never claims
 // Codex review of PR #15.
 test("E6 review: any repeated group is refused (overlapping alternatives too); optional groups and sample patterns pass", () => {
   for (const sig of ["^(a|aa)+$", "(ab|a)*c", "(x|y){3,}", "(a|b){2,5}"]) assert.ok(unsafePattern(sig), sig);
-  for (const ok of ["(\\^\\s*2|²)", "0\\.30(17|45)", "(abc)?d", "a+b*c"]) assert.equal(unsafePattern(ok), null, ok);
+  for (const ok of ["(\\^\\s*2|²)", "0\\.30(17|45)", "(abc)?d", "^a+b*c"]) assert.equal(unsafePattern(ok), null, ok);
 });
 
 test("PUX-6 review: what the class got wrong counts each paper's latest decision only", async () => {
@@ -84,4 +84,17 @@ test("E6 scanner review: empty and escaped-bracket classes and unsupported escap
   const rejected = ["^" + "\\x61*".repeat(9) + "X$", "\\u0061*\\u0061*", "\\t*\\s*", "\\n+", "\\0", "\\cJ", "\\p{L}+"];
   for (const sig of rejected) assert.notEqual(run(sig), "null", sig);
   assert.equal(unsafePattern("\\(\\s*-?\\d+\\s*-\\s*8\\s*\\)\\s*(\\^\\s*2|²)|deviation"), null, "escaped punctuation still works");
+});
+
+test("E6 start review: an unbounded repeat needs ^ or an earlier required piece it cannot match, and no group may end in one; sample patterns pass on long hostile lines", async () => {
+  for (const sig of ["a+X", "x*y*z*", "\\d+x", "b(?:a+)a+X", "(?:c\\s+)\\s*x", "\\s*-?\\d+\\s*-\\s*8"]) assert.ok(unsafePattern(sig), sig);
+  for (const ok of ["^a+X", "Xa+", "b\\d+x", "(\\^\\s*2|²)", "0\\.30(17|45)", "(abc)?d"]) assert.equal(unsafePattern(ok), null, ok);
+  const { execFileSync } = await import("node:child_process");
+  const sigs = [...gradeStandards.methods, ...read("demo201-q3q5.v1.0.json").methods].map((m) => m.signature);
+  for (const sig of sigs) assert.equal(unsafePattern(sig), null, sig);
+  const hostile = ["a".repeat(100000) + "!", " ".repeat(100000) + "!", "( ".repeat(50000) + "!", "(" + " ".repeat(100000) + "!", "0".repeat(100000) + "!"];
+  const script = `const sigs=${JSON.stringify(sigs)}, lines=${JSON.stringify(hostile)}; for (const s of sigs) for (const l of lines) new RegExp(s, "i").test(l);`;
+  const t0 = Date.now();
+  execFileSync(process.execPath, ["-e", script], { timeout: 3000 });
+  assert.ok(Date.now() - t0 < 3000);
 });

@@ -140,7 +140,7 @@ export const COPY = {
     savedBy: (name: string, mark: number | string, max: number) => `Marked by you, ${name}: ${mark} / ${max}`,
     receiptSub: "Assigned by you (TA)",
     undo: "Undo",
-    footer: (label: string) => `Suggestions by Claude (${label}) · Your decisions stay on this computer`,
+    footer: (label: string) => `Suggestions: ${label} · Your decisions stay on this computer`,
     footerNoCall: "No suggestions requested yet · Your decisions stay on this computer",
     stopped: "Nothing was marked for this paper.",
     gotIt: "Got it",
@@ -183,7 +183,7 @@ export const COPY = {
   },
   finish: {
     title: (n: number, name: string) => `${n} ${n === 1 ? "paper" : "papers"} marked by ${name || "you"}.`,
-    tiles: { marked: "Marked", changed: "Changed from the suggestion", notInPaper: "AI lines not found in the paper", names: "Names hidden" },
+    tiles: { marked: "Marked", changed: "Changed from the suggestion", notInPaper: "AI lines not found (all sets on this laptop)", names: "Names hidden (all sets on this laptop)" },
     wrongTitle: "What the class got wrong",
     wrongHelp: "Counted from the mistakes you confirmed, nothing else.",
     reteach: (label: string, n: number) => `Reteach ${label} (${n} ${n === 1 ? "paper" : "papers"})`,

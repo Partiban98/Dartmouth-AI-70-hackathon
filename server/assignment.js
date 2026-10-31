@@ -41,6 +41,101 @@ const shareable = (st) => pick(st, SCHEME);
 const local = (st) => ({ ...shareable(st), ...(Array.isArray(st?.precedents) ? { precedents: st.precedents.filter((x) => typeof x === "string") } : {}),
   ...(Array.isArray(st?.pendingPrecedents) ? { pendingPrecedents: st.pendingPrecedents.map((x) => pick(x, { code: str, reason: str, by: str, itemId: str, at: str })) } : {}) });
 
+/** E6: a method pattern runs on every paper in the browser, where a regular expression cannot be timed out. So only a small,
+ *  conservative grammar is accepted: literals, \d \s \w . and [sets], groups and alternatives; only a letter, \d or \s may repeat;
+ *  a group may only be optional; and nothing a repeat could also match may follow it before the next required piece.
+ *  Returns a plain reason or null. */
+export function unsafePattern(sig) {
+  const s = String(sig ?? "");
+  if (s.length > 200) return "A method pattern must be under 200 characters.";
+  try { new RegExp(s, "i"); } catch { return "A method pattern must be a valid pattern."; }
+  let i = 0;
+  const fail = (m) => { throw new Error(m); };
+  const DIGIT = (c) => /\d/.test(c), SPACE = (c) => /\s/.test(c), WORD = (c) => /\w/.test(c), ALL = () => true;
+  const SAMPLES = Array.from({ length: 128 }, (_, n) => String.fromCharCode(n)).concat(["²", "é", "王", " "]);
+  const overlap = (a, b) => (a.ch !== undefined ? b.has(a.ch) : b.ch !== undefined ? a.has(b.ch) : SAMPLES.some((c) => a.has(c.toLowerCase()) && b.has(c.toLowerCase())));
+  const lit = (ch) => ({ ch, has: (c) => c.toLowerCase() === ch.toLowerCase(), repeatable: true });
+  const cls = (has, repeatable) => ({ has, repeatable });
+  function atom() {
+    const c = s[i++];
+    if (c === "\\") {
+      const e = s[i++];
+      if (/[1-9]/.test(e)) fail("A method pattern cannot refer back to an earlier group.");
+      if (e === "b" || e === "B") return { zero: true };
+      if (e === "d") return cls(DIGIT, true);
+      if (e === "s") return cls(SPACE, true);
+      if (e === "w") return cls(WORD, false);
+      if (/[DSW]/.test(e)) return cls(ALL, false);
+      // Only escaped punctuation is a plain character; any other letter or digit escape (\x61, \u0061, \t, \0, \p{..}) is refused.
+      if (e === undefined || /[A-Za-z0-9]/.test(e)) fail("A method pattern can only use \\d, \\s, \\w and escaped punctuation.");
+      return lit(e);
+    }
+    if (c === "^") return { zero: true, anchor: true };
+    if (c === "$") return { zero: true };
+    if (c === ".") return cls(ALL, false);
+    if (c === "[") {
+      // Scan to the closing bracket, stepping over escapes; [] and [^] are valid classes. Treated as "any character".
+      let j = i; if (s[j] === "^") j++;
+      while (j < s.length && s[j] !== "]") j += s[j] === "\\" ? 2 : 1;
+      if (j >= s.length) fail("A method pattern has an unclosed [ ].");
+      i = j + 1; return cls(ALL, false);
+    }
+    if (c === "(") {
+      if (s[i] === "?") { if (s[i + 1] !== ":") fail("A method pattern cannot look ahead or behind."); i += 2; }
+      const branches = alternation(); if (s[i++] !== ")") fail("A method pattern has an unclosed group.");
+      // A group that ends in an open-ended repeat could run into whatever follows the group.
+      for (const b of branches) {
+        for (const tail of [...b].reverse()) {
+          if (tail.zero) continue;
+          if (tail.max === Infinity) fail("A group in a method pattern cannot end with an open-ended repeat.");
+          if (tail.min > 0) break;
+        }
+      }
+      // What a group can start with: each branch's first piece; anything unclear counts as "anything".
+      const firsts = branches.map((b) => b.find((x) => !x.zero));
+      const has = (ch) => firsts.some((f) => !f || f.min === 0 || f.has(ch));
+      return { has, group: true, repeatable: false };
+    }
+    return lit(c);
+  }
+  function quant(a) {
+    let min = 1, max = 1;
+    const c = s[i];
+    if (c === "*") { min = 0; max = Infinity; i++; } else if (c === "+") { max = Infinity; i++; } else if (c === "?") { min = 0; i++; }
+    else if (c === "{") { const m = /^\{(\d+)(,(\d*))?\}/.exec(s.slice(i)); if (m) { min = +m[1]; max = m[2] ? (m[3] ? +m[3] : Infinity) : min; i += m[0].length; } }
+    if (s[i] === "?" && max !== 1) i++; // lazy marker
+    if (max !== 1 || min !== 1) {
+      if (a.zero) fail("A method pattern cannot repeat an anchor.");
+      if (a.group ? !(min === 0 && max === 1) : !a.repeatable) fail("Only a letter, a digit (\\d) or a space (\\s) may repeat in a method pattern; a group may only be optional.");
+    }
+    return { ...a, min, max };
+  }
+  function branch() {
+    const out = [];
+    while (i < s.length && s[i] !== "|" && s[i] !== ")") out.push(quant(atom()));
+    // A piece that can vary in length must not be able to match what follows it before the next required piece.
+    out.forEach((q, k) => {
+      if (q.zero || q.min === q.max) return;
+      for (let j = k + 1; j < out.length; j++) {
+        const n = out[j]; if (n.zero) continue;
+        if (overlap(q, n)) fail("Two repeating parts of a method pattern can match the same characters; make them distinct.");
+        if (n.min > 0) break;
+      }
+    });
+    // An open-ended repeat must come after ^ or after a required piece it cannot match; otherwise every start position retries it.
+    let anchored = false; const seen = [];
+    for (const q of out) {
+      if (q.zero) { if (q.anchor) anchored = true; continue; }
+      if (q.max === Infinity && !anchored && !seen.some((m) => !overlap(m, q))) fail("An open-ended repeat in a method pattern must come after ^ or after a fixed character it cannot match.");
+      if (q.min >= 1) seen.push(q);
+    }
+    return out;
+  }
+  function alternation() { const bs = [branch()]; while (s[i] === "|") { i++; bs.push(branch()); } return bs; }
+  try { alternation(); if (i < s.length) fail("A method pattern has an unmatched bracket."); return null; } catch (e) { return e.message; }
+}
+const methodsProblem = (st) => (st?.methods ?? []).map((m) => unsafePattern(m.signature)).find(Boolean) ?? null;
+
 /** Validates the scheme with the same rules as the rubric drawer, assigns a code, saves. Throws naming the first problem. */
 export function createAssignment(draft, { localDir, createdBy }) {
   const code = newCode(localDir);
@@ -50,6 +145,7 @@ export function createAssignment(draft, { localDir, createdBy }) {
   if (tolerance != null) standards.tolerance = tolerance;
   const v = validateStandards(standards);
   if (!v.ok) throw new Error(v.errors.join("; "));
+  const mp = methodsProblem(standards); if (mp) throw new Error(mp);
   return save(localDir, { code, course, title, question, standards, createdBy, createdAt: new Date().toISOString(), version: "1.0" });
 }
 
@@ -64,7 +160,7 @@ export function decodePack(text) {
   let raw;
   try { raw = JSON.parse(Buffer.from(t.slice(PREFIX.length), "base64url").toString("utf8")); } catch { throw new Error("This pack could not be read. Paste the whole token"); }
   const a = { ...pick(raw, PACK), standards: shareable(raw?.standards) };
-  if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok) throw new Error("This pack is incomplete or damaged; ask for a fresh one");
+  if (!a || !CODE_RE.test(a.code) || a.standards?.id !== a.code || !validateStandards(a.standards).ok || methodsProblem(a.standards)) throw new Error("This pack is incomplete or damaged (or has an unsafe method pattern); ask for a fresh one");
   return a;
 }
 
@@ -99,6 +195,7 @@ export function saveScheme(localDir, table, me) {
   if ((a.joined || a.createdBy !== me) && same(next) !== same(local(a.standards))) return { errors: ["Only the head TA's laptop can change this scheme. Propose a change instead."] };
   const v = validateStandards(next);
   if (!v.ok) return { errors: v.errors };
+  const mp = methodsProblem(next); if (mp) return { errors: [mp] };
   save(localDir, { ...a, version: next.version, standards: next });
   return { errors: null };
 }

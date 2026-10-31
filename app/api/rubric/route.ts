@@ -3,7 +3,7 @@
 import { loadStandards, saveStandards, LOCAL_DIR, getContext } from "@/server/context.js";
 import { schemeProblem, withLocalIdentities } from "@/server/privacy.js";
 import { validateStandards } from "@/lib/engine.js";
-import { loadAssignment, saveScheme } from "@/server/assignment.js";
+import { loadAssignment, saveScheme, unsafePattern } from "@/server/assignment.js";
 import { uploaderId } from "@/server/ingest.js";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
   if (!FILES[table?.id]) return Response.json({ error: "unknown rubric" }, { status: 404 });
   const v = validateStandards(table);
   if (!v.ok) return Response.json({ ok: false, errors: v.errors }, { status: 422 });
+  const unsafe = (table.methods ?? []).map((m: any) => unsafePattern(m.signature)).find(Boolean);
+  if (unsafe) return Response.json({ ok: false, errors: [unsafe] }, { status: 422 });
   saveStandards(table);
   return Response.json({ ok: true, version: table.version });
 }

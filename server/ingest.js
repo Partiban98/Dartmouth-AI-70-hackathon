@@ -19,6 +19,11 @@ export const INGEST_DIR = (localDir) => join(localDir, "ingest");
 /** Readers take set ids from requests, so only the shapes safeSetId makes (or a Quiz/Assignment code) may name a folder. */
 const setDir = (localDir, setId) => (CODE_RE.test(String(setId)) || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(setId)) ? join(INGEST_DIR(localDir), String(setId)) : null);
 
+/** QA-05: the import script's set id when none is given. A folder name can look like an identifier (demo-papers looks like a NetID), so fall back to a dated id. */
+export function defaultSetId(folderName) {
+  try { return safeSetId(`imp-${folderName}`); } catch { return safeSetId(`imp-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`); }
+}
+
 /** One id per laptop, made once, kept in local/uploader.json. Paper ids carry it, so two laptops never collide and names stay where the papers were uploaded. */
 export function uploaderId(localDir) {
   const p = join(localDir, "uploader.json");

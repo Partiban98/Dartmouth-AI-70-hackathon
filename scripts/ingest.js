@@ -13,7 +13,7 @@ import { proposalRecord } from "../lib/logshape.js";
 import { makeAdapter } from "../server/adapter.js";
 import { makeLog } from "../server/log.js";
 import { loadDotenv } from "../server/env.js";
-import { importFolder, rosterFromCsv, safeSetId, refreshSet, uploaderId } from "../server/ingest.js";
+import { importFolder, rosterFromCsv, safeSetId, refreshSet, uploaderId, defaultSetId } from "../server/ingest.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = process.env.REMAIN_LOCAL_DIR || join(ROOT, "local"); // the same data folder the app uses
@@ -23,7 +23,7 @@ const folder = args.find((a) => !a.startsWith("--"));
 const opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 if (!folder) { console.error("usage: node scripts/ingest.js <folder> [--set id] [--rubric grade-q5|demo201-q3q5] [--roster roster.csv] [--propose]"); process.exit(1); }
 const rubricId = opt("rubric", "grade-q5");
-const setId = safeSetId(opt("set", `imp-${basename(resolve(folder))}`));
+const setId = opt("set") ? safeSetId(opt("set")) : defaultSetId(basename(resolve(folder)));
 const read = (f) => JSON.parse(readFileSync(join(ROOT, "data", f), "utf8"));
 const course = read("course.json");
 if (opt("roster")) { course.roster = rosterFromCsv(readFileSync(resolve(opt("roster")), "utf8")); writeFileSync(join(ROOT, "local", "ingest-roster.json"), JSON.stringify(course.roster, null, 2)); }

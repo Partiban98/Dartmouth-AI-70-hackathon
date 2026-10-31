@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { COPY } from "./copy";
+import { packPreview } from "./checks.js";
 
 const w = COPY.wizard, d = COPY.doors, cr = COPY.create, jn = COPY.join, cf = COPY.callFirst;
 const SAMPLES = ["grade", "grade93"];
-// Reads a pasted pack in the browser for the preview only. The server checks it again on join.
-const peek = (t: string) => { const x = t.trim(); if (!x.startsWith("REMAIN1:")) return null; try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(x.slice(8).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0)))); } catch { return null; } };
 const mistakesOf = (t: any) => (t?.codes ?? []).filter((x: any) => x.code !== "OK" && x.code !== "UNSURE");
 const copy = (text: string) => navigator.clipboard?.writeText(text).catch(() => {});
 const cls = (...xs: (string | false | null | undefined)[]) => xs.filter(Boolean).join(" ");
@@ -209,9 +208,9 @@ function Join({ onBack, onJoined }: { onBack: () => void; onJoined: (code: strin
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [clash, setClash] = useState(false);
-  const p = text.trim() ? peek(text.slice(text.indexOf("REMAIN1:") >= 0 ? text.indexOf("REMAIN1:") : 0).split(/\s/)[0]) : null;
+  const p: any = text.trim() ? packPreview(text) : null; // any malformed pack reads as unreadable, never a crash
   async function join(force: boolean) {
-    const pack = text.slice(text.indexOf("REMAIN1:")).split(/\s/)[0];
+    const pack = p?.pack;
     const res = await fetch("/api/assignment", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ pack, force }) }); const j = await res.json();
     if (!res.ok || !j.ok) { setError(j.error); setClash(/already/i.test(j.error ?? "")); return; }
     onJoined(j.assignment.code);
@@ -227,7 +226,7 @@ function Join({ onBack, onJoined }: { onBack: () => void; onJoined: (code: strin
         <p className="text-xs font-semibold uppercase tracking-wide text-fg-3">{jn.preview}</p>
         <p className="text-lg font-semibold">{p.course} · {p.title} <span className="font-mono text-sm text-fg-3">{p.code}</span></p>
         <p className="text-fg-2">{p.question}</p>
-        <p className="text-fg-3">{w.q.scheme}: {w.q.mistakes(mistakesOf(p.standards).length)} · {w.q.max(p.standards?.max)} · version {p.version}</p>
+        <p className="text-fg-3">{w.q.scheme}: {w.q.mistakes(p.mistakes)} · {w.q.max(p.max)} · version {p.version}</p>
         <p className="text-fg-3">{jn.setBy(p.createdBy)}</p>
       </div>}
       {error && <p role="alert" className="text-sm text-bad">{jn.failed} {error}</p>}

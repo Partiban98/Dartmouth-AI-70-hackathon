@@ -134,7 +134,7 @@ function Doors({ g, onContinue, onNew, onJoin, onSample }: { g: any; onContinue:
             <div className="text-xl font-semibold">{d.continueLabel(`${a.course} · ${a.title}`)}</div>
             <div className="text-sm text-fg-3">{d.continueSub((g.importedPapers[a.code] ?? []).length, !a.joined)} · <span className="font-mono">{a.code}</span> · version {a.version}</div>
           </button>
-          <button className="text-sm underline" onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(a.code); }}>{copied === a.code ? d.copied : d.copyPack}</button>
+          {a.pack ? <button className="text-sm underline" onClick={() => { copy(cr.message(a.course, a.title, a.code, a.pack)); setCopied(a.code); }}>{copied === a.code ? d.copied : d.copyPack}</button> : <p className="text-sm text-bad">{a.packProblem}</p>}
         </div>
       ))}
       <button className={door} onClick={onNew}><div className="text-xl font-semibold">{d.newLabel}</div><div className="text-sm text-fg-3">{d.newSub}</div></button>

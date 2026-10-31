@@ -1,6 +1,6 @@
 // Quiz/Assignment codes on this laptop: list, create (head TA), join by pasting a pack. Nothing here talks to a model.
 import { LOCAL_DIR, getContext } from "@/server/context.js";
-import { packProblem, withLocalIdentities } from "@/server/privacy.js";
+import { packProblem, draftProblem, withLocalIdentities } from "@/server/privacy.js";
 import { uploaderId } from "@/server/ingest.js";
 import { createAssignment, decodePack, encodePack, joinAssignment, listAssignments } from "@/server/assignment.js";
 
@@ -16,7 +16,7 @@ export async function GET() {
 }
 export async function POST(request: Request) {
   const draft = await request.json();
-  const p = packProblem({ ...draft, standards: { question: draft?.question, codes: draft?.codes } }, known()); if (p) return Response.json({ ok: false, error: p }, { status: 422 });
+  const p = draftProblem(draft, known()); if (p) return Response.json({ ok: false, error: p }, { status: 422 });
   try { const a = createAssignment(draft, { localDir: LOCAL_DIR, createdBy: uploaderId(LOCAL_DIR) }); return Response.json({ ok: true, assignment: { ...a, pack: encodePack(a) } }); }
   catch (e: any) { return fail(e); }
 }

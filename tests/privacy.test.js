@@ -1,7 +1,7 @@
 // Audit S1, E1, E4: what may leave this laptop for a model is checked on the server, against the whole request and this laptop's own known students.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runGate, assertClean } from "../lib/gate.js";
@@ -159,4 +159,14 @@ test("E4 re-review: every field a pack shares is checked, including method label
   assert.ok(packProblem({ ...a, standards: { ...st, methods: [{ ...st.methods[0], label: "ask learner@example.edu" }] } }, course));
   assert.ok(packProblem({ ...a, standards: { ...st, answerRules: [{ ...st.answerRules[0], note: "learner@example.edu" }] } }, course));
   assert.equal(packProblem({ ...a, standards: { ...st, pendingPrecedents: [{ code: "E-MEAN", reason: "learner@example.edu" }] } }, course), null, "pending reasons never travel in a pack");
+});
+
+test("E4 create review: the create route checks the whole draft as it will be shared, before the first save", async () => {
+  const { draftProblem } = await import("../server/privacy.js");
+  const draft = { course: "DEMO-STATS 101", title: "Quiz 5", question: gradeStandards.question, max: 10, codes: gradeStandards.codes, methods: gradeStandards.methods, answerRules: gradeStandards.answerRules };
+  assert.equal(draftProblem(draft, course), null);
+  assert.ok(draftProblem({ ...draft, methods: [{ ...draft.methods[0], label: "ask learner@example.edu" }] }, course), "method label");
+  assert.ok(draftProblem({ ...draft, answerRules: [{ ...draft.answerRules[0], note: "learner@example.edu" }] }, course), "answer-rule note");
+  const src = readFileSync(new URL("../app/api/assignment/route.ts", import.meta.url), "utf8");
+  assert.match(src.split("export async function POST")[1].split("createAssignment(")[0], /draftProblem\(draft/, "the route checks the draft before createAssignment saves it");
 });

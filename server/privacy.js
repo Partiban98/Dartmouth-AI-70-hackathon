@@ -97,6 +97,11 @@ export function packProblem(a, course) {
   return schemeProblem(a?.standards, course);
 }
 
+/** E4: a new Quiz/Assignment draft, checked exactly as its pack would carry it (every method label, answer-rule note, code and text), before anything is saved. */
+export function draftProblem(draft, course) {
+  return packProblem({ ...draft, standards: { ...draft, id: draft?.id, version: "1.0", owner: "head TA", status: "approved" } }, course);
+}
+
 /** E1 for logs: a record may name the grader who decided, never a known student. Returns a plain reason or null. */
 export function logProblem(rec, course) {
   try { checkTexts(texts(rec, new Set(["decidedBy"])), course, "log"); return null; }

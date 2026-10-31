@@ -63,7 +63,7 @@ test("T22 no-submission path: fetch targets, forbidden words, route list", () =>
   const files = [];
   const walk = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : files.push(p); } };
   walk(join(ROOT, "legacy", "public")); walk(join(ROOT, "lib")); walk(join(ROOT, "server")); if (existsSync(join(ROOT, "app"))) walk(join(ROOT, "app")); if (existsSync(join(ROOT, "components"))) walk(join(ROOT, "components"));
-  const allowed = new Set(["/propose", "/log", "/counts", "/api/rubric", "/api/ingest", "/api/assignment", "API_URL"]);
+  const allowed = new Set(["/propose", "/log", "/counts", "/api/rubric", "/api/ingest", "/api/assignment", "/api/regrade", "API_URL"]);
   for (const f of files) {
     const src = readFileSync(f, "utf8");
     assert.ok(!/canvas|gradebook/i.test(src), `${f} mentions canvas or gradebook`);

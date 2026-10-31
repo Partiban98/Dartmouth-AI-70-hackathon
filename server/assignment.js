@@ -66,11 +66,19 @@ export function unsafePattern(sig) {
       if (e === "s") return cls(SPACE, true);
       if (e === "w") return cls(WORD, false);
       if (/[DSW]/.test(e)) return cls(ALL, false);
+      // Only escaped punctuation is a plain character; any other letter or digit escape (\x61, \u0061, \t, \0, \p{..}) is refused.
+      if (e === undefined || /[A-Za-z0-9]/.test(e)) fail("A method pattern can only use \\d, \\s, \\w and escaped punctuation.");
       return lit(e);
     }
     if (c === "^" || c === "$") return { zero: true };
     if (c === ".") return cls(ALL, false);
-    if (c === "[") { const j = s.indexOf("]", i + 1); i = j + 1; return cls(ALL, false); }
+    if (c === "[") {
+      // Scan to the closing bracket, stepping over escapes; [] and [^] are valid classes. Treated as "any character".
+      let j = i; if (s[j] === "^") j++;
+      while (j < s.length && s[j] !== "]") j += s[j] === "\\" ? 2 : 1;
+      if (j >= s.length) fail("A method pattern has an unclosed [ ].");
+      i = j + 1; return cls(ALL, false);
+    }
     if (c === "(") {
       if (s[i] === "?") { if (s[i + 1] !== ":") fail("A method pattern cannot look ahead or behind."); i += 2; }
       const branches = alternation(); if (s[i++] !== ")") fail("A method pattern has an unclosed group.");

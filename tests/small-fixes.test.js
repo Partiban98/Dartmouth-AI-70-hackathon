@@ -75,3 +75,13 @@ test("E6 grammar review: adjacent overlapping repeats are refused, and nothing a
     assert.ok(Date.now() - t0 < 700, sig);
   }
 });
+
+test("E6 scanner review: empty and escaped-bracket classes and unsupported escapes can neither hang the check nor slip through", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const checker = new URL("../server/assignment.js", import.meta.url).pathname;
+  const run = (sig) => execFileSync(process.execPath, ["--input-type=module", "-e", `import { unsafePattern } from ${JSON.stringify(checker)}; console.log(JSON.stringify(unsafePattern(${JSON.stringify(sig)})))`], { timeout: 2000, encoding: "utf8" }).trim();
+  for (const sig of ["[]", "[^]", "[\\]]", "a[]b", "[", "[\\"]) assert.doesNotThrow(() => run(sig), `checking ${sig} finishes`);
+  const rejected = ["^" + "\\x61*".repeat(9) + "X$", "\\u0061*\\u0061*", "\\t*\\s*", "\\n+", "\\0", "\\cJ", "\\p{L}+"];
+  for (const sig of rejected) assert.notEqual(run(sig), "null", sig);
+  assert.equal(unsafePattern("\\(\\s*-?\\d+\\s*-\\s*8\\s*\\)\\s*(\\^\\s*2|²)|deviation"), null, "escaped punctuation still works");
+});

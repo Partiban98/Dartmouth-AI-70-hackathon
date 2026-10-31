@@ -1,34 +1,31 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Source_Sans_3, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const ui = Source_Sans_3({ subsets: ["latin"], variable: "--font-ui", weight: ["400", "600", "700"] });
+const paper = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-paper", weight: ["400", "500"] });
 
-export const metadata: Metadata = {
-  title: "Remain: Show your work",
-  description: "AI proposes with evidence, a person decides.",
-};
+export const metadata: Metadata = { title: "Remain", description: "Grade a quiz question. AI suggests, you decide every mark." };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="font-sans min-h-screen">
+    <html lang="en" className={`${ui.variable} ${paper.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col">
         <header className="border-b border-line bg-card">
-          <div className="mx-auto max-w-[1400px] px-6 py-3 flex items-center gap-6">
-            <Link href="/grade" className="flex items-baseline gap-2">
-              <span className="text-xl font-semibold tracking-tight">Remain</span>
-              <span className="text-sm text-ink-3">Show your work</span>
-            </Link>
-            <nav className="flex gap-1 text-sm" aria-label="Personas">
-              <Link href="/grade" className="px-3 py-1.5 rounded-md bg-ink text-white">Teacher and TA</Link>
-              <Link href="/student" className="px-3 py-1.5 rounded-md text-ink-2 hover:bg-line">Student</Link>
-              <Link href="/staff" className="px-3 py-1.5 rounded-md text-ink-2 hover:bg-line">Academic Staff</Link>
-            </nav>
-            <p className="ml-auto text-sm text-ink-3 hidden md:block">AI proposes with evidence. A person decides.</p>
+          <div className="mx-auto max-w-[1280px] px-5 py-3 flex items-center gap-4">
+            <Link href="/grade" className="flex items-baseline gap-2"><span className="text-xl font-bold tracking-tight">Remain</span><span className="text-sm text-fg-3">Grade</span></Link>
+            <p className="ml-auto text-sm text-fg-3 hidden sm:block">AI suggests. You decide every mark.</p>
           </div>
         </header>
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-line text-xs text-fg-3">
+          <div className="mx-auto max-w-[1280px] px-5 py-3 flex flex-wrap gap-4">
+            <span>Remain, Dartmouth AI at 70</span>
+            <Link href="/student" className="underline">Student companion (coming)</Link>
+            <Link href="/staff" className="underline">Staff upskilling (coming)</Link>
+          </div>
+        </footer>
       </body>
     </html>
   );

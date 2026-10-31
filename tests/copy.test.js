@@ -1,0 +1,24 @@
+// The grading screens are for people with no AI background. No engineering vocabulary may appear in their source.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+const ROOT = new URL("..", import.meta.url).pathname;
+const SCREENS = ["GradeApp.tsx", "Start.tsx", "Grader.tsx", "Finish.tsx", "SchemeDrawer.tsx", "copy.ts", "useGrading.ts"].map((f) => join(ROOT, "components", "grading", f));
+const BANNED = [/payload/i, /alias/i, /assertClean/, /\bpipeline\b/i, /\brung\b/i, /R-1[0-3]\b/, /LIVE API/, /CACHED REHEARSAL/, /\bmodel proposes/i, /rules engine/i, /allowlist/i, /deterministic/i, /\bregex\b/i, /confidence \d/];
+
+test("every grading screen exists and uses plain words only", () => {
+  for (const f of SCREENS) {
+    assert.ok(existsSync(f), `${f} missing`);
+    const src = readFileSync(f, "utf8").split("\n").filter((l) => !/^\s*import\b/.test(l) && !/^\s*\/\//.test(l)).join("\n");
+    for (const re of BANNED) assert.ok(!re.test(src), `${f.split("/").pop()} contains ${re}`);
+  }
+});
+
+test("the spec's honest strings still reach the screen through the footer and the receipt", () => {
+  const src = readFileSync(join(ROOT, "components", "grading", "copy.ts"), "utf8");
+  assert.ok(src.includes("Assigned by you (TA)"), "receipt subtitle");
+  assert.ok(src.includes("Your decisions stay on this computer"));
+  assert.ok(src.includes("cannot guarantee 100 percent"), "honest limit in plain words");
+});

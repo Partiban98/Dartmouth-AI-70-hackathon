@@ -84,6 +84,6 @@ test("T22b public-repo hygiene: nothing under local/, no .env, no key-like strin
   for (const f of tracked) {
     assert.ok(!f.startsWith("local/"), `${f} would be committed`);
     assert.ok(!/^\.env/.test(f) || f === ".env.example", `${f} would be committed`);
-    if (statSync(join(ROOT, f)).isFile()) assert.ok(!/sk-ant-[A-Za-z0-9_-]{8,}/.test(readFileSync(join(ROOT, f), "utf8")), `${f} contains a key-like string`);
+    if (existsSync(join(ROOT, f)) && statSync(join(ROOT, f)).isFile()) assert.ok(!/sk-ant-[A-Za-z0-9_-]{8,}/.test(readFileSync(join(ROOT, f), "utf8")), `${f} contains a key-like string`);
   }
 });

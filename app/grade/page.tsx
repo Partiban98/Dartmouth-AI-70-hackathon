@@ -1,2 +1,2 @@
-import GradingWorkspace from "@/components/grading/GradingWorkspace";
-export default function GradePage() { return <GradingWorkspace />; }
+import GradeApp from "@/components/grading/GradeApp";
+export default function GradePage() { return <GradeApp />; }

@@ -7,16 +7,16 @@ Goal: 12 short silent clips, handed to the editor in about 25 minutes. No talkin
 > 2. The footer no longer says "by Claude". It now reads **"Suggestions: LIVE API: claude-sonnet-5-5"**. Every check below uses the new text.
 > 3. The story now leads with how GuruAI works for a real grading team:
 >    - It's **open source and runs on each TA's own laptop, with no hosting**.
->    - The head TA shares a **Quiz/Assignment code**. Every TA joins with it and grades **their own papers** under the same scheme.
+>    - The head TA shares a **Quiz/Assignment code and pack message**. Every TA pastes the whole message and grades **their own papers** under the same scheme.
 >    - Each TA downloads **their own marks file**.
 > 4. The story also leads with **privacy by code**:
->    - Papers and names never leave the laptop.
->    - The cloud model only ever sees the maths, after code has stripped names, emails, IDs and headers.
->    - That code already knows every student on the laptop, so a known name cannot be sent.
+>    - Original files and the student map stay on the laptop; checked, filtered answer text is sent to the cloud model.
+>    - Before sending answer text, code removes headers and detected identifiers, then rechecks the outbound payload.
+>    - The server checks the payload against the roster and imported identities known on this laptop, and blocks detected matches.
 > 5. **New clips 09 to 12** show the Quiz/Assignment code, a second laptop joining, a TA's own papers with the student name and the original file, and the two downloads. Clip 07 (student page) is now optional to stay under 2:30.
 > 6. **New narration section (6)** with the exact lines, so the narrator never claims more than the app does.
 >
-> **Dependency:** clips 11 and 12 and the GuruAI name need two code changes, pull requests **#21** and **#22**. Kishore will confirm they are merged and the demo laptop has pulled main. If they are not in by recording time, skip clips 11 and 12 and keep the old name. Everything else still works.
+> **Dependency:** the code for these clips is merged into main (`af3eeb7`, including #21, #22 and #23 through #24). Pull current main and restart the demo app before recording.
 
 ## 1. Setup (5 minutes, before pressing record)
 
@@ -161,14 +161,14 @@ Rules:
 | Open | "In GuruAI, a person always makes the final call." |
 | Problem (02) | "A grading team splits one stack of papers across many TAs. The same mistake should cost the same mark, whoever grades it, and a person should still decide every mark." |
 | How a paper goes (01) | "The AI can only point. It names a possible mistake and shows the exact line. The TA confirms it, changes it, or rules it out, and types every mark." |
-| Privacy (03) | "Before anything leaves the laptop, plain code, not AI, removes names, emails, IDs and header lines. It already knows every student on this laptop, so a known name can't slip through. The cloud model only ever sees the maths. The receipt shows exactly what left, as counts and a fingerprint." |
+| Privacy (03) | "Before sending answer text, plain code removes headers and detected identifiers. The server checks again against known student identities and identifier patterns. The cloud model receives the filtered answer text, question and mistake labels. The receipt records counts and a fingerprint of the payload." |
 | Human judgment (04) | "Here the machine is wrong. The student used a valid method the scheme didn't list. The TA rules both suggestions out, says why in one line, and asks to remember it. The mark is ten out of ten, and it's the TA's." |
 | Rubber-stamping (05) | "With Call it first, the TA decides before seeing the AI, and the mark box starts empty. Agreement is earned, not copied." |
 | Insights (06) | "At the end, the class's mistakes are counted from the TA's own decisions, and so is how often people kept or overruled the AI." *(say only the tile numbers on screen)* |
-| No hosting, one scheme (09, 10) | "GuruAI is open source and runs on each TA's own laptop, with no server to host. The head TA sets the question and the marking scheme once and shares a code. Every TA joins with it and grades their own papers under exactly the same scheme." |
+| No hosting, one scheme (09, 10) | "GuruAI is open source and runs on each TA's own laptop, without a shared hosted server. The head TA sets the question and the marking scheme once and shares a code and pack message. Every TA pastes the whole message and grades their own papers under exactly the same scheme." |
 | Own papers (11) | "Each TA uploads their own papers. The student's name and the original page show only on that laptop, so the TA can always check what the text reading missed. Neither one is ever sent." |
 | Own marks (12) | "Each TA downloads their own marks: a file with names that stays on their laptop, and one without names for the head TA, matching paper by paper." |
-| Close (08) | "Suggestions come from a cloud model, labelled on screen by the model that answered. It never sees a student's name, never computes a mark, and never decides. GuruAI." |
+| Close (08) | "Suggestions come from a cloud model, labelled on screen by the model that answered. Code checks for known student identities before sending. The model never computes a mark or decides the grade. GuruAI." |
 
 ## Where each clip lands in the video ✏️ CHANGED (new clips added, other beats shortened to stay under 2:30)
 

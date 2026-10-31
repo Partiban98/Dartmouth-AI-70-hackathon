@@ -1,6 +1,13 @@
 # Bug: uploaded papers get no AI suggestions ("unknown idea")
 
 Found by: Rineetha · Oct 31, 2026 · on `main` at 8b3c5df, **not introduced by my branches**
+**Status (05:55): already fixed by PR #11** *("Audit repairs 3: uploaded sets get
+suggestions again")*, which landed `uploadedSets(localDir, standards)` in
+`server/context.js` from Codex's audit. This report was written independently,
+from the other direction — the prompt-injection probe tried to upload a paper
+and hit the same 400 — so treat it as a second reproduction confirming #11
+rather than a new request. Nothing further is needed once #11 merges.
+
 Severity: breaks a headline feature in the demo path. A TA who uploads their own
 PDFs sees *"Suggestions did not arrive. You can still mark the paper yourself."*
 on every paper.

@@ -32,8 +32,9 @@ function idsOf(people) {
   const ids = new Set();
   for (const m of people) {
     const name = String(m.name ?? "").trim();
-    // Latin tokens need two letters to be a name; one character can be a whole name in other scripts.
-    for (const v of [name, ...name.split(/\s+/), m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t.length >= (/^[\x00-\x7f]*$/.test(t) ? 2 : 1)) ids.add(t); }
+    // Every full name and ID counts at any length. Split name words need two Latin letters (one character is a whole name in other scripts).
+    for (const v of [name, m.email, m.netid, m.studentId]) { const t = String(v ?? "").trim(); if (t) ids.add(t); }
+    for (const w of name.split(/\s+/)) if (w.length >= (/^[\x00-\x7f]*$/.test(w) ? 2 : 1)) ids.add(w);
   }
   return ids;
 }
@@ -48,8 +49,8 @@ export function withLocalIdentities(course, localDir) {
 
 /** Whole-word, any-case matcher for known identities. Numbers count as text, so a student ID sent as a number is found. */
 function knownIn(course) {
-  // Numeric ids from four digits up: shorter numbers are ordinary maths (scores like 4, 6, 8, 10, 12).
-  const ids = [...(course.identities ?? idsOf(coursePeople(course)))].filter((t) => !/^\d+$/.test(t) || t.length >= 4).sort((a, b) => b.length - a.length);
+  // An exact known ID fails closed even when it looks like ordinary maths.
+  const ids = [...(course.identities ?? idsOf(coursePeople(course)))].sort((a, b) => b.length - a.length);
   if (!ids.length) return () => 0;
   const re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${ids.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu");
   return (text) => (String(text).match(re) ?? []).length;

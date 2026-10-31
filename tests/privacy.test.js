@@ -170,3 +170,15 @@ test("E4 create review: the create route checks the whole draft as it will be sh
   const src = readFileSync(new URL("../app/api/assignment/route.ts", import.meta.url), "utf8");
   assert.match(src.split("export async function POST")[1].split("createAssignment(")[0], /draftProblem\(draft/, "the route checks the draft before createAssignment saves it");
 });
+
+test("E1 final review: every full imported name and ID counts at any length; only split name words need two letters", async () => {
+  const { localDir } = await importOne("Name: Q\nStudent ID: 123\nSD = 3.162\n");
+  const local = withLocalIdentities(course, localDir);
+  const send = (steps, finalAnswer = 3.162) => checkOutbound({ idea: "grade", payload: { steps, finalAnswer } }, ideas.grade, local);
+  assert.throws(() => send(["Q wrote this"]), (e) => e.status === 422);
+  assert.throws(() => send(["student 123 wrote this"]), (e) => e.status === 422);
+  assert.throws(() => send(["SD = 3.162"], 123), (e) => e.status === 422, "an exact known id fails closed even as a number");
+  assert.doesNotThrow(() => send(["Quiz scores: 4, 6, 8, 10, 12", "1234 is not this id"]), "other numbers are fine");
+  const two = await importOne("Name: Li Wu\nSD = 3.162\n");
+  assert.doesNotThrow(() => checkOutbound({ idea: "grade", payload: { steps: ["a b c"], finalAnswer: 1 } }, ideas.grade, withLocalIdentities(course, two.localDir)), "single letters inside text are not name words");
+});

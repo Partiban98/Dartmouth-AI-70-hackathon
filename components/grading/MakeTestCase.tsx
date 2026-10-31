@@ -4,25 +4,27 @@
 // model never sets, suggests or edits the expected result.
 import { useState } from "react";
 import { COPY } from "./copy";
+import { submitCase } from "./overrides.js";
 
 const c = COPY.evalSet;
 
-export default function MakeTestCase({ idea, itemId, aiCode, taRuling, onAdded }: { idea: string; itemId: string; aiCode: string | null; taRuling: string; onAdded: () => void }) {
+export default function MakeTestCase({ idea, itemId, aiCode, taRuling, onAdded, onOpen }: { idea: string; itemId: string; aiCode: string | null; taRuling: string; onAdded: () => void; onOpen: () => void }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [state, setState] = useState<"idle" | "saving" | "added">("idle");
   const [error, setError] = useState("");
 
   if (state === "added") return <p className="mt-3 text-sm font-semibold text-good">{c.added}</p>;
-  if (!open) return <button className="btn text-sm mt-3" onClick={() => setOpen(true)}>{c.make}</button>;
+  if (!open) return <button className="btn text-sm mt-3" onClick={() => { onOpen(); setOpen(true); }}>{c.make}</button>;
 
   const save = async () => {
     if (!reason.trim()) { setError(c.needWhy); return; }
     setState("saving"); setError("");
-    const res = await fetch("/api/eval-cases", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idea, itemId, aiCode, taRuling, reason }) });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) { setState("idle"); setError(j.error ?? "Could not save that case."); return; }
-    setState("added"); onAdded();
+    try {
+      await submitCase({ idea, itemId, aiCode, taRuling, reason });
+      setState("added"); onAdded();
+    } catch (e: any) { setState("idle"); setError(e?.message ?? "Could not save that case."); }
+
   };
 
   return (

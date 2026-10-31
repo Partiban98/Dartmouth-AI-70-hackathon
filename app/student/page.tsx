@@ -1,12 +1,12 @@
 "use client";
 // What a student sees about their own marks: which step cost points, the rubric
 // line behind it, and that a person decided. The model writes nothing here.
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DeductionCard, { type Deduction } from "@/components/student/DeductionCard";
 import RegradeRequest from "@/components/student/RegradeRequest";
 
-type Question = { questionId: string; questionText: string | null; mark: number | null; max: number | null; rubricVersion: string | null; note: string | null; deductions: Deduction[] };
-type View = { anonId: string; questions: Question[]; total: number; outOf: number };
+type Question = { questionId: string; questionText: string | null; mark: number | null; max: number | null; rubricVersion: string | null; note: string | null; rubricUnavailable: boolean; deductions: Deduction[] };
+type View = { anonId: string; questions: Question[]; total: number; outOf: number | null };
 
 const get = (path: string) => fetch(path, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 
@@ -15,6 +15,7 @@ export default function StudentPage() {
   const [anonId, setAnonId] = useState("");
   const [view, setView] = useState<View | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewLoading, setViewLoading] = useState(false);
 
   // Every paper a TA has actually marked, from the decision log.
   useEffect(() => { get("/counts").then((c) => {
@@ -22,12 +23,16 @@ export default function StudentPage() {
     setIds(seen as string[]); setAnonId((prev) => prev || (seen[0] as string) || ""); setLoading(false);
   }); }, []);
 
-  const loadView = useCallback(async (id: string) => {
-    if (!id) { setView(null); return; }
-    const path = `/api/student/${encodeURIComponent(id)}`;
-    setView(await get(path));
-  }, []);
-  useEffect(() => { loadView(anonId); }, [anonId, loadView]);
+  useEffect(() => {
+    let active = true;
+    setView(null);
+    if (!anonId) { setViewLoading(false); return; }
+    setViewLoading(true);
+    get(`/api/student/${encodeURIComponent(anonId)}`).then((next) => {
+      if (active) { setView(next); setViewLoading(false); }
+    });
+    return () => { active = false; };
+  }, [anonId]);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
@@ -44,16 +49,18 @@ export default function StudentPage() {
 
       {loading && <p className="mt-6 text-fg-3">Loading…</p>}
       {!loading && !ids.length && <p className="mt-6 text-fg-2">Nothing has been marked yet. A TA marks papers on the grading screen first.</p>}
-      {!loading && ids.length > 0 && !view && <p className="mt-6 text-fg-2">No marks for {anonId}.</p>}
+      {viewLoading && <p role="status" className="mt-6 text-fg-3">Loading marks…</p>}
+      {!loading && !viewLoading && ids.length > 0 && !view && <p className="mt-6 text-fg-2">No marks for {anonId}.</p>}
 
       {view && (
         <>
-          <p className="mt-6 text-3xl font-bold">{view.total} <span className="text-xl font-normal text-fg-3">out of {view.outOf}</span></p>
+          <p className="mt-6 text-3xl font-bold">{view.total} {view.outOf != null && <span className="text-xl font-normal text-fg-3">out of {view.outOf}</span>}</p>
           {view.questions.map((q, i) => (
-            <section key={`${q.questionId}-${i}`} className="mt-6">
-              <h2 className="text-lg font-semibold">{q.questionId} · {q.mark} out of {q.max}</h2>
+            <section key={`${view.anonId}:${q.questionId}`} className="mt-6">
+              <h2 className="text-lg font-semibold">{q.questionId} · {q.mark}{q.max != null ? ` out of ${q.max}` : ""}</h2>
               {q.questionText && <p className="mt-1 text-sm text-fg-3">{q.questionText}</p>}
               {q.rubricVersion && <p className="mt-1 text-sm text-fg-3">Marking scheme version {q.rubricVersion}</p>}
+              {q.rubricUnavailable && <p className="mt-2 text-fg-3">The original marking scheme is unavailable. Your TA's saved mark is shown; the original points and rubric details cannot be reconstructed.</p>}
               {q.deductions.length === 0
                 ? <p className="mt-3 text-fg-2">No mistakes were confirmed on this question.</p>
                 : <ul className="mt-3 space-y-3">{q.deductions.map((d) => <DeductionCard key={d.code} label={q.questionId} d={d} />)}</ul>}

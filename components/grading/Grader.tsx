@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalize } from "@/lib/text.js";
 import { feedbackLine } from "@/lib/feedback.js";
 import { COPY } from "./copy";
@@ -10,7 +10,7 @@ import RegressionBadge from "./RegressionBadge";
 import { firstTrueOverride } from "./overrides.js";
 import CallItFirst from "./CallItFirst";
 import BlindAgreementStat from "./BlindAgreementStat";
-import { visibleCard, callChip, markStartValue } from "./callfirst.js";
+import { visibleCard, callChip, markStartValue, lockPrecall } from "./callfirst.js";
 
 const c = COPY.grader;
 /** Keys drive the panel. Links and buttons keep their own behaviour; Enter never leaks to a focused link. */
@@ -30,6 +30,10 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
   const session = useMemo(() => { try { let s = sessionStorage.getItem("remain.session"); if (!s) { s = Math.random().toString(36).slice(2); sessionStorage.setItem("remain.session", s); } return s; } catch { return "nosession"; } }, []);
   // A new paper means a new call: never carry one paper's call to the next.
   useEffect(() => { setMyCall(null); }, [current?.id]);
+  const identity = `${g.setId}:${current?.id}`;
+  const activePaper = useRef(identity); activePaper.current = identity;
+  const [caseOpen, setCaseOpen] = useState(false);
+  useEffect(() => { setCaseOpen(false); }, [identity]);
   const total = papers.length;
 
   // Which paper line a suggestion points at.
@@ -43,11 +47,11 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
 
   // Auto-advance after a save.
   useEffect(() => {
-    if (stage.kind !== "saved") return;
+    if (stage.kind !== "saved" || caseOpen) return;
     const next = g.nextPending(index);
     g.advance.current = setTimeout(() => { if (next) g.start(next); else onFinish(); }, 1400);
     return () => { if (g.advance.current) clearTimeout(g.advance.current); };
-  }, [stage.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stage.kind, caseOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <main className="mx-auto max-w-[1280px] px-5 py-5 space-y-4">
@@ -81,13 +85,11 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             {stage.kind === "names" && <Names stage={stage} onDone={(picks: any) => answer(picks)} onSkip={() => answer(null)} />}
             {stage.kind === "reading" && <Panel title={c.suggestionsTitle}><p className="text-fg-2 animate-pulse">{c.reading}</p><div className="mt-4 space-y-3">{[0, 1].map((i) => <div key={i} className="h-20 rounded-lg bg-bg" />)}</div></Panel>}
             {stage.kind === "suggestions" && !visibleCard(stage.card, { enabled: callFirst, locked: !!myCall }) && (
-              <CallItFirst table={table} onLock={async (code: string) => {
-                const res = await fetch("/api/precall", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idea: g.setId, itemId: current?.id, code, by: g.name, session }) });
-                if (!res.ok && res.status !== 409) throw new Error((await res.json().catch(() => ({}))).error ?? "That call could not be saved.");
-                // The reveal is logged only now, after the call is stored, so the
-                // order of the two is provable from the log.
-                await fetch("/api/precall", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "reveal", idea: g.setId, itemId: current?.id, session }) }).catch(() => {});
-                setMyCall(code); setAgreeBump((b) => b + 1);
+              <CallItFirst key={identity} table={table} onLock={async (code: string) => {
+                const mine = identity;
+                const storedCode = await lockPrecall({ call: { idea: g.setId, itemId: current?.id, code, by: g.name, session } });
+                if (activePaper.current !== mine) return;
+                setMyCall(storedCode); setAgreeBump((b) => b + 1);
               }} />
             )}
             {stage.kind === "suggestions" && visibleCard(stage.card, { enabled: callFirst, locked: !!myCall }) && <Tip id="suggestions" text={c.tips.suggestions} />}
@@ -99,7 +101,7 @@ export default function Grader({ g, onFinish, onScheme }: { g: any; onFinish: ()
             )}
             {stage.kind === "mark" && <Tip id="mark" text={c.tips.mark} />}
             {stage.kind === "mark" && <Mark bar={stage.bar} table={table} name={g.name} callFirst={callFirst} onDone={(d: any) => answer(d)} />}
-            {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onAdded={() => setEvalBump((b) => b + 1)} />}
+            {stage.kind === "saved" && <Saved result={stage.result} table={table} idea={g.setId} onOpen={() => setCaseOpen(true)} onAdded={() => setEvalBump((b) => b + 1)} />}
             {stage.kind === "stopped" && <Panel title={c.privacyTitle} tone="bad"><p>{stage.text === "blocked" ? c.blocked : stage.text === "noAnswer" ? c.noAnswer : c.stopped}</p>{stage.detail && <ul className="mt-2 text-xs text-fg-3 list-disc pl-4">{stage.detail.map((a: string, i: number) => <li key={i}>{a}</li>)}</ul>}<div className="mt-3 flex gap-2"><button className="btn" onClick={() => g.start(current)}>Try again</button>{index < total - 1 && <button className="btn" onClick={() => g.start(papers[index + 1])}>{c.next} →</button>}</div></Panel>}
           </div>
         </section>
@@ -273,7 +275,7 @@ function Mark({ bar, table, name, callFirst, onDone }: any) {
   );
 }
 
-function Saved({ result, table, idea, onAdded }: any) {
+function Saved({ result, table, idea, onAdded, onOpen }: any) {
   // An override is a suggestion the TA ruled out: to === "OK". A confirm never
   // reaches overrides, and a change carries the code it was changed to.
   const override = firstTrueOverride(result.overrides);
@@ -282,7 +284,7 @@ function Saved({ result, table, idea, onAdded }: any) {
       <p className="text-2xl font-bold">{c.savedBy(result.decidedBy, result.grade, table.max)}</p>
       <p className="text-sm text-fg-3">{c.receiptSub}{result.overrides?.length ? ` · ${result.overrides.length} suggestion${result.overrides.length === 1 ? "" : "s"} changed by you` : ""}</p>
       {result.feedback && <p className="mt-2 text-fg-2">“{result.feedback}”</p>}
-      {override && <MakeTestCase idea={idea} itemId={result.itemId} aiCode={override.from} taRuling="OK" onAdded={onAdded} />}
+      {override && <MakeTestCase idea={idea} itemId={result.itemId} aiCode={override.from} taRuling="OK" onOpen={onOpen} onAdded={onAdded} />}
     </Panel>
   );
 }

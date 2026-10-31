@@ -30,7 +30,8 @@ test("T2: the stat counts matches from the logged precalls and proposals only", 
     { idea: "grade", itemId: "S-02", proposals: [{ code: "E-N-DENOM" }] },
     { idea: "grade", itemId: "S-03", proposals: [] },
   ];
-  assert.equal(agreement(precalls, proposals, "s1").text, "2 of 3");
+  const revealed = precalls.map((p) => ({ ...p, kind: "reveal", proposalTs: "proposal" }));
+  assert.equal(agreement([...precalls, ...revealed], proposals.map((p) => ({ ...p, ts: "proposal" })), "s1").text, "2 of 3");
 });
 
 test("T2: a fresh session shows 0 of 0", () => {
@@ -74,11 +75,45 @@ test("T2: an empty proposal list reads as OK, so a blind OK call can match it", 
 test("T2: the call is logged before the reveal, and reveals are not counted as calls", () => {
   const p = fresh();
   p.add(CALL);
-  p.addReveal({ idea: "grade", itemId: "S-07", session: "s1" });
+  p.addReveal({ idea: "grade", itemId: "S-07", session: "s1", proposalTs: "proposal" });
   const call = p.list()[0], reveal = p.reveals()[0];
   assert.equal(p.list().length, 1, "a reveal is not a call");
   assert.ok(call.ts <= reveal.ts, `the call (${call.ts}) must not be later than the reveal (${reveal.ts})`);
   // A reveal must never be read as a blind call, however the file is ordered.
-  const proposals = [{ idea: "grade", itemId: "S-07", proposals: [{ code: "E-VAR-SD" }] }];
+  const proposals = [{ idea: "grade", itemId: "S-07", ts: "proposal", proposals: [{ code: "E-VAR-SD" }] }];
   assert.equal(agreement([...p.reveals(), ...p.list()], proposals, "s1").text, "1 of 1");
+});
+
+test('T2 review: duplicate call returns the original immutable prediction for redisplay', () => {
+  const p = fresh();
+  p.add(CALL);
+  const r = p.add({ ...CALL, code: 'E-ARITH' });
+  assert.equal(r.status, 409);
+  assert.equal(r.call.code, CALL.code);
+});
+
+test('T2 review: agreement uses the proposal actually linked to reveal, not a stale earlier run', () => {
+  const p = fresh();
+  p.add(CALL);
+  const proposals = [
+    { idea: CALL.idea, itemId: CALL.itemId, ts: 'old', proposals: [{ code: 'E-MEAN' }] },
+    { idea: CALL.idea, itemId: CALL.itemId, ts: 'new', proposals: [{ code: CALL.code }] },
+  ];
+  assert.equal(p.agreement(proposals, CALL.session).total, 0, 'not revealed is not counted');
+  assert.equal(p.addReveal({ ...CALL, proposalTs: 'new' }).status, 201);
+  assert.equal(p.agreement(proposals, CALL.session).text, '1 of 1');
+});
+
+test('T2 review: reveal without a prior call is refused', () => {
+  assert.equal(fresh().addReveal({ idea: 'grade', itemId: 'S-99', session: 's1' }).status, 409);
+});
+
+test('T2 review: UI locking uses persisted call after 409 and requires reveal acknowledgement', async () => {
+  const { lockPrecall } = await import('../components/grading/callfirst.js');
+  const responses = [
+    { status: 409, ok: false, json: async () => ({ call: { code: 'E-MEAN' } }) },
+    { status: 201, ok: true, json: async () => ({ saved: true }) },
+  ];
+  assert.equal(await lockPrecall({ fetchImpl: async () => responses.shift(), call: { ...CALL, code: 'E-ARITH' } }), 'E-MEAN');
+  await assert.rejects(() => lockPrecall({ fetchImpl: async () => ({ status: 500, ok: false, json: async () => ({}) }), call: CALL }), /saved/);
 });

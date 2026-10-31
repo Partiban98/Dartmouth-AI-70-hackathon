@@ -11,3 +11,14 @@ export const callChip = (myCode, aiCode) => `Your call: ${myCode} · AI: ${aiCod
  *  after their own call, never seeded from the rubric computation. Outside the
  *  toggle the existing behaviour is untouched. */
 export const markStartValue = (computedScore, { enabled }) => (enabled ? "" : String(computedScore));
+
+/** A duplicate must redisplay the original persisted prediction, never a new browser selection. */
+export async function lockPrecall({ fetchImpl = fetch, call }) {
+  const post = (body) => fetchImpl("/api/precall", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const r = await post(call);
+  const json = await r.json().catch(() => ({}));
+  if ((!r.ok && r.status !== 409) || typeof json.call?.code !== "string") throw new Error(json.error ?? "That call could not be saved.");
+  const reveal = await post({ kind: "reveal", idea: call.idea, itemId: call.itemId, session: call.session });
+  if (!reveal.ok) throw new Error("The reveal could not be saved. Try again.");
+  return json.call.code;
+}

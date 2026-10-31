@@ -86,11 +86,12 @@ export function useGrading() {
     const mine = ++run.current;
     if (pending.current) { const r = pending.current; pending.current = null; r(null); }
     setCurrent(item); setStage({ kind: "idle" });
+    const askForRun = (s: Stage) => mine === run.current ? ask(s) : Promise.resolve(null);
     const ui = {
-      resolveFlags: (flags: any[], report: any) => ask({ kind: "names", flags, report }),
-      approveGate: (report: any, flags: any[], { blocked }: any) => ask({ kind: "privacy", report, flags, blocked }),
-      review: (card: any) => { setModelLabel(card.label); return ask({ kind: "suggestions", card }); },
-      decide: (bar: any) => ask({ kind: "mark", bar }),
+      resolveFlags: (flags: any[], report: any) => askForRun({ kind: "names", flags, report }),
+      approveGate: (report: any, flags: any[], { blocked }: any) => askForRun({ kind: "privacy", report, flags, blocked }),
+      review: (card: any) => { if (mine !== run.current) return Promise.resolve(null); setModelLabel(card.label); return askForRun({ kind: "suggestions", card }); },
+      decide: (bar: any) => askForRun({ kind: "mark", bar }),
     };
     const r = await runPipeline(idea, item, ui, { course: data.course });
     if (mine !== run.current) return;

@@ -6,12 +6,11 @@
 //
 //   node scripts/eval-overrides.js           live, under the adapter's call cap and payload cache
 //   node scripts/eval-overrides.js --replay  cache only, makes no live call
-import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { makeAdapter } from "../server/adapter.js";
 import { makeEvalCases, topCode } from "../server/evalcases.js";
-import { makeIdeas } from "../lib/ideas.js";
+import { getContext } from "../server/context.js";
 import { loadDotenv } from "../server/env.js";
 
 /** Pure. Counts agreement between each case's TA ruling and whatever propose() returns.
@@ -28,7 +27,7 @@ export async function runEval({ cases, propose }) {
     // part of the total that match and mismatch divide.
     if (!r || r.ok === false) { errors++; rows.push({ idea: c.idea, itemId: c.itemId, agree: null }); continue; }
     const aiNow = topCode(r.proposals ?? []);
-    const agree = aiNow === c.taRuling;
+    const agree = c.aiCode && c.taRuling === "OK" ? !(r.proposals ?? []).some((p) => p.code === c.aiCode) : aiNow === c.taRuling;
     if (agree) match++; else mismatch++;
     rows.push({ idea: c.idea, itemId: c.itemId, agree });
   }
@@ -37,7 +36,11 @@ export async function runEval({ cases, propose }) {
 
 /** A stored case holds post-gate text only, so the payload is rebuilt from it:
  *  the lines are the steps the model saw, the last line is the final answer. */
-export const payloadOf = (text) => { const lines = String(text).split("\n").filter((l) => l.trim()); return { steps: lines, finalAnswer: lines[lines.length - 1] ?? "" }; };
+export const payloadOf = (c) => {
+  const p = c?.input;
+  if (!p || !Array.isArray(p.steps) || !p.steps.every((s) => typeof s === "string") || !(p.finalAnswer === null || (typeof p.finalAnswer === "number" && Number.isFinite(p.finalAnswer)))) throw new Error("case has no exact checked input; save it again from the paper");
+  return { steps: p.steps.slice(), finalAnswer: p.finalAnswer };
+};
 
 async function main() {
   const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -45,11 +48,8 @@ async function main() {
   loadDotenv(join(ROOT, ".env"));
   const env = replay ? { ...process.env, REPLAY_MODE: "1" } : process.env;
   const localDir = process.env.REMAIN_LOCAL_DIR || join(ROOT, "local");
-  const readData = (f) => JSON.parse(readFileSync(join(ROOT, "data", f), "utf8"));
-  const course = readData("course.json");
-  const gradingSets = {};
-  if (existsSync(join(ROOT, "data", "demo201-q3q5.v1.0.json"))) gradingSets.grade93 = readData("demo201-q3q5.v1.0.json");
-  const ideas = makeIdeas({ gradeStandards: readData("grade-q5.v1.0.json"), companion: readData("companion-ch3.json"), upskillStandards: readData("upskill-email.v1.0.json"), gradingSets });
+  const { course, ideas: loadIdeas } = getContext();
+  const ideas = loadIdeas();
   const store = makeEvalCases({ localDir, course });
   const cases = store.list();
   if (!cases.length) { console.log("No test cases yet. Override a suggestion in the app and press Make this a test case."); return; }
@@ -57,8 +57,8 @@ async function main() {
   const adapter = makeAdapter({ localDir, env });
   const propose = async (c) => {
     const ideaConfig = ideas[c.idea];
-    if (!ideaConfig) return { proposals: [] };
-    try { return await adapter.propose({ ideaConfig, payload: payloadOf(c.text), promptName: ideaConfig.promptName }); }
+    if (!ideaConfig) return { ok: false, proposals: [] };
+    try { store.checkForSend(c, ideaConfig); return await adapter.propose({ ideaConfig, payload: payloadOf(c), promptName: ideaConfig.promptName }); }
     catch (e) { console.log(`  ${c.itemId}: ${e.message}`); return { ok: false, proposals: [] }; }
   };
 

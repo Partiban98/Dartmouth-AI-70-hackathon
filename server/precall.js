@@ -14,7 +14,9 @@ export function agreement(precalls, proposals, session) {
   const mine = (precalls ?? []).filter((p) => p.kind !== "reveal" && (!session || p.session === session));
   let matched = 0, total = 0;
   for (const p of mine) {
-    const prop = (proposals ?? []).find((x) => x.idea === p.idea && x.itemId === p.itemId);
+    const reveal = (precalls ?? []).find((r) => r.kind === "reveal" && r.idea === p.idea && r.itemId === p.itemId && r.session === p.session);
+    if (!reveal) continue;
+    const prop = (proposals ?? []).find((x) => x.idea === p.idea && x.itemId === p.itemId && x.ts === reveal.proposalTs);
     if (!prop) continue;
     total++;
     if (aiCodeOf(prop) === p.code) matched++;
@@ -30,10 +32,11 @@ export function makePrecall({ localDir, course }) {
       if (!idea || !itemId || !code) return { status: 400, error: "idea, itemId and code are required" };
       const rec = { ts: new Date().toISOString(), kind: "precall", idea, itemId, code: String(code), by: by ?? null, session: session ?? null };
       const existing = log.read("precalls");
-      if (existing.some((p) => recordKey(p) === recordKey(rec))) return { status: 409, error: "you have already made your call on this paper" };
+      const old = existing.find((p) => p.kind === "precall" && recordKey(p) === recordKey(rec));
+      if (old) return { status: 409, error: "you have already made your call on this paper", call: { code: old.code } };
       try { log.assertSafe(rec); } catch (e) { return { status: 400, error: e.message }; }
       log.append("precalls", rec);
-      return { status: 201, saved: true };
+      return { status: 201, saved: true, call: { code: rec.code } };
     },
     /** The moment the AI's proposal was actually put on screen. Logged so that
      *  "the TA called it first" is checkable from the log rather than claimed:
@@ -41,9 +44,14 @@ export function makePrecall({ localDir, course }) {
      *  reveal. The pipeline fetches the proposal before the review hook runs,
      *  so the proposal log line is not the reveal and cannot stand in for it.
      *  See docs/REQUEST-KISHORE-precall-before-model.md. */
-    addReveal({ idea, itemId, session }) {
+    addReveal({ idea, itemId, session, proposalTs }) {
       if (!idea || !itemId) return { status: 400, error: "idea and itemId are required" };
-      const rec = { ts: new Date().toISOString(), kind: "reveal", idea, itemId, session: session ?? null };
+      const records = log.read("precalls");
+      const call = records.find((p) => p.kind === "precall" && p.idea === idea && p.itemId === itemId);
+      if (!call) return { status: 409, error: "make your call before revealing the suggestion" };
+      if (typeof proposalTs !== "string" || !proposalTs) return { status: 400, error: "a logged proposal is required before reveal" };
+      if (records.some((p) => p.kind === "reveal" && p.idea === idea && p.itemId === itemId && p.session === call.session)) return { status: 200, saved: true };
+      const rec = { ts: new Date().toISOString(), kind: "reveal", idea, itemId, session: call.session, proposalTs };
       try { log.assertSafe(rec); } catch (e) { return { status: 400, error: e.message }; }
       log.append("precalls", rec);
       return { status: 201, saved: true };

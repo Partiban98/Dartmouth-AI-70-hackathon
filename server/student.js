@@ -41,29 +41,34 @@ export function makeStudent({ localDir, course, decisions, standardsOf, paperOf 
   return {
     /** null when nobody has marked anything for this id, so the route can 404 without leaking. */
     view(anonId) {
-      const mine = (decisions() ?? []).filter((d) => d.type === "decision" && d.itemId === anonId);
+      const latest = new Map();
+      for (const d of decisions() ?? []) if (d.type === "decision" && d.itemId === anonId) latest.set(d.idea, d);
+      const mine = [...latest.values()];
       if (!mine.length) return null;
       const questions = mine.map((d) => {
-        const standards = standardsOf(d.idea) ?? { codes: [], max: 0 };
-        const quotes = quoteMap(paperOf(d.idea, anonId), standards);
+        const available = standardsOf(d.idea, d.rubricVersion);
+        // Never label today's deductions as the scheme used for an older mark.
+        const standards = available && available.version === d.rubricVersion ? available : null;
+        const quotes = standards ? quoteMap(paperOf(d.idea, anonId), standards) : {};
         // A change carries the code it was changed to and the TA's one line. An
         // override is to "OK": the TA ruled the suggestion out, so it is not a
         // deduction and never appears here.
         const changed = Object.fromEntries((d.overrides ?? []).filter((o) => o.to && o.to !== "OK").map((o) => [o.to, o.reason ?? null]));
         const deductions = [...new Set(d.confirmed ?? [])].filter((code) => code !== "OK" && code !== "UNSURE").map((code) => {
-          const line = (standards.codes ?? []).find((c) => c.code === code);
+          const line = (standards?.codes ?? []).find((c) => c.code === code);
           const at = quotes[code] ?? null;
-          return { code, points: line?.deduction ?? 0, rubricLine: line?.label ?? code, quote: at?.text ?? null, quoteLine: at?.line ?? null, taReason: changed[code] ?? null };
+          return { code, points: line?.deduction ?? null, rubricLine: line?.label ?? `Confirmed ${code}; original rubric details unavailable`, quote: at?.text ?? null, quoteLine: at?.line ?? null, taReason: changed[code] ?? null };
         });
-        return { questionId: d.idea, questionText: standards.question ?? null, mark: d.grade ?? null, max: standards.max ?? null, rubricVersion: d.rubricVersion ?? standards.version ?? null, note: d.feedback ?? null, decidedBy: "your TA", deductions };
+        return { questionId: d.idea, questionText: standards?.question ?? null, mark: d.grade ?? null, max: standards?.max ?? null, rubricVersion: d.rubricVersion ?? null, rubricUnavailable: !standards, note: d.feedback ?? null, decidedBy: "your TA", deductions };
       });
       const marks = questions.map((q) => Number(q.mark)).filter((n) => Number.isFinite(n));
-      return { anonId, questions, total: marks.reduce((a, b) => a + b, 0), outOf: questions.reduce((a, q) => a + (Number(q.max) || 0), 0) };
+      return { anonId, questions, total: marks.reduce((a, b) => a + b, 0), outOf: questions.every((q) => q.max != null) ? questions.reduce((a, q) => a + Number(q.max), 0) : null };
     },
     /** A regrade request is stored for a person to read. It notifies nobody and writes to no system of record. */
     addRegrade({ anonId, questionId, text }) {
-      if (!anonId || !questionId) return { status: 400, error: "anonId and questionId are required" };
-      const words = String(text ?? "").trim();
+      if (typeof anonId !== "string" || typeof questionId !== "string" || typeof text !== "string") return { status: 400, error: "anonId, questionId and text must be strings" };
+      if (!(decisions() ?? []).some((d) => d.type === "decision" && d.itemId === anonId && d.idea === questionId)) return { status: 400, error: "no marked paper for that student and question" };
+      const words = text.trim();
       if (words.length < 20) return { status: 400, error: "please explain in at least 20 characters so your TA has something to read" };
       const rec = { ts: new Date().toISOString(), kind: "regrade-request", anonId, questionId, text: words, status: "waiting for a person" };
       try { log.assertSafe(rec); } catch (e) { return { status: 400, error: e.message }; }
